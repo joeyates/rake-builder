@@ -26,7 +26,7 @@ spec = Gem::Specification.new do |s|
   s.rdoc_options     += RDOC_OPTS
   s.extra_rdoc_files = ['README.rdoc', 'COPYING']
 
-  s.test_file = 'test/all_tests.rb'
+  s.test_files       = Dir.glob('spec/**/*_spec.rb')
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
