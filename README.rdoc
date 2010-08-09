@@ -1,0 +1,40 @@
+= rake-cpp - Rake for C/C++
+
+Rake was created as a make replacement, and rake-cpp
+aims to become a replacement for autom4te, autoconfig,
+configure.in, configure etc.
+
+= Installation
+
+ $ sudo gem install rake-cpp
+
+= Example
+
+== A minimal C++ project
+
+This case assumes you have a project where all source and header files are in the same directory.
+
+Create a file 'Rakefile' in the directory.
+
+Rakefile contents:
+
+ Rake::Cpp.new do |cpp|
+   cpp.target = 'my_program'
+ end
+
+ $ rake
+
+= Status
+
+- Builds C++ projects on Linux
+
+= Alternatives
+
+- make
+- CMake
+- Boost.Build
+- rakepp - another take on using rake for c++ projects
+
+== TODO
+
+- pre-compiled headers
