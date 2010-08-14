@@ -1,0 +1,24 @@
+= Examples
+
+== 1. Hello World! in C++
+
+The Hello World! project should build and run as follows:
+
+ $ cd 01_hello_world_cpp
+ $ rake run
+ Hello World!
+
+This is the simplest possible type of project:
+- Only one source file,
+- Rakefile and source file in the same directory,
+- no non-standard header or library dependencies.
+
+== 2. Hello World! in C
+
+ $ cd 02_hello_world_c
+ $ rake run
+ Hello World!
+
+== 3. Search Paths
+
+In this project the source files and headers are in different directories

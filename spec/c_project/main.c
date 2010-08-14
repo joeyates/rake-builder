@@ -8,5 +8,6 @@ int main(int argc, char *argv[]) {
   fputs( "rake/cpp test", file );
   fclose( file );
 
+  puts( "Done" );
   return 0;
 }

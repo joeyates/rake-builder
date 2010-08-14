@@ -4,29 +4,66 @@ Rake was created as a make replacement, and rake-cpp
 aims to become a replacement for autom4te, autoconfig,
 configure.in, configure etc.
 
+Projects are managed and build via a 'Rakefile'.
+
+Here is a typical example:
+
+ require 'rubygems' if RUBY_VERSION < '1.9'
+ require 'rake'
+ require 'rake/cpp'
+ 
+ Rake::Cpp.new do |cpp|
+   cpp.target               = 'search-paths'
+   cpp.source_search_paths  = [ 'src' ]
+   cpp.header_search_paths  = [ 'include' ]
+   cpp.objects_path         = '.'
+   cpp.include_paths        = [ 'include' ]
+   cpp.library_dependencies = []
+ end
+
 = Installation
 
  $ sudo gem install rake-cpp
 
-= Example
+= Hello World! Example
 
-== A minimal C++ project
+See the 'examples' directory.
 
-This case assumes you have a project where all source and header files are in the same directory.
+The Hello World! project should build and run:
 
-Create a file 'Rakefile' in the directory.
+ $ cd examples/01hello-world
+ $ rake run
+ Hello World!
 
-Rakefile contents:
+= Usage
 
- Rake::Cpp.new do |cpp|
-   cpp.target = 'my_program'
- end
+See the 'examples' directory.
 
- $ rake
+If you've installed the gem system-wide, type the following to go to
+the correct directory:
+
+ $ cd `gem environment gemdir`/gems/rake-cpp/examples
+
+= Tasks
+
+You can list tasks as follows:
+
+ $ rake -T
+ rake build    # Compile and build 'hello-world'
+ rake clean    # Remove temporary files
+ rake compile  # Compile all sources
+ rake default  # Equivalent to 'rake build'
+ rake run      # Run 'hello-world'
+
+= Online
+
+* Source code: http://github.com/joeyates/rake-cpp
+* Documentation: http://rdoc.info/projects/joeyates/rake-cpp
+* Gem: http://rubygems.org/gems/rake-cpp
 
 = Status
 
-- Builds C++ projects on Linux
+- Builds C and C++ projects using gcc
 
 = Alternatives
 
@@ -37,4 +74,6 @@ Rakefile contents:
 
 == TODO
 
+- external libraries: fail informatively if missing
+- install task
 - pre-compiled headers

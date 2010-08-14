@@ -1,0 +1,11 @@
+require 'rubygems' if RUBY_VERSION < '1.9'
+require 'rake'
+require 'rake/cpp'
+
+Rake::Cpp.new do |cpp|
+  cpp.target               = 'search-paths'
+  cpp.source_search_paths  = [ 'src' ]
+  cpp.header_search_paths  = [ 'include' ]
+  cpp.objects_path         = '.'
+  cpp.library_dependencies = []
+end
