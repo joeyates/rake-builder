@@ -13,12 +13,9 @@ Here is a typical example:
  require 'rake/cpp'
  
  Rake::Cpp.new do |cpp|
-   cpp.target               = 'search-paths'
+   cpp.target               = 'my_program'
    cpp.source_search_paths  = [ 'src' ]
    cpp.header_search_paths  = [ 'include' ]
-   cpp.objects_path         = '.'
-   cpp.include_paths        = [ 'include' ]
-   cpp.library_dependencies = []
  end
 
 = Installation
@@ -31,7 +28,7 @@ See the 'examples' directory.
 
 The Hello World! project should build and run:
 
- $ cd examples/01hello-world
+ $ cd examples/01_hello_world_cpp
  $ rake run
  Hello World!
 
