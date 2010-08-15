@@ -1,11 +1,12 @@
-
 = rake-cpp - Rake for C/C++
 
-Rake was created as a make replacement, and rake-cpp
-aims to become a replacement for autom4te, autoconfig,
-configure.in, configure etc.
+rake-cpp provides a simple interface for building C
+and C++ projects.
+It uses rake, which was created as a make replacement,
+and specializes it for the specific purpose of compiling
+single projects. 
 
-Projects are managed and build via a 'Rakefile'.
+Projects are managed and built via a 'Rakefile'.
 
 Here is a typical example:
 
