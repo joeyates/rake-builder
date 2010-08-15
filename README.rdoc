@@ -96,9 +96,6 @@ and updating dependencies' modification times.
 
 = TODO
 
-* reset modified mtime after dependencies spec
-* install task
-* external libraries: fail informatively if missing
-* install task
+* Objective-C/Objective-C++ builds
 * pre-compiled headers
-* parallel building
+* parallel builds
