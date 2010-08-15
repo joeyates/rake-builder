@@ -6,12 +6,34 @@ require 'rake/loaders/makefile'
 
 module Rake
 
+  # A task whose behaviour depends on a FileTask
+  class FileTaskAlias < Task
+
+    attr_accessor :target
+
+    def self.define_task( name, target, &block )
+      alias_task = super( { name => [] }, &block )
+      alias_task.target = target
+      alias_task.prerequisites.unshift( target )
+      alias_task
+    end
+
+    def needed?
+      Rake::Task[ @target ].needed?
+    end
+
+  end
+
+  # Error indicating that the project failed to build.
+  class BuildFailureError < StandardError
+  end
+
   class Cpp < TaskLib
 
     module VERSION #:nodoc:
       MAJOR = 0
       MINOR = 0
-      TINY  = 2
+      TINY  = 3
  
       STRING = [ MAJOR, MINOR, TINY ].join('.')
     end
@@ -75,6 +97,11 @@ module Rake
     # All paths are relative to this
     attr_reader   :rakefile_path
 
+    # The Rakefile
+    # The file is not necessarily called 'Rakefile'
+    # It is the file which calls to Rake::Cpp.new
+    attr_reader   :rakefile
+
     # Directories containing project source files
     attr_accessor :source_search_paths
 
@@ -87,11 +114,8 @@ module Rake
     # Name of the default task
     attr_accessor :default_task
 
-    # Tasks which :build depends upon
-    attr_accessor :prerequesite_tasks
-
-    # Name of the generated file containing source - header dependencies
-    attr_reader   :makedepend_file
+    # Tasks which the target file depends upon
+    attr_accessor :target_prerequisites
 
     # Directory to be used for object files
     attr_accessor :objects_path
@@ -105,13 +129,18 @@ module Rake
     # Libraries to be linked
     attr_accessor :library_dependencies
 
+    # Name of the generated file containing source - header dependencies
+    attr_reader   :makedepend_file
+
+    # Temporary files generated during compilation and linking
+    attr_accessor :generated_files
+
     # Each instance has its own logger
     attr_accessor :logger
 
     def initialize( &block )
-      @logger       = Logger.new( STDOUT )
-      @logger.level = Logger::UNKNOWN
-      save_path( caller[0] )
+      save_rakefile_info( caller[0] )
+      initialize_attributes
       block.call( self )
       configure
       define_tasks
@@ -128,46 +157,49 @@ module Rake
       @header_files ||= find_files( @header_search_paths, @header_file_extension )
     end
 
-    # Temporary files generated during compilation and linking
-    def generated_files
-      @clean
-    end
-
     private
 
+    def initialize_attributes
+      @logger                = Logger.new( STDOUT )
+      @logger.level          = Logger::UNKNOWN
+      @programming_language  = 'c++'
+      @header_file_extension = 'h'
+      @objects_path          = @rakefile_path.dup
+      @generated_files       = []
+      @library_paths         = []
+      @library_dependencies  = []
+      @target_prerequisites  = []
+      @source_search_paths   = [ @rakefile_path.dup ]
+      @header_search_paths   = [ @rakefile_path.dup ]
+      @target                = 'a.out'
+    end
+
     def configure
-      @programming_language  ||= 'c++'
       @programming_language.downcase!
       raise "Don't know how to build '#{ @programming_language }' programs" if KNOWN_LANGUAGES[ @programming_language ].nil?
       @compiler              ||= KNOWN_LANGUAGES[ @programming_language ][ :compiler ]
       @linker                ||= KNOWN_LANGUAGES[ @programming_language ][ :linker ]
       @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
-      @header_file_extension ||= 'h'
 
-      @source_search_paths   ||= [ @rakefile_path.dup ]
       @source_search_paths   = Rake::Cpp.expand_paths_with_root( @source_search_paths, @rakefile_path )
-      @header_search_paths   ||= [ @rakefile_path.dup ]
       @header_search_paths   = Rake::Cpp.expand_paths_with_root( @header_search_paths, @rakefile_path )
-      @library_paths         ||= []
       @library_paths         = Rake::Cpp.expand_paths_with_root( @library_paths, @rakefile_path )
-      @library_dependencies  ||= []
 
-      @target                ||= 'a.out'
+      raise "The target name cannot be nil" if @target.nil?
       raise "The target name cannot be an empty string" if @target == ''
       @target                = Rake::Cpp.expand_path_with_root( @target, @rakefile_path )
       @target_type           ||= type( @target )
       raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
 
-      @objects_path          ||= @rakefile_path.dup
       @objects_path          = Rake::Cpp.expand_path_with_root( @objects_path, @rakefile_path )
       @include_paths         ||= @header_search_paths.dup
       @include_paths         = Rake::Cpp.expand_paths_with_root( @include_paths, @rakefile_path )
 
       @default_task          ||= :build
-      @prerequesite_tasks    ||= []
+      @target_prerequisites  << @rakefile
 
       @makedepend_file       = @objects_path + '/.' + File::basename( @target ) + '.depend.mf'
-      @clean                 = Rake::FileList.new
+      @generated_files       = Rake::FileList.new
 
       raise "No source files found" if source_files.length == 0
     end
@@ -206,14 +238,14 @@ module Rake
 
       source_files.each do |src|
         object = object_path( src )
-        @clean.include( object )
+        @generated_files.include( object )
         rule object => src do |t|
           @logger.add( Logger::INFO, "Compiling '#{ t.source }'" )
           shell "#{ @compiler } #{ compiler_flags } -c -o #{ t.name } #{ t.source }"
         end
       end
 
-      file @target => :compile do |t|
+      file @target => [ :compile, @target_prerequisites ] do |t|
         shell "rm -f #{ t.name }"
         case @target_type
         when :executable
@@ -225,6 +257,7 @@ module Rake
           @logger.add( Logger::INFO, "Builing library '#{ t.name }'" )
           shell "#{ @linker } -shared -o #{ t.name } #{ file_list( object_files ) } #{ link_flags }"
         end
+        raise BuildFailureError if ! File.exist?( t.name )
       end
 
       if @target_type == :executable
@@ -238,27 +271,20 @@ module Rake
       # Standard :clean is a singleton
       desc "Remove temporary files"
       task :clean do
-        @clean.each { |f| shell "rm -f #{ f }" }
+        @generated_files.each do |file|
+          shell "rm -f #{ file }"
+        end
       end
 
-      @clean.include( @target )
-      @clean.include( @makedepend_file )
+      @generated_files.include( @target )
+      @generated_files.include( @makedepend_file )
 
       desc "Compile all sources"
       task :compile => [ :dependencies, *object_files ]
 
       desc "Compile and build '#{ @target }'"
-      task :build => @prerequesite_tasks + [ @target ]
+      FileTaskAlias.define_task( :build, @target )
 
-      # Dump configuration
-      task :dump do
-        puts self.inspect
-      end
-
-      # List source files
-      task :source_files do
-        puts source_files.join( "\n" )
-      end
     end
 
     def scoped_default
@@ -296,9 +322,9 @@ module Rake
 
     # Paths
 
-    def save_path( caller )
-      file = caller.match(/^([^\:]+)/)[1]
-      @rakefile_path = File.expand_path( File.dirname( file ) )
+    def save_rakefile_info( caller )
+      @rakefile      = caller.match(/^([^\:]+)/)[1]
+      @rakefile_path = File.expand_path( File.dirname( @rakefile ) )
     end
 
     def object_path( source_path_name )
@@ -344,3 +370,4 @@ module Rake
   end
 
 end
+

@@ -1,7 +1,5 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
-SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
-
 describe 'when creating tasks' do
 
   before( :each ) do
@@ -14,28 +12,20 @@ describe 'when creating tasks' do
         cpp.target = ''
         cpp.source_search_paths = [ 'cpp_project' ]
       end
-    end.should raise_error
+    end.should raise_error( RuntimeError )
   end
 
-  it 'doesn\'t raise an error when the target is nil' do
+  it 'raises an error when the target is set to nil' do
     lambda do
       Rake::Cpp.new do |cpp|
         cpp.target = nil
         cpp.source_search_paths = [ 'cpp_project' ]
       end
-    end.should_not raise_error
+    end.should raise_error( RuntimeError )
   end
 
-  it 'set the target to \'a.out\' if it is not set' do
+  it 'sets the target to \'a.out\' if it is not set' do
     cpp = Rake::Cpp.new do |cpp|
-      cpp.source_search_paths = [ 'cpp_project' ]
-    end
-    cpp.target.should == Rake::Cpp.expand_path_with_root( 'a.out', SPEC_PATH )
-  end
-
-  it 'set the target to \'a.out\' if it is set to nil' do
-    cpp = Rake::Cpp.new do |cpp|
-      cpp.target = nil
       cpp.source_search_paths = [ 'cpp_project' ]
     end
     cpp.target.should == Rake::Cpp.expand_path_with_root( 'a.out', SPEC_PATH )

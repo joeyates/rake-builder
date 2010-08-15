@@ -1,13 +1,12 @@
 #include "main.h"
 
-int main(int argc, char *argv[]) {
-  ofstream outfile( "testfile.txt" );
+int main( int argc, char *argv[] ) {
+  ofstream outfile( "rake-cpp-testfile.txt" );
 
   if( outfile.fail() )
     return 1;
 
-  outfile << "rake/cpp test";
+  outfile << "rake-cpp test";
 
-  cout << "Done";
   return 0;
 }

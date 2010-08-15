@@ -5,7 +5,7 @@ describe 'when building a C project' do
   include RakeCppHelper
 
   before( :all ) do
-    @test_output_file = 'testfile.txt'
+    @test_output_file = "rake-c-testfile.txt"
   end
 
   before( :each ) do

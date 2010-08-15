@@ -1,3 +1,4 @@
+
 = rake-cpp - Rake for C/C++
 
 Rake was created as a make replacement, and rake-cpp
@@ -58,19 +59,43 @@ You can list tasks as follows:
 * Documentation: http://rdoc.info/projects/joeyates/rake-cpp
 * Gem: http://rubygems.org/gems/rake-cpp
 
+= Limitations
+
+== File Modification Times
+
+Rake's FileTask decides whether a file needs rebuilding by comparing on disk file
+modification times (see the private method <em>out_of_date?</em>, which returns true if the
+dependency was modified *after* the dependent).
+Unfortunately, most modern file systems hold modification times in whole
+seconds. If a dependency and a dependent were modificed during the same second,
+<b>even if the dependency were modified later</b>, <em>out_of_date?</em> gives *false*
+which is not the correct answer.
+
+This problem is mostly felt in testing, where modfication times are modified
+to test dependencies. As a workaround, tests wait for second to complete between building
+and updating dependencies' modification times.
+
+=== File Modification Time Resolutions
+
+* Ext3[http://en.wikipedia.org/wiki/Ext3] - resolution: 1s
+* Ext4[http://en.wikipedia.org/wiki/Ext4] - resolution: *1 microsecond*
+* Hierarchical_File_System[http://en.wikipedia.org/wiki/Hierarchical_File_System] - resolution: 1s
+* HFS_Plus[http://en.wikipedia.org/wiki/HFS_Plus] - resolution: 1s
+
 = Status
 
-- Builds C and C++ projects using gcc
+* Builds C and C++ projects using gcc
 
 = Alternatives
 
-- make
-- CMake
-- Boost.Build
-- rakepp - another take on using rake for c++ projects
+* make
+* CMake
+* Boost.Build
+* rakepp - another take on using rake for c++ projects
 
-== TODO
+= TODO
 
-- external libraries: fail informatively if missing
-- install task
-- pre-compiled headers
+* external libraries: fail informatively if missing
+* install task
+* pre-compiled headers
+* parallel building

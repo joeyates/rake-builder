@@ -5,13 +5,20 @@ describe 'when building an executable' do
   include RakeCppHelper
 
   before( :all ) do
-    @test_output_file = 'testfile.txt'
+    @test_output_file = 'rake-cpp-testfile.txt'
   end
 
   before( :each ) do
     Rake::Task.clear
     @project = cpp_task( :executable )
-    @expected_generated = Rake::Cpp.expand_paths_with_root( [ './main.o',  @project.makedepend_file, @project.target ], SPEC_PATH )
+    @expected_generated = Rake::Cpp.expand_paths_with_root(
+                            [
+                             './main.o',
+                             @project.makedepend_file,
+                             @project.target
+                            ],
+                            SPEC_PATH
+                          )
     `rm -f #{ @test_output_file }`
     `rm -f #{ @project.target }`
   end
@@ -22,7 +29,11 @@ describe 'when building an executable' do
   end
 
   it 'knows the target' do
-    @project.target.should == Rake::Cpp.expand_path_with_root( RakeCppHelper::TARGET[ :executable ], SPEC_PATH )
+    expected_target = Rake::Cpp.expand_path_with_root(
+                        RakeCppHelper::TARGET[ :executable ],
+                        SPEC_PATH
+                      )
+    @project.target.should == expected_target
   end
 
   it 'knows the project type' do
@@ -47,6 +58,17 @@ describe 'when building an executable' do
 
   it 'lists generated files' do
     @project.generated_files.sort.should == @expected_generated.sort
+  end
+
+  it 'removes generated files with \'clean\'' do
+    Rake::Task[ 'build' ].invoke
+    @expected_generated.each do |f|
+      exist?( f ).should be_true
+    end
+    Rake::Task[ 'clean' ].invoke
+    @expected_generated.each do |f|
+      exist?( f ).should be_false
+    end
   end
 
   it 'removes generated files with \'clean\'' do
@@ -109,10 +131,6 @@ describe 'when building a static library' do
 
   include RakeCppHelper
 
-  before( :all ) do
-    #cd SPEC_PATH
-  end
-
   before( :each ) do
     Rake::Task.clear
     @project = cpp_task( :static_library )
@@ -141,10 +159,6 @@ end
 describe 'when building a shared library' do
 
   include RakeCppHelper
-
-  before( :all ) do
-    #cd SPEC_PATH
-  end
 
   before( :each ) do
     Rake::Task.clear

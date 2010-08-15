@@ -18,6 +18,8 @@ module RakeCppHelper
       cpp.task_namespace       = namespace
       cpp.source_search_paths  = [ 'cpp_project' ]
       cpp.header_search_paths  = [ 'cpp_project' ]
+      cpp.generated_files      << 'rake-cpp-testfile.txt'
+      yield cpp if block_given?
     end
   end
 
@@ -28,6 +30,8 @@ module RakeCppHelper
       cpp.task_namespace       = namespace
       cpp.source_search_paths  = [ 'c_project' ]
       cpp.header_search_paths  = [ 'c_project' ]
+      cpp.generated_files      << 'rake-c-testfile.txt'
+      yield cpp if block_given?
     end
   end
 
@@ -61,6 +65,15 @@ module RakeCppHelper
   def scoped_tasks( tasks, scope )
     return tasks if scope.nil?
     tasks.map{ |t| "#{scope}:#{t}" }
+  end
+
+  # Most file systems has a 1s resolution
+  # Force a wait into the next second around a task
+  # So FileTask's out_of_date? will behave correctly
+  def isolate_seconds
+    sec = Time.now.sec
+    yield
+    while( Time.now.sec == sec ) do end
   end
 
 end

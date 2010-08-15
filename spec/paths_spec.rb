@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
-SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
+PATHS_SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
 
 describe 'when creating tasks' do
 
@@ -12,7 +12,7 @@ describe 'when creating tasks' do
     cpp = Rake::Cpp.new do |cpp|
       cpp.source_search_paths = [ 'cpp_project' ]
     end
-    cpp.rakefile_path.should == SPEC_PATH
+    cpp.rakefile_path.should == PATHS_SPEC_PATH
   end
 
 end

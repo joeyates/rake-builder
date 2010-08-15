@@ -1,13 +1,12 @@
 #include "main.h"
 
-int main(int argc, char *argv[]) {
-  FILE * file = fopen ("testfile.txt","w");
+int main( int argc, char *argv[] ) {
+  FILE * file = fopen ( "rake-c-testfile.txt", "w" );
   if( file == NULL )
     return 1;
 
-  fputs( "rake/cpp test", file );
+  fputs( "rake-cpp test", file );
   fclose( file );
 
-  puts( "Done" );
   return 0;
 }

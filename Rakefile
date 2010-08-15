@@ -18,7 +18,7 @@ spec = Gem::Specification.new do |s|
   s.author           = 'Joe Yates'
   s.email            = 'joe.g.yates@gmail.com'
 
-  s.files            = [ 'README.rdoc', 'COPYING', 'Rakefile' ] + FileList[ '{lib,test}/**/*.rb' ]
+  s.files            = [ 'README.rdoc', 'COPYING', 'Rakefile' ] + FileList[ '{examples,lib,test}/**/*.rb' ]
   s.require_paths    = [ 'lib']
   s.add_dependency( 'rake', '>= 0.8.7' )
 

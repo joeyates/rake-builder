@@ -21,4 +21,8 @@ This is the simplest possible type of project:
 
 == 3. Search Paths
 
-In this project the source files and headers are in different directories
+Here, the source files and headers are in different directories
+
+== 4. Zlib
+
+Here, an external library is used.
