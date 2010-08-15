@@ -129,6 +129,9 @@ module Rake
     # Libraries to be linked
     attr_accessor :library_dependencies
 
+    # The directory where 'rake install' will copy the target file
+    attr_accessor :install_path
+
     # Name of the generated file containing source - header dependencies
     attr_reader   :makedepend_file
 
@@ -192,6 +195,7 @@ module Rake
       @target                = Rake::Cpp.expand_path_with_root( @target, @objects_path )
       @target_type           ||= type( @target )
       raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
+      @install_path          ||= default_install_path( @target_type )
 
       @include_paths         ||= @header_search_paths.dup
       @include_paths         = Rake::Cpp.expand_paths_with_root( @include_paths, @rakefile_path )
@@ -291,6 +295,31 @@ module Rake
 
       desc "Compile and build '#{ @target }'"
       FileTaskAlias.define_task( :build, @target )
+
+      desc "Install the target file"
+      task :install, [] => [ :build ] do
+        destination = File.join( @install_path, File.basename( @target ) )
+        begin
+          shell "cp '#{ @target }' '#{ destination }'", Logger::INFO
+        rescue Errno::EACCES => e
+          raise "You do not have premission to install '#{ File.basename( @target ) }' in '#{ @install_path }'\nTry\n $ sudo rake install"
+        end
+      end
+
+      desc "Uninstall the target file"
+      task :uninstall, [] => [] do
+        destination = File.join( @install_path, File.basename( @target ) )
+        if ! File.exist?( destination )
+          @logger.add( Logger::INFO, "The file '#{ destination }' does not exist" )
+          next
+        end
+        begin
+          shell "rm '#{ destination }'", Logger::INFO
+        rescue Errno::EACCES => e
+          raise "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake uninstall"
+        end
+      end
+
     end
 
     def scoped_default
@@ -336,6 +365,15 @@ module Rake
     def object_path( source_path_name )
       o_name = File.basename( source_path_name ).gsub( '.' + @source_file_extension, '.o' )
       @objects_path + '/' + o_name
+    end
+
+    def default_install_path( target_type )
+      case target_type
+      when :executable
+        '/usr/local/bin'
+      else  
+        '/usr/local/lib'
+      end
     end
 
     # Lists of files

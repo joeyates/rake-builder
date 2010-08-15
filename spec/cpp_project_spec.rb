@@ -77,10 +77,6 @@ describe 'when using namespaces' do
 
   include RakeCppHelper
 
-  before( :all ) do
-    #cd SPEC_PATH
-  end
-
   before( :each ) do
     Rake::Task.clear
     @project = cpp_task( :executable, 'my_namespace' )
@@ -152,6 +148,39 @@ describe 'when building a shared library' do
 
   it 'hasn\'t got a \'run\' task' do
     task_names.include?( 'run' ).should be_false
+  end
+
+end
+
+describe 'when installing' do
+
+  include RakeCppHelper
+
+  INSTALL_DIRECTORY = '/tmp/rake-cpp-test-install'
+
+  before( :each ) do
+    Rake::Task.clear
+    `mkdir #{ INSTALL_DIRECTORY }`
+    @project = cpp_task( :executable ) do |cpp|
+      cpp.install_path = INSTALL_DIRECTORY
+    end
+    @installed_target = File.join( INSTALL_DIRECTORY, File.basename( @project.target ) )
+  end
+  
+  after( :each ) do
+    `rm -rf #{ INSTALL_DIRECTORY }`
+  end
+
+  it 'should install the file' do
+    Rake::Task[ 'install' ].invoke
+    exist?( @installed_target ).should be_true
+  end
+
+  it 'should uninstall the file' do
+    Rake::Task[ 'install' ].invoke
+    exist?( @installed_target ).should be_true
+    Rake::Task[ 'uninstall' ].invoke
+    exist?( @installed_target ).should be_false
   end
 
 end
