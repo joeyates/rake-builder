@@ -23,14 +23,14 @@ describe 'when handling generated files' do
   end
 
   it 'lists generated files, with a method' do
-    @project.generated_files.sort.should == @expected_generated.sort
+    @project.generated_files.should =~ @expected_generated
   end
 
   it 'lists generated files, via the task' do
     output = capturing_output do
       Rake::Task[ 'generated_files' ].execute
     end
-    eval( output ).should =~ @expected_generated.sort
+    eval( output ).should =~ @expected_generated
   end
 
   it 'removes generated files with \'clean\'' do
