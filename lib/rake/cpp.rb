@@ -291,7 +291,6 @@ module Rake
 
       desc "Compile and build '#{ @target }'"
       FileTaskAlias.define_task( :build, @target )
-
     end
 
     def scoped_default

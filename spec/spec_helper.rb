@@ -76,4 +76,13 @@ module RakeCppHelper
     while( Time.now.sec == sec ) do end
   end
 
+  def capturing_output
+    output = StringIO.new
+    $stdout = output
+    yield
+    output.string
+  ensure
+    $stdout = STDOUT
+  end
+
 end
