@@ -67,15 +67,6 @@ module RakeCppHelper
     tasks.map{ |t| "#{scope}:#{t}" }
   end
 
-  # Most file systems has a 1s resolution
-  # Force a wait into the next second around a task
-  # So FileTask's out_of_date? will behave correctly
-  def isolate_seconds
-    sec = Time.now.sec
-    yield
-    while( Time.now.sec == sec ) do end
-  end
-
   def capturing_output
     output = StringIO.new
     $stdout = output
@@ -83,6 +74,17 @@ module RakeCppHelper
     output.string
   ensure
     $stdout = STDOUT
+  end
+
+  def touching_temporarily( file, touch_time )
+    begin
+      atime = File.atime( file )
+      mtime = File.mtime( file )
+      File.utime( atime, touch_time, file )
+      yield
+    ensure
+      File.utime( atime, mtime, file )
+    end
   end
 
 end

@@ -34,33 +34,31 @@ describe 'the dependencies' do
   end
 
   it 'should indicate the target is up to date, if nothing changes' do
-    isolate_seconds { Rake::Task[ 'build' ].invoke }
+    Rake::Task[ 'build' ].invoke
     Rake::Task[ @project.target ].needed?.should_not be_true
   end
 
   it 'should indicate the build is up to date, if nothing changes' do
-    isolate_seconds { Rake::Task[ 'build' ].invoke }
-    exist?( @project.target ).should be_true
+    Rake::Task[ 'build' ].invoke
     Rake::Task[ 'build' ].needed?.should be_false
   end
 
   # In our case this spec file is the "Rakefile"
   # i.e., the file that calls Rake::Cpp.new
-  it 'should indicate the target is out of date, if the Rakefile changes' do
+  it 'should indicate the target is out of date, if the Rakefile is newer' do
     Rake::Task[ 'build' ].invoke
-    isolate_seconds { Rake::Task[ 'build' ].invoke }
-    exist?( @project.target ).should be_true
     Rake::Task[ @project.target ].needed?.should be_false
-    touch @project.rakefile
-    Rake::Task[ @project.target ].needed?.should be_true
+    touching_temporarily( @project.target, File.mtime( @project.rakefile ) - 1 ) do
+      Rake::Task[ @project.target ].needed?.should be_true
+    end
   end
 
   it 'should indicate that a build is needed if the Rakefile changes' do
-    isolate_seconds { Rake::Task[ 'build' ].invoke }
-    exist?( @project.target ).should be_true
+    Rake::Task[ 'build' ].invoke
     Rake::Task[ 'build' ].needed?.should be_false
-    touch @project.rakefile
-    Rake::Task[ 'build' ].needed?.should be_true
+    touching_temporarily( @project.target, File.mtime( @project.rakefile ) - 1 ) do
+      Rake::Task[ 'build' ].needed?.should be_true
+    end
   end
 
 end

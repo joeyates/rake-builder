@@ -56,9 +56,9 @@ You can list tasks as follows:
 
 = Online
 
-* Source code: http://github.com/joeyates/rake-cpp
-* Documentation: http://rdoc.info/projects/joeyates/rake-cpp
-* Gem: http://rubygems.org/gems/rake-cpp
+* Source code[http://github.com/joeyates/rake-cpp]
+* Documentation[http://rdoc.info/projects/joeyates/rake-cpp]
+* Gem[http://rubygems.org/gems/rake-cpp]
 
 = Limitations
 
@@ -79,7 +79,7 @@ and updating dependencies' modification times.
 === File Modification Time Resolutions
 
 * Ext3[http://en.wikipedia.org/wiki/Ext3] - resolution: 1s
-* Ext4[http://en.wikipedia.org/wiki/Ext4] - resolution: *1 microsecond*
+* Ext4[http://en.wikipedia.org/wiki/Ext4] - resolution: 1 microsecond
 * Hierarchical_File_System[http://en.wikipedia.org/wiki/Hierarchical_File_System] - resolution: 1s
 * HFS_Plus[http://en.wikipedia.org/wiki/HFS_Plus] - resolution: 1s
 
@@ -96,6 +96,8 @@ and updating dependencies' modification times.
 
 = TODO
 
+* reset modified mtime after dependencies spec
+* install task
 * external libraries: fail informatively if missing
 * install task
 * pre-compiled headers
