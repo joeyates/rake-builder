@@ -5,7 +5,7 @@ describe 'when building a C project' do
   include RakeCppHelper
 
   before( :all ) do
-    @test_output_file = "rake-c-testfile.txt"
+    @test_output_file = Rake::Cpp.expand_path_with_root( 'rake-c-testfile.txt', SPEC_PATH )
   end
 
   before( :each ) do

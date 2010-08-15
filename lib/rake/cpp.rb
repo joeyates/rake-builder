@@ -172,6 +172,7 @@ module Rake
       @source_search_paths   = [ @rakefile_path.dup ]
       @header_search_paths   = [ @rakefile_path.dup ]
       @target                = 'a.out'
+      @generated_files       = []
     end
 
     def configure
@@ -187,19 +188,19 @@ module Rake
 
       raise "The target name cannot be nil" if @target.nil?
       raise "The target name cannot be an empty string" if @target == ''
-      @target                = Rake::Cpp.expand_path_with_root( @target, @rakefile_path )
+      @objects_path          = Rake::Cpp.expand_path_with_root( @objects_path, @rakefile_path )
+      @target                = Rake::Cpp.expand_path_with_root( @target, @objects_path )
       @target_type           ||= type( @target )
       raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
 
-      @objects_path          = Rake::Cpp.expand_path_with_root( @objects_path, @rakefile_path )
       @include_paths         ||= @header_search_paths.dup
       @include_paths         = Rake::Cpp.expand_paths_with_root( @include_paths, @rakefile_path )
+      @generated_files       = Rake::Cpp.expand_paths_with_root( @generated_files, @rakefile_path )
 
       @default_task          ||= :build
       @target_prerequisites  << @rakefile
 
       @makedepend_file       = @objects_path + '/.' + File::basename( @target ) + '.depend.mf'
-      @generated_files       = Rake::FileList.new
 
       raise "No source files found" if source_files.length == 0
     end
@@ -236,9 +237,14 @@ module Rake
         import @makedepend_file
       end
 
+      desc 'List generated file (which are remove with \'rake clean\')'
+      task :generated_files do
+        puts @generated_files.inspect
+      end
+
       source_files.each do |src|
         object = object_path( src )
-        @generated_files.include( object )
+        @generated_files << object
         rule object => src do |t|
           @logger.add( Logger::INFO, "Compiling '#{ t.source }'" )
           shell "#{ @compiler } #{ compiler_flags } -c -o #{ t.name } #{ t.source }"
@@ -263,7 +269,8 @@ module Rake
       if @target_type == :executable
         desc "Run '#{ @target }'"
         task :run => :build do
-          puts shell( Rake::Cpp.expand_path_with_root( @target, @rakefile_path ), Logger::INFO )
+          command = "cd #{ @rakefile_path } && #{ @target }" 
+          puts shell( command, Logger::INFO )
         end
       end
 
@@ -276,8 +283,8 @@ module Rake
         end
       end
 
-      @generated_files.include( @target )
-      @generated_files.include( @makedepend_file )
+      @generated_files << @target
+      @generated_files << @makedepend_file
 
       desc "Compile all sources"
       task :compile => [ :dependencies, *object_files ]
