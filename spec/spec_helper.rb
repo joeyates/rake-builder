@@ -48,7 +48,7 @@ module RakeCppHelper
   end
 
   def default_tasks
-    [ 'build', 'clean', 'compile', 'dependencies' ]
+    [ 'build', 'clean', 'compile', 'load_makedepend' ]
   end
 
   def expected_tasks( extras, scope = nil )
@@ -74,6 +74,15 @@ module RakeCppHelper
     output.string
   ensure
     $stdout = STDOUT
+  end
+
+  # Most file systems have a 1s resolution
+  # Force a wait into the next second around a task
+  # So FileTask's out_of_date? will behave correctly
+  def isolating_seconds
+    sec = Time.now.sec
+    yield
+    while( Time.now.sec == sec ) do end
   end
 
   def touching_temporarily( file, touch_time )

@@ -7,5 +7,4 @@ Rake::Cpp.new do |cpp|
   cpp.source_search_paths  = [ 'src' ]
   cpp.header_search_paths  = [ 'include' ]
   cpp.objects_path         = '.'
-  cpp.library_dependencies = []
 end

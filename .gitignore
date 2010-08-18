@@ -1,3 +1,5 @@
 coverage/
 pkg/
 html/
+*.depend.mf
+*.o

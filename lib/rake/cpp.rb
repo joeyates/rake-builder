@@ -229,31 +229,16 @@ module Rake
     end
 
     def define
-      file @makedepend_file => [ *project_files ] do
-        @logger.add( Logger::DEBUG, "Analysing dependencies" )
-        command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
-        shell command
-      end
-
-      # Only import dependencies when we're compiling
-      # otherwise makedepend gets run on e.g. 'rake -T'
-      task :dependencies => @makedepend_file do |t|
-        import @makedepend_file
-      end
-
-      desc 'List generated file (which are remove with \'rake clean\')'
-      task :generated_files do
-        puts @generated_files.inspect
-      end
-
-      source_files.each do |src|
-        object = object_path( src )
-        @generated_files << object
-        rule object => src do |t|
-          @logger.add( Logger::INFO, "Compiling '#{ t.source }'" )
-          shell "#{ @compiler } #{ compiler_flags } -c -o #{ t.name } #{ t.source }"
+      if @target_type == :executable
+        desc "Run '#{ @target }'"
+        task :run => :build do
+          command = "cd #{ @rakefile_path } && #{ @target }" 
+          puts shell( command, Logger::INFO )
         end
       end
+
+      desc "Compile and build '#{ @target }'"
+      FileTaskAlias.define_task( :build, @target )
 
       file @target => [ :compile, @target_prerequisites ] do |t|
         shell "rm -f #{ t.name }"
@@ -270,12 +255,49 @@ module Rake
         raise BuildFailureError if ! File.exist?( t.name )
       end
 
-      if @target_type == :executable
-        desc "Run '#{ @target }'"
-        task :run => :build do
-          command = "cd #{ @rakefile_path } && #{ @target }" 
-          puts shell( command, Logger::INFO )
+      desc "Compile all sources"
+      # Only import dependencies when we're compiling
+      # otherwise makedepend gets run on e.g. 'rake -T'
+      task :compile => [ @makedepend_file, :load_makedepend, *object_files ]
+
+      source_files.each do |src|
+        object = object_path( src )
+        @generated_files << object
+        file object => [ src ] do |t|
+          @logger.add( Logger::INFO, "Compiling '#{ src }'" )
+          shell "#{ @compiler } #{ compiler_flags } -c -o #{ object } #{ src }"
         end
+      end
+
+      desc 'Create the make depend file'
+      file @makedepend_file => [ *project_files ] do
+        @logger.add( Logger::DEBUG, "Analysing dependencies" )
+        command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
+        shell command
+      end
+
+      task :load_makedepend => @makedepend_file do |t|
+        object_to_source = source_files.inject( {} ) do |memo, source|
+          mapped_object = source.gsub( '.' + @source_file_extension, '.o' )
+          memo[ mapped_object ] = source
+          memo
+        end
+        File.open( @makedepend_file ).each_line do |line|
+          next if line !~ /:\s/
+          mapped_object_file = $`
+          header_file = $'.gsub( "\n", '' )
+          # Why does it work
+          # if I make the object (not the source) depend on the header
+          source_file = object_to_source[ mapped_object_file ]
+          object_file = object_path( source_file )
+          object_file_task = Rake.application[ object_file ]
+          object_file_task.enhance( [ header_file ] )
+        end
+      end
+
+      desc 'List generated file (which are remove with \'rake clean\')'
+      task :generated_files do
+        puts @generated_files.inspect
       end
 
       # Re-implement :clean locally for project and within namespace
@@ -289,12 +311,6 @@ module Rake
 
       @generated_files << @target
       @generated_files << @makedepend_file
-
-      desc "Compile all sources"
-      task :compile => [ :dependencies, *object_files ]
-
-      desc "Compile and build '#{ @target }'"
-      FileTaskAlias.define_task( :build, @target )
 
       desc "Install the target file"
       task :install, [] => [ :build ] do
@@ -364,7 +380,7 @@ module Rake
 
     def object_path( source_path_name )
       o_name = File.basename( source_path_name ).gsub( '.' + @source_file_extension, '.o' )
-      @objects_path + '/' + o_name
+      Rake::Cpp.expand_path_with_root( o_name, @objects_path )
     end
 
     def default_install_path( target_type )
@@ -414,4 +430,3 @@ module Rake
   end
 
 end
-

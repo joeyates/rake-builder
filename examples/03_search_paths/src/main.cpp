@@ -1,7 +1,7 @@
 #include "main.h"
 
 int main( int argc, char *argv[] ) {
-  printf( "The contents of this directory:\n" );
+  printf( "The complete contents of this directory:\n" );
 
   DIR *directory = opendir( "." );
   if( directory == NULL ) {

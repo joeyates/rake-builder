@@ -15,14 +15,19 @@ This is the simplest possible type of project:
 
 == 2. Hello World! in C
 
- $ cd 02_hello_world_c
- $ rake run
- Hello World!
+Same as the above, but for C.
 
 == 3. Search Paths
 
-Here, the source files and headers are in different directories
+Source files and headers in different directories
 
 == 4. Zlib
 
-Here, an external library is used.
+Library dependencies.
+
+== 5. Main Project and Tests
+
+In this case, there are two build projects,
+one for the main executable and one for tests.
+
+The tests are in the 'test' namespace.

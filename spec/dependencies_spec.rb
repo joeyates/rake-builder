@@ -1,27 +1,76 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
-=begin
-
-N.B. This spec file changes *it's own* modification time
-to check dependency handling.
-
-=end
-
-describe 'the dependencies' do
+describe 'the dependencies system' do
 
   include RakeCppHelper
 
   before( :each ) do
     Rake::Task.clear
-    # The project *must* be created in this file,
-    # so that it is this file that gets its
-    # modification time updated
-    @project = Rake::Cpp.new do |cpp|
-      cpp.programming_language = 'c++'
-      cpp.target               = 'my_program'
-      cpp.source_search_paths  = [ 'cpp_project' ]
-      cpp.header_search_paths  = [ 'cpp_project' ]
+    @project = cpp_task( :executable )
+    Rake::Task[ 'clean' ].execute
+  end
+
+  after( :each ) do
+    Rake::Task[ 'clean' ].execute
+  end
+
+  it 'says the target is up to date, if nothing changes' do
+    Rake::Task[ 'build' ].invoke
+    Rake::Task[ @project.target ].needed?.should_not be_true
+  end
+
+  it 'says the build is up to date, if nothing changes' do
+    Rake::Task[ 'build' ].invoke
+    Rake::Task[ 'build' ].needed?.should be_false
+  end
+
+  it 'doesn\'t recompile objects, if nothing changes' do
+    isolating_seconds do
+      Rake::Task[ 'compile' ].invoke
     end
+    Rake::Task.clear
+    @project = cpp_task( :executable )
+    object_file_path = Rake::Cpp.expand_path_with_root( 'main.o', SPEC_PATH )
+    Rake::Task[ object_file_path ].needed?.should be_false
+  end
+
+  it 'recompiles objects, if a source file changes' do
+    isolating_seconds do
+      Rake::Task[ 'compile' ].invoke
+    end
+    Rake::Task.clear
+    @project = cpp_task( :executable )
+    source_file_path = Rake::Cpp.expand_path_with_root( 'cpp_project/main.cpp', SPEC_PATH )
+    object_file_path = Rake::Cpp.expand_path_with_root( 'main.o', SPEC_PATH )
+    touching_temporarily( source_file_path, File.mtime( object_file_path ) + 1 ) do
+      Rake::Task[ object_file_path ].needed?.should be_true
+    end
+  end
+
+  it 'recompiles source files, if header dependencies' do
+    header_file_path = Rake::Cpp.expand_path_with_root( 'cpp_project/main.h', SPEC_PATH )
+    object_file_path = Rake::Cpp.expand_path_with_root( 'main.o', SPEC_PATH )
+    isolating_seconds do
+      Rake::Task[ 'compile' ].invoke
+    end
+    Rake::Task.clear
+    @project = cpp_task( :executable )
+    # Header dependencies aren't loaded until we call :compile
+    Rake::Task[ :load_makedepend ].invoke
+    touching_temporarily( header_file_path, File.mtime( object_file_path ) + 1 ) do
+      Rake::Task[ object_file_path ].needed?.should be_true
+    end
+  end
+
+end
+
+describe 'Rakefile dependencies' do
+
+  include RakeCppHelper
+
+  before( :each ) do
+    Rake::Task.clear
+    @project = cpp_task( :executable )
     Rake::Task[ 'clean' ].execute
   end
 
@@ -33,17 +82,7 @@ describe 'the dependencies' do
     Rake::Task[ @project.target ].prerequisites.include?( @project.rakefile ).should be_true
   end
 
-  it 'should indicate the target is up to date, if nothing changes' do
-    Rake::Task[ 'build' ].invoke
-    Rake::Task[ @project.target ].needed?.should_not be_true
-  end
-
-  it 'should indicate the build is up to date, if nothing changes' do
-    Rake::Task[ 'build' ].invoke
-    Rake::Task[ 'build' ].needed?.should be_false
-  end
-
-  # In our case this spec file is the "Rakefile"
+  # In our case this spec file is the spec_helper
   # i.e., the file that calls Rake::Cpp.new
   it 'should indicate the target is out of date, if the Rakefile is newer' do
     Rake::Task[ 'build' ].invoke

@@ -72,9 +72,8 @@ seconds. If a dependency and a dependent were modificed during the same second,
 <b>even if the dependency were modified later</b>, <em>out_of_date?</em> gives *false*
 which is not the correct answer.
 
-This problem is mostly felt in testing, where modfication times are modified
-to test dependencies. As a workaround, tests wait for second to complete between building
-and updating dependencies' modification times.
+This problem is mostly felt in testing, where file modification times are temporarily
+modified to test dependencies. Also, tests wait for second to complete after building.
 
 === File Modification Time Resolutions
 
@@ -82,6 +81,11 @@ and updating dependencies' modification times.
 * Ext4[http://en.wikipedia.org/wiki/Ext4] - resolution: 1 microsecond
 * Hierarchical_File_System[http://en.wikipedia.org/wiki/Hierarchical_File_System] - resolution: 1s
 * HFS_Plus[http://en.wikipedia.org/wiki/HFS_Plus] - resolution: 1s
+
+== Source Files with the Same Name
+
+Currently, object files from all source files are placed in the same directory.
+So, if there are two source files with the same name, they will overwrite each other.
 
 = Status
 
