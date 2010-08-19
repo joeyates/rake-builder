@@ -120,6 +120,9 @@ module Rake
     # Directory to be used for object files
     attr_accessor :objects_path
 
+    # extra options to pass to the compiler
+    attr_accessor :compilation_options
+
     # Additional include directories for compilation
     attr_accessor :include_paths
 
@@ -197,6 +200,7 @@ module Rake
       raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
       @install_path          ||= default_install_path( @target_type )
 
+      @compilation_options   ||= ''
       @include_paths         ||= @header_search_paths.dup
       @include_paths         = Rake::Cpp.expand_paths_with_root( @include_paths, @rakefile_path )
       @generated_files       = Rake::Cpp.expand_paths_with_root( @generated_files, @rakefile_path )
@@ -204,7 +208,7 @@ module Rake
       @default_task          ||= :build
       @target_prerequisites  << @rakefile
 
-      @makedepend_file       = @objects_path + '/.' + File::basename( @target ) + '.depend.mf'
+      @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
 
       raise "No source files found" if source_files.length == 0
     end
@@ -220,27 +224,29 @@ module Rake
     end
 
     def define_default
-      desc "Equivalent to 'rake #{ scoped_default }'"
+      name = scoped_task( @default_task )
+      desc "Equivalent to 'rake #{ name }'"
       if @task_namespace
-        task @task_namespace => [ scoped_default ]
+        task @task_namespace => [ name ]
       else
-        task :default => [ scoped_default ]
+        task :default => [ name ]
       end
     end
 
     def define
       if @target_type == :executable
-        desc "Run '#{ @target }'"
+        desc "Run '#{ target_basename }'"
         task :run => :build do
           command = "cd #{ @rakefile_path } && #{ @target }" 
           puts shell( command, Logger::INFO )
         end
       end
 
-      desc "Compile and build '#{ @target }'"
+      desc "Compile and build '#{ target_basename }'"
       FileTaskAlias.define_task( :build, @target )
 
-      file @target => [ :compile, @target_prerequisites ] do |t|
+      desc "Build '#{ target_basename }'"
+      file @target => [ scoped_task( :compile ), @target_prerequisites ] do |t|
         shell "rm -f #{ t.name }"
         case @target_type
         when :executable
@@ -258,7 +264,7 @@ module Rake
       desc "Compile all sources"
       # Only import dependencies when we're compiling
       # otherwise makedepend gets run on e.g. 'rake -T'
-      task :compile => [ @makedepend_file, :load_makedepend, *object_files ]
+      task :compile => [ @makedepend_file, scoped_task( :load_makedepend ), *object_files ]
 
       source_files.each do |src|
         object = object_path( src )
@@ -269,7 +275,6 @@ module Rake
         end
       end
 
-      desc 'Create the make depend file'
       file @makedepend_file => [ *project_files ] do
         @logger.add( Logger::DEBUG, "Analysing dependencies" )
         command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
@@ -295,7 +300,7 @@ module Rake
         end
       end
 
-      desc 'List generated file (which are remove with \'rake clean\')'
+      desc 'List generated files (which are remove with \'rake clean\')'
       task :generated_files do
         puts @generated_files.inspect
       end
@@ -312,17 +317,17 @@ module Rake
       @generated_files << @target
       @generated_files << @makedepend_file
 
-      desc "Install the target file"
-      task :install, [] => [ :build ] do
-        destination = File.join( @install_path, File.basename( @target ) )
+      desc "Install '#{ target_basename }' in '#{ @install_path }'"
+      task :install, [] => [ scoped_task( :build ) ] do
+        destination = File.join( @install_path, target_basename )
         begin
           shell "cp '#{ @target }' '#{ destination }'", Logger::INFO
         rescue Errno::EACCES => e
-          raise "You do not have premission to install '#{ File.basename( @target ) }' in '#{ @install_path }'\nTry\n $ sudo rake install"
+          raise "You do not have premission to install '#{ target_basename }' in '#{ @install_path }'\nTry\n $ sudo rake install"
         end
       end
 
-      desc "Uninstall the target file"
+      desc "Uninstall '#{ target_basename }' from '#{ @install_path }'"
       task :uninstall, [] => [] do
         destination = File.join( @install_path, File.basename( @target ) )
         if ! File.exist?( destination )
@@ -338,11 +343,11 @@ module Rake
 
     end
 
-    def scoped_default
+    def scoped_task( task )
       if @task_namespace
-        "#{ task_namespace }:#{ @default_task }"
+        "#{ task_namespace }:#{ task }"
       else
-        @default_task
+        task
       end
     end
 
@@ -364,7 +369,7 @@ module Rake
     end
 
     def compiler_flags
-      include_path
+      include_path + ' ' + @compilation_options
     end
 
     def link_flags
@@ -392,11 +397,16 @@ module Rake
       end
     end
 
+    def target_basename
+      File.basename( @target )
+    end
+
     # Lists of files
 
     def find_files( paths, extension )
-      files = paths.reduce( [] ) do |memo, p|
-        memo + FileList[p + '/*.' + extension]
+      files = paths.reduce( [] ) do |memo, path|
+        glob = ( path =~ /[\*\?]/ ) ? path : path + '/*.' + extension
+        memo + FileList[ glob ]
       end
       Rake::Cpp.expand_paths_with_root( files, @rakefile_path )
     end
