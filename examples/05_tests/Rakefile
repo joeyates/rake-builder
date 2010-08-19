@@ -1,0 +1,19 @@
+require 'rubygems' if RUBY_VERSION < '1.9'
+require 'rake'
+require 'rake/cpp'
+
+Rake::Cpp.new do |cpp|
+  cpp.target               = 'unit'
+  cpp.source_search_paths  = [ 'src' ]
+  cpp.header_search_paths  = [ 'include' ]
+end
+
+Rake::Cpp.new do |cpp|
+  cpp.task_namespace       = 'test'
+  cpp.target               = 'test_unit'
+  cpp.source_search_paths  = [ 'test', 'src/units.*' ]
+  cpp.header_search_paths  = [ 'include' ]
+  cpp.objects_path         = 'test'
+  cpp.compilation_options  = '-DDEBUG'
+end
+
