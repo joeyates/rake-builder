@@ -4,23 +4,23 @@ require 'rake/gempackagetask'
 require 'spec/rake/spectask'
 require 'rake/rdoctask'
 $:.unshift( File.dirname( __FILE__ ) + '/lib' )
-require 'rake/cpp'
+require 'rake/builder'
 
 ADMIN_FILES          = FileList[ 'CHANGES', 'COPYING', 'Rakefile', 'README.rdoc' ]
 SOURCE_FILES         = FileList[ 'lib/**/*.rb' ]
 SPEC_FILES           = FileList[ 'spec/**/*' ]
 EXAMPLE_EXTRA_FILES  = FileList[ 'examples/README.rdoc' ] + FileList[ 'examples/**/Rakefile' ]
-EXAMPLE_SOURCE_FILES = FileList[ 'examples/**/*.{h,c,cpp}' ]
+EXAMPLE_SOURCE_FILES = FileList[ 'examples/**/*.{h,c,cpp,m}' ]
 RDOC_FILES           = FileList[ 'COPYING', 'README.rdoc' ] + SOURCE_FILES + EXAMPLE_EXTRA_FILES
 RDOC_OPTS            = [ '--quiet', '--main', 'README.rdoc', '--inline-source' ]
 
 spec = Gem::Specification.new do |s|
-  s.name             = 'rake-cpp'
+  s.name             = 'rake-builder'
   s.summary          = 'Rake for C/C++ Projects'
-  s.description      = 'Provides Rake:CPP, a specific rake TaskLib for building C and C++ projects'
-  s.version          = Rake::Cpp::VERSION::STRING
+  s.description      = 'Provides Rake:Builder, a specific rake TaskLib for building C, C++, Objective-C and Objective-C++ projects'
+  s.version          = Rake::Builder::VERSION::STRING
 
-  s.homepage         = 'http://github.com/joeyates/rake-cpp'
+  s.homepage         = 'http://github.com/joeyates/rake-builder'
   s.author           = 'Joe Yates'
   s.email            = 'joe.g.yates@gmail.com'
 
@@ -55,6 +55,6 @@ end
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir      = 'html'
   rdoc.options       += RDOC_OPTS
-  rdoc.title         = 'Rake for C/C++ Projects'
+  rdoc.title         = 'Rake for C/C++/Objective-C/Objective-C++ Projects'
   rdoc.rdoc_files.add RDOC_FILES
 end

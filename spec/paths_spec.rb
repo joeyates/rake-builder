@@ -9,10 +9,10 @@ describe 'when creating tasks' do
   end
 
   it 'remembers the Rakefile path' do
-    cpp = Rake::Cpp.new do |cpp|
-      cpp.source_search_paths = [ 'cpp_project' ]
+    builder = Rake::Builder.new do |builder|
+      builder.source_search_paths = [ 'cpp_project' ]
     end
-    cpp.rakefile_path.should == PATHS_SPEC_PATH
+    builder.rakefile_path.should == PATHS_SPEC_PATH
   end
 
 end

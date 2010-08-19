@@ -1,10 +1,10 @@
 require 'rubygems' if RUBY_VERSION < '1.9'
 require 'rake'
-require 'rake/cpp'
+require 'rake/builder'
 
-Rake::Cpp.new do |cpp|
-  cpp.target               = 'search-paths'
-  cpp.source_search_paths  = [ 'src' ]
-  cpp.header_search_paths  = [ 'include' ]
-  cpp.objects_path         = '.'
+Rake::Builder.new do |builder|
+  builder.target               = 'search-paths'
+  builder.source_search_paths  = [ 'src' ]
+  builder.header_search_paths  = [ 'include' ]
+  builder.objects_path         = '.'
 end

@@ -2,15 +2,15 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe 'when handling generated files' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
     @project = cpp_task( :executable )
-    @expected_generated = Rake::Cpp.expand_paths_with_root(
+    @expected_generated = Rake::Builder.expand_paths_with_root(
                             [
                              'main.o',
-                             'rake-cpp-testfile.txt',
+                             'rake-builder-testfile.txt',
                              @project.makedepend_file,
                              @project.target
                             ],
@@ -48,11 +48,11 @@ end
 
 describe 'when adding generated files' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     @file = 'foobar.txt'
-    @file_with_path = Rake::Cpp.expand_path_with_root( @file, SPEC_PATH )
+    @file_with_path = Rake::Builder.expand_path_with_root( @file, SPEC_PATH )
   end
 
   it 'includes added files' do

@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe 'the dependencies system' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
@@ -30,7 +30,7 @@ describe 'the dependencies system' do
     end
     Rake::Task.clear
     @project = cpp_task( :executable )
-    object_file_path = Rake::Cpp.expand_path_with_root( 'main.o', SPEC_PATH )
+    object_file_path = Rake::Builder.expand_path_with_root( 'main.o', SPEC_PATH )
     Rake::Task[ object_file_path ].needed?.should be_false
   end
 
@@ -40,16 +40,16 @@ describe 'the dependencies system' do
     end
     Rake::Task.clear
     @project = cpp_task( :executable )
-    source_file_path = Rake::Cpp.expand_path_with_root( 'cpp_project/main.cpp', SPEC_PATH )
-    object_file_path = Rake::Cpp.expand_path_with_root( 'main.o', SPEC_PATH )
+    source_file_path = Rake::Builder.expand_path_with_root( 'cpp_project/main.cpp', SPEC_PATH )
+    object_file_path = Rake::Builder.expand_path_with_root( 'main.o', SPEC_PATH )
     touching_temporarily( source_file_path, File.mtime( object_file_path ) + 1 ) do
       Rake::Task[ object_file_path ].needed?.should be_true
     end
   end
 
   it 'recompiles source files, if header dependencies' do
-    header_file_path = Rake::Cpp.expand_path_with_root( 'cpp_project/main.h', SPEC_PATH )
-    object_file_path = Rake::Cpp.expand_path_with_root( 'main.o', SPEC_PATH )
+    header_file_path = Rake::Builder.expand_path_with_root( 'cpp_project/main.h', SPEC_PATH )
+    object_file_path = Rake::Builder.expand_path_with_root( 'main.o', SPEC_PATH )
     isolating_seconds do
       Rake::Task[ 'compile' ].invoke
     end
@@ -66,7 +66,7 @@ end
 
 describe 'Rakefile dependencies' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
@@ -83,7 +83,7 @@ describe 'Rakefile dependencies' do
   end
 
   # In our case this spec file is the spec_helper
-  # i.e., the file that calls Rake::Cpp.new
+  # i.e., the file that calls Rake::Builder.new
   it 'should indicate the target is out of date, if the Rakefile is newer' do
     Rake::Task[ 'build' ].invoke
     Rake::Task[ @project.target ].needed?.should be_false

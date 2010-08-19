@@ -8,35 +8,35 @@ describe 'when creating tasks' do
 
   it 'raises an error when the target is an empty string' do
     lambda do
-      Rake::Cpp.new do |cpp|
-        cpp.target = ''
-        cpp.source_search_paths = [ 'cpp_project' ]
+      Rake::Builder.new do |builder|
+        builder.target = ''
+        builder.source_search_paths = [ 'cpp_project' ]
       end
     end.should raise_error( RuntimeError )
   end
 
   it 'raises an error when the target is set to nil' do
     lambda do
-      Rake::Cpp.new do |cpp|
-        cpp.target = nil
-        cpp.source_search_paths = [ 'cpp_project' ]
+      Rake::Builder.new do |builder|
+        builder.target = nil
+        builder.source_search_paths = [ 'cpp_project' ]
       end
     end.should raise_error( RuntimeError )
   end
 
   it 'sets the target to \'a.out\' if it is not set' do
-    cpp = Rake::Cpp.new do |cpp|
-      cpp.source_search_paths = [ 'cpp_project' ]
+    builder = Rake::Builder.new do |builder|
+      builder.source_search_paths = [ 'cpp_project' ]
     end
-    cpp.target.should == Rake::Cpp.expand_path_with_root( 'a.out', SPEC_PATH )
+    builder.target.should == Rake::Builder.expand_path_with_root( 'a.out', SPEC_PATH )
   end
 
   it 'raises an error when the supplied target_type is unknown' do
     lambda do
-      project = Rake::Cpp.new do |cpp|
-        cpp.target      = 'my_prog'
-        cpp.target_type = :foo
-        cpp.source_search_paths = [ 'cpp_project' ]
+      project = Rake::Builder.new do |builder|
+        builder.target      = 'my_prog'
+        builder.target_type = :foo
+        builder.source_search_paths = [ 'cpp_project' ]
       end
     end.should raise_error
   end

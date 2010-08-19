@@ -5,7 +5,7 @@ int main( int argc, char *argv[] ) {
   if( file == NULL )
     return 1;
 
-  fputs( "rake-cpp test", file );
+  fputs( "rake-builder test", file );
   fclose( file );
 
   return 0;

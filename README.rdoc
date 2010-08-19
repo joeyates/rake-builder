@@ -1,7 +1,7 @@
-= rake-cpp - Rake for C/C++
+= rake-builder - Rake for C/C++/Objective-C/Objective-C++ Projects
 
-rake-cpp provides a simple interface for building C
-and C++ projects.
+rake-builder provides a simple interface for building C, C++,
+Objective-C and Objective-C++ projects.
 It uses rake, which was created as a make replacement,
 and specializes it for the specific purpose of compiling
 single projects. 
@@ -12,17 +12,17 @@ Here is a typical example:
 
  require 'rubygems' if RUBY_VERSION < '1.9'
  require 'rake'
- require 'rake/cpp'
+ require 'rake/builder'
  
- Rake::Cpp.new do |cpp|
-   cpp.target               = 'my_program'
-   cpp.source_search_paths  = [ 'src' ]
-   cpp.header_search_paths  = [ 'include' ]
+ Rake::Builder.new do |builder|
+   builder.target               = 'my_program'
+   builder.source_search_paths  = [ 'src' ]
+   builder.header_search_paths  = [ 'include' ]
  end
 
 = Installation
 
- $ sudo gem install rake-cpp
+ $ sudo gem install rake-builder
 
 = Hello World! Example
 
@@ -41,7 +41,7 @@ See the 'examples' directory.
 If you've installed the gem system-wide, type the following to go to
 the correct directory:
 
- $ cd `gem environment gemdir`/gems/rake-cpp/examples
+ $ cd `gem environment gemdir`/gems/rake-builder/examples
 
 = Tasks
 
@@ -56,9 +56,9 @@ You can list tasks as follows:
 
 = Online
 
-* Source code[http://github.com/joeyates/rake-cpp]
-* Documentation[http://rdoc.info/projects/joeyates/rake-cpp]
-* Gem[http://rubygems.org/gems/rake-cpp]
+* 'Source code'[http://github.com/joeyates/rake-builder]
+* Documentation[http://rdoc.info/projects/joeyates/rake-builder]
+* Gem[http://rubygems.org/gems/rake-builder]
 
 = Limitations
 

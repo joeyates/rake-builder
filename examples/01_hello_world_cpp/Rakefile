@@ -1,13 +1,13 @@
 =begin
 
-= A Minimal Example for Rake-Cpp
+= A Minimal Example for Rake-Builder
 
 =end
 
 require 'rubygems' if RUBY_VERSION < '1.9'
 require 'rake'
-require 'rake/cpp'
+require 'rake/builder'
 
-Rake::Cpp.new do |cpp|
-  cpp.target = 'hello_world_cpp'
+Rake::Builder.new do |builder|
+  builder.target = 'hello_world_cpp'
 end

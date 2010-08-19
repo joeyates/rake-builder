@@ -1,9 +1,9 @@
 require 'spec'
-require File.dirname(__FILE__) + '/../lib/rake/cpp'
+require File.dirname(__FILE__) + '/../lib/rake/builder'
 
 SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
 
-module RakeCppHelper
+module RakeBuilderHelper
 
   TARGET = {
     :executable      => 'the_executable',
@@ -12,26 +12,26 @@ module RakeCppHelper
   }
 
   def cpp_task( type, namespace = nil )
-    Rake::Cpp.new do |cpp|
-      cpp.programming_language = 'c++'
-      cpp.target               = TARGET[ type ]
-      cpp.task_namespace       = namespace
-      cpp.source_search_paths  = [ 'cpp_project' ]
-      cpp.header_search_paths  = [ 'cpp_project' ]
-      cpp.generated_files      << 'rake-cpp-testfile.txt'
-      yield cpp if block_given?
+    Rake::Builder.new do |builder|
+      builder.programming_language = 'c++'
+      builder.target               = TARGET[ type ]
+      builder.task_namespace       = namespace
+      builder.source_search_paths  = [ 'cpp_project' ]
+      builder.header_search_paths  = [ 'cpp_project' ]
+      builder.generated_files      << 'rake-builder-testfile.txt'
+      yield builder if block_given?
     end
   end
 
   def c_task( type, namespace = nil )
-    Rake::Cpp.new do |cpp|
-      cpp.programming_language = 'c'
-      cpp.target               = TARGET[ type ]
-      cpp.task_namespace       = namespace
-      cpp.source_search_paths  = [ 'c_project' ]
-      cpp.header_search_paths  = [ 'c_project' ]
-      cpp.generated_files      << 'rake-c-testfile.txt'
-      yield cpp if block_given?
+    Rake::Builder.new do |builder|
+      builder.programming_language = 'c'
+      builder.target               = TARGET[ type ]
+      builder.task_namespace       = namespace
+      builder.source_search_paths  = [ 'c_project' ]
+      builder.header_search_paths  = [ 'c_project' ]
+      builder.generated_files      << 'rake-c-testfile.txt'
+      yield builder if block_given?
     end
   end
 

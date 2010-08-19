@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe 'when using libraries' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
@@ -14,8 +14,8 @@ describe 'when using libraries' do
 
   it 'builds if libraries are found' do
     lambda do
-      @project = cpp_task( :executable ) do |cpp|
-        cpp.library_dependencies = [ 'gcc' ] # As we're using GCC, libgcc.a should always be present
+      @project = cpp_task( :executable ) do |builder|
+        builder.library_dependencies = [ 'gcc' ] # As we're using GCC, libgcc.a should always be present
       end
       Rake::Task[ 'build' ].invoke
     end.should_not raise_error
@@ -23,8 +23,8 @@ describe 'when using libraries' do
 
   it 'fails to build if libraries are missing' do
     lambda do
-      @project = cpp_task( :executable ) do |cpp|
-        cpp.library_dependencies = [ 'library_that_doesnt_exist' ]
+      @project = cpp_task( :executable ) do |builder|
+        builder.library_dependencies = [ 'library_that_doesnt_exist' ]
       end
       Rake::Task[ 'build' ].invoke
     end.should raise_error( Rake::BuildFailureError )

@@ -28,7 +28,7 @@ module Rake
   class BuildFailureError < StandardError
   end
 
-  class Cpp < TaskLib
+  class Builder < TaskLib
 
     module VERSION #:nodoc:
       MAJOR = 0
@@ -67,7 +67,7 @@ module Rake
     # This also sets defaults for source_file_extension
     attr_accessor :programming_language
 
-    # Programmaing languages that Rake::Cpp can handle
+    # Programmaing languages that Rake::Builder can handle
     KNOWN_LANGUAGES = {
       'c' => {
         :source_file_extension => 'c',
@@ -78,6 +78,11 @@ module Rake
         :source_file_extension => 'cpp',
         :compiler              => 'g++',
         :linker                => 'g++'
+      },
+      'objective-c' => {
+        :source_file_extension => 'm',
+        :compiler              => 'gcc',
+        :linker                => 'gcc'
       },
     }
 
@@ -99,7 +104,7 @@ module Rake
 
     # The Rakefile
     # The file is not necessarily called 'Rakefile'
-    # It is the file which calls to Rake::Cpp.new
+    # It is the file which calls to Rake::Builder.new
     attr_reader   :rakefile
 
     # Directories containing project source files
@@ -188,22 +193,22 @@ module Rake
       @linker                ||= KNOWN_LANGUAGES[ @programming_language ][ :linker ]
       @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
 
-      @source_search_paths   = Rake::Cpp.expand_paths_with_root( @source_search_paths, @rakefile_path )
-      @header_search_paths   = Rake::Cpp.expand_paths_with_root( @header_search_paths, @rakefile_path )
-      @library_paths         = Rake::Cpp.expand_paths_with_root( @library_paths, @rakefile_path )
+      @source_search_paths   = Rake::Builder.expand_paths_with_root( @source_search_paths, @rakefile_path )
+      @header_search_paths   = Rake::Builder.expand_paths_with_root( @header_search_paths, @rakefile_path )
+      @library_paths         = Rake::Builder.expand_paths_with_root( @library_paths, @rakefile_path )
 
       raise "The target name cannot be nil" if @target.nil?
       raise "The target name cannot be an empty string" if @target == ''
-      @objects_path          = Rake::Cpp.expand_path_with_root( @objects_path, @rakefile_path )
-      @target                = Rake::Cpp.expand_path_with_root( @target, @objects_path )
+      @objects_path          = Rake::Builder.expand_path_with_root( @objects_path, @rakefile_path )
+      @target                = Rake::Builder.expand_path_with_root( @target, @objects_path )
       @target_type           ||= type( @target )
       raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
       @install_path          ||= default_install_path( @target_type )
 
       @compilation_options   ||= ''
       @include_paths         ||= @header_search_paths.dup
-      @include_paths         = Rake::Cpp.expand_paths_with_root( @include_paths, @rakefile_path )
-      @generated_files       = Rake::Cpp.expand_paths_with_root( @generated_files, @rakefile_path )
+      @include_paths         = Rake::Builder.expand_paths_with_root( @include_paths, @rakefile_path )
+      @generated_files       = Rake::Builder.expand_paths_with_root( @generated_files, @rakefile_path )
 
       @default_task          ||= :build
       @target_prerequisites  << @rakefile
@@ -385,7 +390,7 @@ module Rake
 
     def object_path( source_path_name )
       o_name = File.basename( source_path_name ).gsub( '.' + @source_file_extension, '.o' )
-      Rake::Cpp.expand_path_with_root( o_name, @objects_path )
+      Rake::Builder.expand_path_with_root( o_name, @objects_path )
     end
 
     def default_install_path( target_type )
@@ -408,7 +413,7 @@ module Rake
         glob = ( path =~ /[\*\?]/ ) ? path : path + '/*.' + extension
         memo + FileList[ glob ]
       end
-      Rake::Cpp.expand_paths_with_root( files, @rakefile_path )
+      Rake::Builder.expand_paths_with_root( files, @rakefile_path )
     end
 
     # TODO: make this return a FileList, not a plain Array

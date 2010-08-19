@@ -2,12 +2,12 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe 'when building an executable' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :all ) do
-    @test_output_file = Rake::Cpp.expand_path_with_root( 'rake-cpp-testfile.txt', SPEC_PATH )
-    @expected_target = Rake::Cpp.expand_path_with_root(
-                        RakeCppHelper::TARGET[ :executable ],
+    @test_output_file = Rake::Builder.expand_path_with_root( 'rake-builder-testfile.txt', SPEC_PATH )
+    @expected_target = Rake::Builder.expand_path_with_root(
+                        RakeBuilderHelper::TARGET[ :executable ],
                         SPEC_PATH
                       )
   end
@@ -43,12 +43,12 @@ describe 'when building an executable' do
   end
 
   it 'finds source files' do
-    expected_sources = Rake::Cpp.expand_paths_with_root( [ 'cpp_project/main.cpp' ], SPEC_PATH )
+    expected_sources = Rake::Builder.expand_paths_with_root( [ 'cpp_project/main.cpp' ], SPEC_PATH )
     @project.source_files.should == expected_sources
   end
 
   it 'finds header files' do
-    expected_headers = Rake::Cpp.expand_paths_with_root( [ 'cpp_project/main.h' ], SPEC_PATH )
+    expected_headers = Rake::Builder.expand_paths_with_root( [ 'cpp_project/main.h' ], SPEC_PATH )
     @project.header_files.should == expected_headers
   end
 
@@ -75,7 +75,7 @@ end
 
 describe 'when using namespaces' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
@@ -96,7 +96,7 @@ end
 
 describe 'when building a static library' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
@@ -125,7 +125,7 @@ end
 
 describe 'when building a shared library' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
@@ -154,15 +154,15 @@ end
 
 describe 'when installing' do
 
-  include RakeCppHelper
+  include RakeBuilderHelper
 
-  INSTALL_DIRECTORY = '/tmp/rake-cpp-test-install'
+  INSTALL_DIRECTORY = '/tmp/rake-builder-test-install'
 
   before( :each ) do
     Rake::Task.clear
     `mkdir #{ INSTALL_DIRECTORY }`
-    @project = cpp_task( :executable ) do |cpp|
-      cpp.install_path = INSTALL_DIRECTORY
+    @project = cpp_task( :executable ) do |builder|
+      builder.install_path = INSTALL_DIRECTORY
     end
     @installed_target = File.join( INSTALL_DIRECTORY, File.basename( @project.target ) )
   end
