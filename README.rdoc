@@ -1,10 +1,9 @@
 = rake-builder - Rake for C/C++/Objective-C/Objective-C++ Projects
 
-rake-builder provides a simple interface for building C, C++,
-Objective-C and Objective-C++ projects.
-It uses rake, which was created as a make replacement,
-and specializes it for the specific purpose of compiling
-single projects. 
+rake-builder builds C, C++, Objective-C and Objective-C++
+projects.
+Project files are dicovered accoring to indicated paths
+and or flie globs.
 
 Projects are managed and built via a 'Rakefile'.
 
@@ -56,7 +55,7 @@ You can list tasks as follows:
 
 = Online
 
-* 'Source code'[http://github.com/joeyates/rake-builder]
+* {Source code}[http://github.com/joeyates/rake-builder]
 * Documentation[http://rdoc.info/projects/joeyates/rake-builder]
 * Gem[http://rubygems.org/gems/rake-builder]
 
@@ -100,6 +99,6 @@ So, if there are two source files with the same name, they will overwrite each o
 
 = TODO
 
-* Objective-C/Objective-C++ builds
+* Objective-C++ projects
 * pre-compiled headers
 * parallel builds

@@ -1,0 +1,10 @@
+require 'rubygems' if RUBY_VERSION < '1.9'
+require 'rake'
+require 'rake/builder'
+
+Rake::Builder.new do |builder|
+  builder.target               = 'hello_world_objective_c'
+  builder.programming_language = 'objective-c'
+  builder.library_dependencies = [ 'objc' ]
+  builder.linker_options       = '-framework CoreFoundation -framework Foundation'
+end

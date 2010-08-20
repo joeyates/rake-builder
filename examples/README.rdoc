@@ -31,3 +31,7 @@ In this case, there are two build projects,
 one for the main executable and one for tests.
 
 The tests are in the 'test' namespace.
+
+== 6. Hello World! in Objective-C
+
+Minimal project using NSLog.

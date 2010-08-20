@@ -134,6 +134,9 @@ module Rake
     # Additional library directories for linking
     attr_accessor :library_paths
 
+    # extra options to pass to the linker
+    attr_accessor :linker_options
+
     # Libraries to be linked
     attr_accessor :library_dependencies
 
@@ -206,6 +209,7 @@ module Rake
       @install_path          ||= default_install_path( @target_type )
 
       @compilation_options   ||= ''
+      @linker_options        ||= ''
       @include_paths         ||= @header_search_paths.dup
       @include_paths         = Rake::Builder.expand_paths_with_root( @include_paths, @rakefile_path )
       @generated_files       = Rake::Builder.expand_paths_with_root( @generated_files, @rakefile_path )
@@ -378,7 +382,7 @@ module Rake
     end
 
     def link_flags
-      [ library_paths_list, library_dependencies_list ].join( " " )
+      [ @linker_options, library_paths_list, library_dependencies_list ].join( " " )
     end
 
     # Paths
