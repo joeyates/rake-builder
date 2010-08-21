@@ -35,6 +35,20 @@ module RakeBuilderHelper
     end
   end
 
+  def objective_c_task( type, namespace = nil )
+    Rake::Builder.new do |builder|
+      builder.programming_language = 'objective-c'
+      builder.target               = TARGET[ type ]
+      builder.task_namespace       = namespace
+      builder.source_search_paths  = [ 'objective_c_project' ]
+      builder.header_search_paths  = [ 'objective_c_project' ]
+      builder.generated_files      << 'rake-builder-testfile.txt'
+      builder.library_dependencies = [ 'objc' ]
+      builder.linker_options       = '-framework CoreFoundation -framework Foundation'
+      yield builder if block_given?
+    end
+  end
+
   def touch( file )
     `touch #{file}`
   end
