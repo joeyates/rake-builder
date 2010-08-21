@@ -56,6 +56,12 @@ You can list tasks as follows:
 * Documentation[http://rdoc.info/projects/joeyates/rake-builder]
 * Gem[http://rubygems.org/gems/rake-builder]
 
+= Dependencies
+
+Task dependencies must ensure that out of date files are recreated as needed.
+
+http://github.com/downloads/joeyates/rake-builder/rake-cppDependencies.png
+
 = Limitations
 
 == File Modification Times
