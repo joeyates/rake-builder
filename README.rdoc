@@ -2,10 +2,6 @@
 
 rake-builder builds C, C++, Objective-C and Objective-C++
 projects.
-Project files are dicovered accoring to indicated paths
-and or flie globs.
-
-Projects are managed and built via a 'Rakefile'.
 
 Here is a typical example:
 
@@ -68,7 +64,7 @@ modification times (see the private method <em>out_of_date?</em>, which returns 
 dependency was modified *after* the dependent).
 Unfortunately, most modern file systems hold modification times in whole
 seconds. If a dependency and a dependent were modificed during the same second,
-<b>even if the dependency were modified later</b>, <em>out_of_date?</em> gives *false*
+<b>even if the dependency were modified later</b>, <em>out_of_date?</em> returns *false*
 which is not the correct answer.
 
 This problem is mostly felt in testing, where file modification times are temporarily
@@ -88,7 +84,7 @@ So, if there are two source files with the same name, they will overwrite each o
 
 = Status
 
-* Builds C and C++ projects using gcc
+* Builds C, C++ and Objective-C projects using GCC[http://gcc.gnu.org/].
 
 = Alternatives
 
