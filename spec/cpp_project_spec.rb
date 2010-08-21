@@ -5,11 +5,11 @@ describe 'when building an executable' do
   include RakeBuilderHelper
 
   before( :all ) do
-    @test_output_file = Rake::Builder.expand_path_with_root( 'rake-builder-testfile.txt', SPEC_PATH )
+    @test_output_file = Rake::Builder.expand_path_with_root(
+                          'rake-builder-testfile.txt', SPEC_PATH )
     @expected_target = Rake::Builder.expand_path_with_root(
-                        RakeBuilderHelper::TARGET[ :executable ],
-                        SPEC_PATH
-                      )
+                         RakeBuilderHelper::TARGET[ :executable ],
+                         SPEC_PATH )
   end
 
   before( :each ) do
@@ -43,12 +43,14 @@ describe 'when building an executable' do
   end
 
   it 'finds source files' do
-    expected_sources = Rake::Builder.expand_paths_with_root( [ 'cpp_project/main.cpp' ], SPEC_PATH )
+    expected_sources = Rake::Builder.expand_paths_with_root(
+                         [ 'cpp_project/main.cpp' ], SPEC_PATH )
     @project.source_files.should == expected_sources
   end
 
   it 'finds header files' do
-    expected_headers = Rake::Builder.expand_paths_with_root( [ 'cpp_project/main.h' ], SPEC_PATH )
+    expected_headers = Rake::Builder.expand_paths_with_root(
+                         [ 'cpp_project/main.h' ], SPEC_PATH )
     @project.header_files.should == expected_headers
   end
 
