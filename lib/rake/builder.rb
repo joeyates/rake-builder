@@ -255,7 +255,7 @@ module Rake
       FileTaskAlias.define_task( :build, @target )
 
       desc "Build '#{ target_basename }'"
-      file @target => [ scoped_task( :compile ), @target_prerequisites ] do |t|
+      file @target => [ scoped_task( :compile ), *@target_prerequisites ] do |t|
         shell "rm -f #{ t.name }"
         case @target_type
         when :executable
