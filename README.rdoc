@@ -87,7 +87,7 @@ You can list tasks as follows:
 
 Task dependencies must ensure that out of date files are recreated as needed.
 
-http://github.com/downloads/joeyates/rake-builder/rake-cppDependencies.png
+http://github.com/downloads/joeyates/rake-builder/RakeBuilderDependencyStructure.png
 
 = Limitations
 
