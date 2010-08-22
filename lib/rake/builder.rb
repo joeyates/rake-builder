@@ -179,7 +179,6 @@ module Rake
       @programming_language  = 'c++'
       @header_file_extension = 'h'
       @objects_path          = @rakefile_path.dup
-      @generated_files       = []
       @library_paths         = []
       @library_dependencies  = []
       @target_prerequisites  = []
