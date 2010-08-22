@@ -26,7 +26,7 @@ describe 'when handling generated files' do
 
   it 'lists generated files, via the task' do
     output = capturing_output do
-      Rake::Task[ 'generated_files' ].execute
+      Rake::Task[ 'generated_files' ].invoke
     end
     eval( output ).should =~ @expected_generated
   end
