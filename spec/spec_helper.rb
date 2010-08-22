@@ -1,5 +1,5 @@
 require 'spec'
-require File.dirname(__FILE__) + '/../lib/rake/builder'
+require File.expand_path( File.dirname(__FILE__) + '/../lib/rake/builder' )
 
 SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
 

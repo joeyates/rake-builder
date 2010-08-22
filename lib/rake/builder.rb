@@ -211,7 +211,6 @@ module Rake
       @compilation_options   ||= ''
       @linker_options        ||= ''
       @include_paths         ||= @header_search_paths.dup
-      @include_paths         = Rake::Builder.expand_paths_with_root( @include_paths, @rakefile_path )
       @generated_files       = Rake::Builder.expand_paths_with_root( @generated_files, @rakefile_path )
 
       @default_task          ||= :build
@@ -219,7 +218,30 @@ module Rake
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
 
+      load_local_config
+
+      @include_paths         = Rake::Builder.expand_paths_with_root( @include_paths, @rakefile_path )
+
       raise "No source files found" if source_files.length == 0
+    end
+
+    def local_config
+      filename = '.rake-builder'
+      filename += '.' + @task_namespace.to_s if @task_namespace
+      Rake::Builder.expand_path_with_root( filename, @rakefile_path )
+    end
+
+    def load_local_config
+      return if ! File.exist?( local_config )
+
+      config = YAML.load_file( local_config )
+
+      version = config[ :rake_builder ][ :config_file ][ :version ]
+      raise "Config file version missing" if version.nil?
+
+      @include_paths += config[ :include_paths ] if config[ :include_paths ]
+    rescue => e
+      raise "#{__FILE__}:#{__LINE__}: Failed to load local config file '#{ local_config }': #{ e.message }"
     end
 
     def define_tasks
@@ -300,8 +322,8 @@ module Rake
           next if line !~ /:\s/
           mapped_object_file = $`
           header_file = $'.gsub( "\n", '' )
-          # Why does it work
-          # if I make the object (not the source) depend on the header
+          # TODO: Why does it work,
+          # if I make the object (not the source) depend on the header?
           source_file = object_to_source[ mapped_object_file ]
           object_file = object_path( source_file )
           object_file_task = Rake.application[ object_file ]

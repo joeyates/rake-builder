@@ -12,10 +12,8 @@ describe 'when handling generated files' do
                              'main.o',
                              'rake-builder-testfile.txt',
                              @project.makedepend_file,
-                             @project.target
-                            ],
-                            SPEC_PATH
-                          )
+                             @project.target ],
+                            SPEC_PATH )
   end
 
   after( :each ) do

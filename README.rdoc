@@ -39,6 +39,33 @@ the correct directory:
  $ cd `gem environment gemdir`/gems/rake-builder-nnn
  $ cd examples
 
+== Project Configuration
+
+In order to build on a specific computer, you will need
+to indicate information like non-standard
+include paths.
+
+Rake::Builder collects all such information in one file:
+'.rake-builder'
+
+This file should be created in the same
+directory as the Rakefile.
+
+The file should be a YAML structure, and must include a version.
+
+Currently, the following can be configured:
+* extra include paths: :include_paths
+
+=== Example '.rake-builder'
+
+ ---
+ :rake_builder:
+   :config_file:
+     :version: "1.0"
+ :include_paths:
+ - /opt/local/include
+ - /usr/include/c++/4.2.1
+
 = Tasks
 
 You can list tasks as follows:
@@ -98,10 +125,12 @@ So, if there are two source files with the same name, they will overwrite each o
 * make
 * CMake
 * Boost.Build
-* rakepp - another take on using rake for c++ projects
+* rakepp - another customisation of Rake for C++ projects
 
 = TODO
 
+* re-factor config loader into separate class 
+* Only look for sources, etc when compiling
 * Objective-C++ projects
 * pre-compiled headers
 * parallel builds
