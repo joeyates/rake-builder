@@ -126,11 +126,3 @@ So, if there are two source files with the same name, they will overwrite each o
 * CMake
 * Boost.Build
 * rakepp - another customisation of Rake for C++ projects
-
-= TODO
-
-* re-factor config loader into separate class 
-* Only look for sources, etc when compiling
-* Objective-C++ projects
-* pre-compiled headers
-* parallel builds
