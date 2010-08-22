@@ -2,7 +2,6 @@ require 'rubygems' if RUBY_VERSION < '1.9'
 require 'logger'
 require 'rake'
 require 'rake/tasklib'
-require 'rake/loaders/makefile'
 
 module Rake
 
