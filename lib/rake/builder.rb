@@ -354,7 +354,7 @@ module Rake
         begin
           shell "cp '#{ @target }' '#{ destination }'", Logger::INFO
         rescue Errno::EACCES => e
-          raise "You do not have premission to install '#{ target_basename }' in '#{ @install_path }'\nTry\n $ sudo rake install"
+          raise "You do not have permission to install '#{ target_basename }' in '#{ @install_path }'\nTry\n $ sudo rake install"
         end
       end
 
