@@ -310,7 +310,11 @@ module Rake
         shell command
       end
 
-      task :load_makedepend => @makedepend_file do |t|
+      # Reimplemented mkdepend file loading to make objects depend on
+      # sources with the correct paths:
+      # the standard rake mkdepend loader doesn't do what we want,
+      # as it assumes files will be compiled in their own directory.
+      task :load_makedepend => @makedepend_file do
         object_to_source = source_files.inject( {} ) do |memo, source|
           mapped_object = source.gsub( '.' + @source_file_extension, '.o' )
           memo[ mapped_object ] = source
