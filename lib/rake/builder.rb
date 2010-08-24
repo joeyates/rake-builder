@@ -106,10 +106,23 @@ module Rake
     # It is the file which calls to Rake::Builder.new
     attr_reader   :rakefile
 
-    # Directories containing project source files
+    # Directories/file globs to search for project source files
     attr_accessor :source_search_paths
 
-    # Directories containing project header files
+    # Directories/file globs to search for header files
+    # When static libraries are installed,
+    # headers are install too.
+    # During installation, the destination path is:
+    #   /usr/local/include + the relative path
+    # This 'relative path' is calculated as follows:
+    # 1. Named files are installed directly under /usr/local/include
+    # 2. Files found by directory are also installed directly under /usr/local/include
+    # 3. Files found by glob have the fixed part of the glob removed and
+    #  the relative path calculated:
+    # E.g. files found with './include/**/*' will have './include' removed to calculate the
+    #  relative path.
+    # So, ./include/my_lib/foo.h' produces a relative path of 'my_lib'
+    # so the file will be installed as '/usr/local/include/my_lib/foo.h'
     attr_accessor :header_search_paths
 
     # (Optional) namespace for tasks
@@ -160,6 +173,8 @@ module Rake
       define_default
     end
 
+    private
+
     # Source files found in source_search_paths
     def source_files
       @source_fies ||= find_files( @source_search_paths, @source_file_extension )
@@ -169,8 +184,6 @@ module Rake
     def header_files
       @header_files ||= find_files( @header_search_paths, @header_file_extension )
     end
-
-    private
 
     def initialize_attributes
       @logger                = Logger.new( STDOUT )
@@ -353,11 +366,8 @@ module Rake
       desc "Install '#{ target_basename }' in '#{ @install_path }'"
       task :install, [] => [ scoped_task( :build ) ] do
         destination = File.join( @install_path, target_basename )
-        begin
-          shell "cp '#{ @target }' '#{ destination }'", Logger::INFO
-        rescue Errno::EACCES => e
-          raise "You do not have permission to install '#{ target_basename }' in '#{ @install_path }'\nTry\n $ sudo rake install"
-        end
+        install( @target, destination )
+        install_headers if @target_type == :static_library
       end
 
       desc "Uninstall '#{ target_basename }' from '#{ @install_path }'"
@@ -437,9 +447,16 @@ module Rake
     # Lists of files
 
     def find_files( paths, extension )
-      files = paths.reduce( [] ) do |memo, path|
-        glob = ( path =~ /[\*\?]/ ) ? path : path + '/*.' + extension
-        memo + FileList[ glob ]
+      files = paths.reduce( [] ) do | memo, path |
+        case
+        when File.file?( path )
+          files = FileList[ path ]
+        when ( path =~ /[\*\?]/ )
+          files = FileList[ path ]
+        else
+          files = FileList[ path + '/*.' + extension ]
+        end
+        memo + files
       end
       Rake::Builder.expand_paths_with_root( files, @rakefile_path )
     end
@@ -458,11 +475,67 @@ module Rake
     end
     
     def library_paths_list
-      @library_paths.map { |l| "-L#{ l }" }.join( " " )
+      @library_paths.map { | path | "-L#{ path }" }.join( " " )
     end
     
     def library_dependencies_list
-      @library_dependencies.map { |l| "-l#{ l }" }.join( " " )
+      @library_dependencies.map { | lib | "-l#{ lib }" }.join( " " )
+    end
+
+    def install_headers
+      # TODO: make install_headers_path a configuration option
+      install_headers_path = '/usr/local/include'
+
+      installable_headers.each do | installable_header |
+        destination_path = File.join( install_headers_path, installable_header[ :relative_path ] )
+        begin
+          `mkdir -p '#{ destination_path }'`
+        rescue Errno::EACCES => e
+          raise "Permission denied to created directory '#{ destination_path }'"
+        end
+        install( installable_header[ :source_file ], destination_path )
+      end
+    end
+
+    def subtract_path_prefix( prefix, path )
+      path[ prefix.size .. -1 ]
+    end
+
+    def installable_headers
+      @header_search_paths.reduce( [] ) do | memo, search |
+        non_glob_search = ( search.match( /^([^\*\?]*)/ ) )[ 1 ]
+        case
+        when ( non_glob_search !~ /#{ @rakefile_path }/ )
+          # Skip paths that are not inside the project
+        when File.file?( search )
+          full_path = Rake::Builder.expand_path_with_root( search, @rakefile_path )
+          memo << { :source_file => search, :relative_path => '' }
+        when File.directory?( search )
+          FileList[ search + '/*.' + @header_file_extension ].each do | pathname |
+            full_path = Rake::Builder.expand_path_with_root( pathname, @rakefile_path )
+            memo << { :source_file => pathname, :relative_path => '' }
+          end
+        when ( search =~ /[\*\?]/ )
+          FileList[ search ].each do | pathname |
+            full_path = Rake::Builder.expand_path_with_root( pathname, @rakefile_path )
+            directory = File.dirname( full_path )
+            relative = subtract_path_prefix( non_glob_search, directory )
+            memo << { :source_file => pathname, :relative_path => relative }
+          end
+        else
+          $stderr.puts "Bad search path: '${ search }'"
+        end
+        memo
+      end
+    end
+
+    def install( source_pathname, destination_path )
+      begin
+        shell "cp '#{ source_pathname }' '#{ destination_path }'", Logger::INFO
+      rescue Errno::EACCES => e
+        source_filename = File.basename( source_pathname ) rescue '????'
+        raise "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install"
+      end
     end
 
     def shell( command, log_level = Logger::ERROR )

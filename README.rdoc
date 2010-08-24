@@ -74,6 +74,12 @@ Currently, the following can be configured:
 * install
 * clean
 
+= Installing Headers
+
+If you install a static library, your headers will also be installed.
+Ensure that you use file globs, e.g. './include/**/*.h',
+as these will ensure that your headers are installed in the correct subdirectories.
+
 = Online
 
 * {Source code}[http://github.com/joeyates/rake-builder]
