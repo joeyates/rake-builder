@@ -333,7 +333,7 @@ module Rake
         end
       end
 
-      desc 'List generated files (which are remove with \'rake clean\')'
+      desc "List generated files (which are removed with 'rake #{ scoped_task( :clean ) }')"
       task :generated_files do
         puts @generated_files.inspect
       end

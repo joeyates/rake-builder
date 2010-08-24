@@ -66,16 +66,13 @@ Currently, the following can be configured:
  - /opt/local/include
  - /usr/include/c++/4.2.1
 
-= Tasks
+= Default Tasks
 
-You can list tasks as follows:
-
- $ rake -T
- rake build    # Compile and build 'hello-world'
- rake clean    # Remove temporary files
- rake compile  # Compile all sources
- rake default  # Equivalent to 'rake build'
- rake run      # Run 'hello-world'
+* compile
+* build
+* run - executables only
+* install
+* clean
 
 = Online
 
