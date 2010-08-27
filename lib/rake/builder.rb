@@ -61,7 +61,7 @@ module Rake
     # The linker that will be used
     attr_accessor :linker
 
-    # Extension of source files (default 'cpp' for C++ and 'c' fo C)
+    # Extension of source files (default 'cpp' for C++ and 'c' for C)
     attr_accessor :source_file_extension
 
     # Extension of header files (default 'h')
