@@ -7,7 +7,7 @@ describe 'local config files' do
   include RakeBuilderHelper
 
   before( :each ) do
-    @local_config_file = Rake::Builder.expand_path_with_root( '.rake-builder', LOCAL_CONFIG_SPEC_PATH )
+    @local_config_file = Rake::Path.expand_with_root( '.rake-builder', LOCAL_CONFIG_SPEC_PATH )
     @expected_path     = "/some/special/path"
     @config            = {:rake_builder=>{:config_file=>{:version=>"1.0"}}, :include_paths=>[ @expected_path ]}
     `rm -f '#{ @local_config_file }'`

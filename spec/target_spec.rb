@@ -28,7 +28,7 @@ describe 'when creating tasks' do
     builder = Rake::Builder.new do |builder|
       builder.source_search_paths = [ 'cpp_project' ]
     end
-    builder.target.should == Rake::Builder.expand_path_with_root( 'a.out', SPEC_PATH )
+    builder.target.should == Rake::Path.expand_with_root( 'a.out', SPEC_PATH )
   end
 
   it 'raises an error when the supplied target_type is unknown' do

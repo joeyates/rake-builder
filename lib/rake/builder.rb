@@ -2,6 +2,7 @@ require 'rubygems' if RUBY_VERSION < '1.9'
 require 'logger'
 require 'rake'
 require 'rake/tasklib'
+require 'rake/path'
 require 'rake/file_task_alias'
 
 module Rake
@@ -18,20 +19,6 @@ module Rake
       TINY  = 10
  
       STRING = [ MAJOR, MINOR, TINY ].join('.')
-    end
-
-    # Expand path to an absolute path relative to the supplied root
-    def self.expand_path_with_root( path, root )
-      if path =~ /^\//
-        File.expand_path( path )
-      else
-        File.expand_path( root + '/' + path )
-      end
-    end
-
-    # Expand an array of paths to absolute paths relative to the supplied root
-    def self.expand_paths_with_root( paths, root )
-      paths.map{ |path| expand_path_with_root( path, root ) }
     end
 
     # The file to be built
@@ -190,14 +177,14 @@ module Rake
       @linker                ||= KNOWN_LANGUAGES[ @programming_language ][ :linker ]
       @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
 
-      @source_search_paths   = Rake::Builder.expand_paths_with_root( @source_search_paths, @rakefile_path )
-      @header_search_paths   = Rake::Builder.expand_paths_with_root( @header_search_paths, @rakefile_path )
-      @library_paths         = Rake::Builder.expand_paths_with_root( @library_paths, @rakefile_path )
+      @source_search_paths   = Rake::Path.expand_all_with_root( @source_search_paths, @rakefile_path )
+      @header_search_paths   = Rake::Path.expand_all_with_root( @header_search_paths, @rakefile_path )
+      @library_paths         = Rake::Path.expand_all_with_root( @library_paths, @rakefile_path )
 
       raise "The target name cannot be nil" if @target.nil?
       raise "The target name cannot be an empty string" if @target == ''
-      @objects_path          = Rake::Builder.expand_path_with_root( @objects_path, @rakefile_path )
-      @target                = Rake::Builder.expand_path_with_root( @target, @objects_path )
+      @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
+      @target                = Rake::Path.expand_with_root( @target, @objects_path )
       @target_type           ||= type( @target )
       raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
       @install_path          ||= default_install_path( @target_type )
@@ -205,7 +192,7 @@ module Rake
       @compilation_options   ||= ''
       @linker_options        ||= ''
       @include_paths         ||= @header_search_paths.dup
-      @generated_files       = Rake::Builder.expand_paths_with_root( @generated_files, @rakefile_path )
+      @generated_files       = Rake::Path.expand_all_with_root( @generated_files, @rakefile_path )
 
       @default_task          ||= :build
       @target_prerequisites  << @rakefile
@@ -214,7 +201,7 @@ module Rake
 
       load_local_config
 
-      @include_paths         = Rake::Builder.expand_paths_with_root( @include_paths, @rakefile_path )
+      @include_paths         = Rake::Path.expand_all_with_root( @include_paths, @rakefile_path )
 
       raise "No source files found" if source_files.length == 0
     end
@@ -222,7 +209,7 @@ module Rake
     def local_config
       filename = '.rake-builder'
       filename += '.' + @task_namespace.to_s if @task_namespace
-      Rake::Builder.expand_path_with_root( filename, @rakefile_path )
+      Rake::Path.expand_with_root( filename, @rakefile_path )
     end
 
     def load_local_config
@@ -411,7 +398,7 @@ module Rake
 
     def object_path( source_path_name )
       o_name = File.basename( source_path_name ).gsub( '.' + @source_file_extension, '.o' )
-      Rake::Builder.expand_path_with_root( o_name, @objects_path )
+      Rake::Path.expand_with_root( o_name, @objects_path )
     end
 
     def default_install_path( target_type )
@@ -441,7 +428,7 @@ module Rake
         end
         memo + files
       end
-      Rake::Builder.expand_paths_with_root( files, @rakefile_path )
+      Rake::Path.expand_all_with_root( files, @rakefile_path )
     end
 
     # TODO: make this return a FileList, not a plain Array
@@ -491,16 +478,16 @@ module Rake
         when ( non_glob_search !~ /#{ @rakefile_path }/ )
           # Skip paths that are not inside the project
         when File.file?( search )
-          full_path = Rake::Builder.expand_path_with_root( search, @rakefile_path )
+          full_path = Rake::Path.expand_with_root( search, @rakefile_path )
           memo << { :source_file => search, :relative_path => '' }
         when File.directory?( search )
           FileList[ search + '/*.' + @header_file_extension ].each do | pathname |
-            full_path = Rake::Builder.expand_path_with_root( pathname, @rakefile_path )
+            full_path = Rake::Path.expand_with_root( pathname, @rakefile_path )
             memo << { :source_file => pathname, :relative_path => '' }
           end
         when ( search =~ /[\*\?]/ )
           FileList[ search ].each do | pathname |
-            full_path = Rake::Builder.expand_path_with_root( pathname, @rakefile_path )
+            full_path = Rake::Path.expand_with_root( pathname, @rakefile_path )
             directory = File.dirname( full_path )
             relative = subtract_path_prefix( non_glob_search, directory )
             memo << { :source_file => pathname, :relative_path => relative }

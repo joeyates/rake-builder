@@ -5,11 +5,11 @@ describe 'when building an executable' do
   include RakeBuilderHelper
 
   before( :all ) do
-    @test_output_file = Rake::Builder.expand_path_with_root(
+    @test_output_file = Rake::Path.expand_with_root(
                           'rake-builder-testfile.txt', SPEC_PATH )
-    @expected_target = Rake::Builder.expand_path_with_root(
-                         RakeBuilderHelper::TARGET[ :executable ],
-                         SPEC_PATH )
+    @expected_target  = Rake::Path.expand_with_root(
+                          RakeBuilderHelper::TARGET[ :executable ],
+                          SPEC_PATH )
   end
 
   before( :each ) do
