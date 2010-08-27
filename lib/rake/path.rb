@@ -4,6 +4,20 @@ module Rake
 
   module Path
 
+    def self.find_files( paths, extension )
+      files = paths.reduce( [] ) do | memo, path |
+        case
+        when File.file?( path )
+          files = FileList[ path ]
+        when ( path =~ /[\*\?]/ )
+          files = FileList[ path ]
+        else
+          files = FileList[ path + '/*.' + extension ]
+        end
+        memo + files
+      end
+    end
+
     # Expand path to an absolute path relative to the supplied root
     def self.expand_with_root( path, root )
       if path =~ /^\//

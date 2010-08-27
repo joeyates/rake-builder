@@ -417,17 +417,7 @@ module Rake
     # Lists of files
 
     def find_files( paths, extension )
-      files = paths.reduce( [] ) do | memo, path |
-        case
-        when File.file?( path )
-          files = FileList[ path ]
-        when ( path =~ /[\*\?]/ )
-          files = FileList[ path ]
-        else
-          files = FileList[ path + '/*.' + extension ]
-        end
-        memo + files
-      end
+      files = Rake::Path.find_files( paths, extension )
       Rake::Path.expand_all_with_root( files, @rakefile_path )
     end
 
