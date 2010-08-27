@@ -81,12 +81,12 @@ module Rake
 
     # Directories/file globs to search for header files
     # When static libraries are installed,
-    # headers are install too.
+    # headers are installed too.
     # During installation, the destination path is:
     #   /usr/local/include + the relative path
     # This 'relative path' is calculated as follows:
-    # 1. Named files are installed directly under /usr/local/include
-    # 2. Files found by directory are also installed directly under /usr/local/include
+    # 1. Any files named in header_search_paths are installed directly under /usr/local/include
+    # 2. The contents of any directory named in header_search_paths are also installed directly under /usr/local/include
     # 3. Files found by glob have the fixed part of the glob removed and
     #  the relative path calculated:
     # E.g. files found with './include/**/*' will have './include' removed to calculate the
