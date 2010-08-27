@@ -1,4 +1,4 @@
-= rake-builder - Rake for C/C++/Objective-C/Objective-C++ Projects
+= rake-builder - Rake for C, C++, Objective-C and Objective-C++ Projects
 
 rake-builder builds C, C++, Objective-C and Objective-C++
 projects.
