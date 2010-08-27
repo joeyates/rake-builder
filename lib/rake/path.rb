@@ -18,6 +18,10 @@ module Rake
       paths.map{ |path| expand_with_root( path, root ) }
     end
 
+    def self.subtract_prefix( prefix, path )
+      path[ prefix.size .. -1 ]
+    end
+
   end
 
 end

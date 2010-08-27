@@ -467,10 +467,6 @@ module Rake
       end
     end
 
-    def subtract_path_prefix( prefix, path )
-      path[ prefix.size .. -1 ]
-    end
-
     def installable_headers
       @header_search_paths.reduce( [] ) do | memo, search |
         non_glob_search = ( search.match( /^([^\*\?]*)/ ) )[ 1 ]
@@ -489,7 +485,7 @@ module Rake
           FileList[ search ].each do | pathname |
             full_path = Rake::Path.expand_with_root( pathname, @rakefile_path )
             directory = File.dirname( full_path )
-            relative = subtract_path_prefix( non_glob_search, directory )
+            relative  = Rake::Path.subtract_prefix( non_glob_search, directory )
             memo << { :source_file => pathname, :relative_path => relative }
           end
         else
