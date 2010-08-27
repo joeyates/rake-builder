@@ -2,26 +2,9 @@ require 'rubygems' if RUBY_VERSION < '1.9'
 require 'logger'
 require 'rake'
 require 'rake/tasklib'
+require 'rake/file_task_alias'
 
 module Rake
-
-  # A task whose behaviour depends on a FileTask
-  class FileTaskAlias < Task
-
-    attr_accessor :target
-
-    def self.define_task( name, target, &block )
-      alias_task = super( { name => [] }, &block )
-      alias_task.target = target
-      alias_task.prerequisites.unshift( target )
-      alias_task
-    end
-
-    def needed?
-      Rake::Task[ @target ].needed?
-    end
-
-  end
 
   # Error indicating that the project failed to build.
   class BuildFailureError < StandardError
