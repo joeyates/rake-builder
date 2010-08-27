@@ -42,18 +42,6 @@ describe 'when building an Objective-C executable' do
     missing_tasks.should == []
   end
 
-  it 'finds source files' do
-    expected_sources = Rake::Builder.expand_paths_with_root(
-                         [ 'objective_c_project/main.m' ], SPEC_PATH )
-    @project.source_files.should == expected_sources
-  end
-
-  it 'finds header files' do
-    expected_headers = Rake::Builder.expand_paths_with_root(
-                         [ 'objective_c_project/main.h' ], SPEC_PATH )
-    @project.header_files.should == expected_headers
-  end
-
   it 'builds the program with \'build\'' do
     Rake::Task[ 'build' ].invoke
     exist?( @project.target ).should be_true
