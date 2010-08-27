@@ -342,7 +342,7 @@ module Rake
 
       desc "Uninstall '#{ target_basename }' from '#{ @install_path }'"
       task :uninstall, [] => [] do
-        destination = File.join( @install_path, File.basename( @target ) )
+        destination = File.join( @install_path, target_basename )
         if ! File.exist?( destination )
           @logger.add( Logger::INFO, "The file '#{ destination }' does not exist" )
           next
