@@ -350,7 +350,7 @@ module Rake
         begin
           shell "rm '#{ destination }'", Logger::INFO
         rescue Errno::EACCES => e
-          raise "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake uninstall"
+          raise "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }"
         end
       end
 
