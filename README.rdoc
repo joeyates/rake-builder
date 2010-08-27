@@ -125,7 +125,9 @@ So, if there are two source files with the same name, they will overwrite each o
 
 = Alternatives
 
-* make
-* CMake
+* GNU build system, a.k.a. Autotools: autoconf, configure, make, etc.
 * Boost.Build
+* CMake
 * rakepp - another customisation of Rake for C++ projects
+* Scons
+* waf[http://code.google.com/p/waf/]
