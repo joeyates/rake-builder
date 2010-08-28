@@ -7,6 +7,12 @@ require 'rake/file_task_alias'
 
 module Rake
 
+  class Formatter < Logger::Formatter
+    def call(severity, time, progname, msg)
+      msg2str(msg) << "\n"
+    end
+  end
+
   # Error indicating that the project failed to build.
   class BuildFailureError < StandardError
   end
@@ -107,7 +113,7 @@ module Rake
     # Directory to be used for object files
     attr_accessor :objects_path
 
-    # extra options to pass to the compiler
+    # Array of extra options to pass to the compiler
     attr_accessor :compilation_options
 
     # Additional include directories for compilation
@@ -147,17 +153,20 @@ module Rake
 
     # Source files found in source_search_paths
     def source_files
-      @source_fies ||= find_files( @source_search_paths, @source_file_extension )
+      @source_files ||= find_files( @source_search_paths, @source_file_extension ).uniq
+      @source_files
     end
 
     # Header files found in header_search_paths
     def header_files
-      @header_files ||= find_files( @header_search_paths, @header_file_extension )
+      @header_files ||= find_files( @header_search_paths, @header_file_extension ).uniq
+      @header_files
     end
 
     def initialize_attributes
       @logger                = Logger.new( STDOUT )
       @logger.level          = Logger::UNKNOWN
+      @logger.formatter      = Formatter.new
       @programming_language  = 'c++'
       @header_file_extension = 'h'
       @objects_path          = @rakefile_path.dup
@@ -168,6 +177,7 @@ module Rake
       @header_search_paths   = [ @rakefile_path.dup ]
       @target                = 'a.out'
       @generated_files       = []
+      @compilation_options   = []
     end
 
     def configure
@@ -189,7 +199,6 @@ module Rake
       raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
       @install_path          ||= default_install_path( @target_type )
 
-      @compilation_options   ||= ''
       @linker_options        ||= ''
       @include_paths         ||= @header_search_paths.dup
       @generated_files       = Rake::Path.expand_all_with_root( @generated_files, @rakefile_path )
@@ -260,16 +269,7 @@ module Rake
       desc "Build '#{ target_basename }'"
       file @target => [ scoped_task( :compile ), *@target_prerequisites ] do |t|
         shell "rm -f #{ t.name }"
-        case @target_type
-        when :executable
-          shell "#{ @linker } #{ link_flags } -o #{ @target } #{ file_list( object_files ) }"
-        when :static_library
-          @logger.add( Logger::INFO, "Builing library '#{ t.name }'" )
-          shell "ar -cq #{ t.name } #{ file_list( object_files ) }"
-        when :shared_library
-          @logger.add( Logger::INFO, "Builing library '#{ t.name }'" )
-          shell "#{ @linker } -shared -o #{ t.name } #{ file_list( object_files ) } #{ link_flags }"
-        end
+        shell build_command
         raise BuildFailureError if ! File.exist?( t.name )
       end
 
@@ -279,12 +279,7 @@ module Rake
       task :compile => [ @makedepend_file, scoped_task( :load_makedepend ), *object_files ]
 
       source_files.each do |src|
-        object = object_path( src )
-        @generated_files << object
-        file object => [ src ] do |t|
-          @logger.add( Logger::INFO, "Compiling '#{ src }'" )
-          shell "#{ @compiler } #{ compiler_flags } -c -o #{ object } #{ src }"
-        end
+        define_compile_task( src )
       end
 
       file @makedepend_file => [ *project_files ] do
@@ -298,7 +293,7 @@ module Rake
       # the standard rake mkdepend loader doesn't do what we want,
       # as it assumes files will be compiled in their own directory.
       task :load_makedepend => @makedepend_file do
-        object_to_source = source_files.inject( {} ) do |memo, source|
+        object_to_source = source_files.inject( {} ) do | memo, source |
           mapped_object = source.gsub( '.' + @source_file_extension, '.o' )
           memo[ mapped_object ] = source
           memo
@@ -318,14 +313,14 @@ module Rake
 
       desc "List generated files (which are removed with 'rake #{ scoped_task( :clean ) }')"
       task :generated_files do
-        puts @generated_files.inspect
+        puts generated_files.inspect
       end
 
       # Re-implement :clean locally for project and within namespace
       # Standard :clean is a singleton
       desc "Remove temporary files"
       task :clean do
-        @generated_files.each do |file|
+        generated_files.each do |file|
           shell "rm -f #{ file }"
         end
       end
@@ -353,7 +348,6 @@ module Rake
           raise "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }"
         end
       end
-
     end
 
     def scoped_task( task )
@@ -361,6 +355,26 @@ module Rake
         "#{ task_namespace }:#{ task }"
       else
         task
+      end
+    end
+
+    def define_compile_task( source )
+      object = object_path( source )
+      @generated_files << object
+      file object => [ source ] do |t|
+        @logger.add( Logger::INFO, "Compiling '#{ source }'" )
+        shell "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
+      end
+    end
+
+    def build_command
+      case @target_type
+      when :executable
+        "#{ @linker } #{ link_flags } -o #{ @target } #{ file_list( object_files ) }"
+      when :static_library
+        "ar -cq #{ @target } #{ file_list( object_files ) }"
+      when :shared_library
+        "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }"
       end
     end
 
@@ -382,7 +396,7 @@ module Rake
     end
 
     def compiler_flags
-      include_path + ' ' + @compilation_options
+      include_path + ' ' + compilation_options.join( " " )
     end
 
     def link_flags
@@ -451,7 +465,7 @@ module Rake
       # TODO: make install_headers_path a configuration option
       install_headers_path = '/usr/local/include'
 
-      installable_headers.each do | installable_header |
+      project_headers.each do | installable_header |
         destination_path = File.join( install_headers_path, installable_header[ :relative_path ] )
         begin
           `mkdir -p '#{ destination_path }'`
@@ -462,7 +476,7 @@ module Rake
       end
     end
 
-    def installable_headers
+    def project_headers
       @header_search_paths.reduce( [] ) do | memo, search |
         non_glob_search = ( search.match( /^([^\*\?]*)/ ) )[ 1 ]
         case
@@ -499,7 +513,7 @@ module Rake
       end
     end
 
-    def shell( command, log_level = Logger::ERROR )
+    def shell( command, log_level = Logger::DEBUG )
       @logger.add( log_level, command )
       `#{ command }`
     end
