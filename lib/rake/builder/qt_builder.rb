@@ -33,9 +33,10 @@ module Rake
     end
 
     def configure
-      super
+      raise 'programming_language must be C++' if @programming_language.downcase != 'c++'
+      raise 'qt_version must be set'           if ! @qt_version
 
-      raise "qt_version must be set" if ! @qt_version
+      super
 
       @resource_files      = Rake::Path.expand_all_with_root( @resource_files, @rakefile_path )
       @compilation_options += [ '-pipe', '-g', '-gdwarf-2', '-Wall', '-W' ]
