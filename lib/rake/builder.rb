@@ -135,7 +135,7 @@ module Rake
     attr_accessor :logger
 
     def initialize( &block )
-      save_rakefile_info( caller[0] )
+      save_rakefile_info( block )
       initialize_attributes
       block.call( self )
       configure
@@ -391,8 +391,13 @@ module Rake
 
     # Paths
 
-    def save_rakefile_info( caller )
-      @rakefile      = caller.match(/^([^\:]+)/)[1]
+    def save_rakefile_info( block )
+      if RUBY_VERSION < '1.9'
+        # Hack the path from the block String representation
+        @rakefile = block.to_s.match( /@([^\:]+):/ )[ 1 ]
+      else
+        @rakefile = block.source_location
+      end
       @rakefile_path = File.expand_path( File.dirname( @rakefile ) )
     end
 
