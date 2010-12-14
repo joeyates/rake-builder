@@ -131,3 +131,4 @@ So, if there are two source files with the same name, they will overwrite each o
 * rakepp - another customisation of Rake for C++ projects
 * Scons
 * waf[http://code.google.com/p/waf/]
+* http://felix-lang.org/blog/2010/aug/30/fbuild-0-2/

@@ -18,4 +18,7 @@ describe 'the logger' do
     end.should_not raise_exception
   end
 
+  # TODO: check the output
+  # builder.logger.level = Logger::DEBUG
+
 end
