@@ -270,7 +270,9 @@ module Rake
       desc "Build '#{ target_basename }'"
       file @target => [ scoped_task( :compile ), *@target_prerequisites ] do |t|
         shell "rm -f #{ t.name }"
-        shell build_command
+        build_commands.each do | command |
+          shell command
+        end
         raise BuildFailureError if ! File.exist?( t.name )
       end
 
@@ -370,14 +372,15 @@ module Rake
       end
     end
 
-    def build_command
+    def build_commands
       case @target_type
       when :executable
-        "#{ @linker } #{ link_flags } -o #{ @target } #{ file_list( object_files ) }"
+        [ "#{ @linker } #{ link_flags } -o #{ @target } #{ file_list( object_files ) }" ]
       when :static_library
-        "ar -cq #{ @target } #{ file_list( object_files ) }"
+        [ "ar -cq #{ @target } #{ file_list( object_files ) }",
+          "ranlib #{ @target }" ]
       when :shared_library
-        "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }"
+        [ "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       end
     end
 
