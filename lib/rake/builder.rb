@@ -283,7 +283,9 @@ module Rake
         define_compile_task( src )
       end
 
-      file @makedepend_file => [ *project_files ] do
+      directory @objects_path
+
+      file @makedepend_file => [ @objects_path, *project_files ] do
         @logger.add( Logger::DEBUG, "Analysing dependencies" )
         command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
         shell command
