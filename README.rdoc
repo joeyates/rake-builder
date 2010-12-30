@@ -48,6 +48,8 @@ include paths.
 Rake::Builder collects all such information in one file:
 '.rake-builder'
 
+For namespaced tasks, e.g. 'test:build', the file is '.rake-builer.test'
+
 This file should be created in the same
 directory as the Rakefile.
 
