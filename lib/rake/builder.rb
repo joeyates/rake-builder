@@ -218,7 +218,6 @@ module Rake
 
     def local_config
       filename = '.rake-builder'
-      filename += '.' + @task_namespace.to_s if @task_namespace
       Rake::Path.expand_with_root( filename, @rakefile_path )
     end
 
