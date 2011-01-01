@@ -5,6 +5,27 @@ require 'rake'
 require 'rake/tasklib'
 require 'rake/path'
 require 'rake/file_task_alias'
+require 'compiler'
+
+namespace :rake_builder do
+
+  desc "Generate the local configuration file '.rake-builder'"
+  task :local_config, [ :language, :include_paths, :source_files ] => [] do | task, args |
+    compiler         = Compiler::Base.for( :gcc )
+    project_includes = args[ :include_paths ].split( ':' )
+    default_includes = compiler.default_include_paths( args[ :language ] )
+    all_includes     = default_includes + project_includes
+    source_files     = args[ :source_files ].split( ':' )
+    missing_headers  = compiler.missing_headers( all_includes, source_files )
+    added_includes   = compiler.include_paths( missing_headers )
+    config           = { :rake_builder  => { :config_file => { :version=>"1.0" } },
+                         :include_paths => added_includes }
+    File.open( '.rake-builder', 'w' ) do | file |
+      file.write config.to_yaml
+    end
+  end
+
+end
 
 module Rake
 
@@ -202,6 +223,7 @@ module Rake
 
       @linker_options        ||= ''
       @include_paths         ||= @header_search_paths.dup
+      @include_paths         = Rake::Path.expand_all_with_root( @include_paths, @rakefile_path )
       @generated_files       = Rake::Path.expand_all_with_root( @generated_files, @rakefile_path )
 
       @default_task          ||= :build
@@ -209,29 +231,7 @@ module Rake
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
 
-      load_local_config
-
-      @include_paths         = Rake::Path.expand_all_with_root( @include_paths, @rakefile_path )
-
       raise "No source files found" if source_files.length == 0
-    end
-
-    def local_config
-      filename = '.rake-builder'
-      Rake::Path.expand_with_root( filename, @rakefile_path )
-    end
-
-    def load_local_config
-      return if ! File.exist?( local_config )
-
-      config = YAML.load_file( local_config )
-
-      version = config[ :rake_builder ][ :config_file ][ :version ]
-      raise "Config file version missing" if version.nil?
-
-      @include_paths += config[ :include_paths ] if config[ :include_paths ]
-    rescue => e
-      raise "#{__FILE__}:#{__LINE__}: Failed to load local config file '#{ local_config }': #{ e.message }"
     end
 
     def define_tasks
@@ -286,10 +286,26 @@ module Rake
 
       directory @objects_path
 
-      file @makedepend_file => [ @objects_path, *project_files ] do
+      file local_config do
+        Rake::Task[ 'rake_builder:local_config' ].execute( :language      => @programming_language,
+                                                           :include_paths => file_list( @include_paths, ':' ),
+                                                           :source_files  => file_list( source_files, ':' ) )
+      end
+
+      file @makedepend_file => [ :load_local_config, @objects_path, *project_files ] do
         @logger.add( Logger::DEBUG, "Analysing dependencies" )
         command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
         shell command
+      end
+
+      task :load_local_config => local_config do
+        config = YAML.load_file( local_config )
+
+        version = config[ :rake_builder ][ :config_file ][ :version ]
+        raise "Config file version missing" if version.nil?
+
+        config[ :include_paths ] ||= []
+        @include_paths += Rake::Path.expand_all_with_root( config[ :include_paths ], @rakefile_path )
       end
 
       # Reimplemented mkdepend file loading to make objects depend on
@@ -410,6 +426,11 @@ module Rake
 
     # Paths
 
+    def local_config
+      filename = '.rake-builder'
+      Rake::Path.expand_with_root( filename, @rakefile_path )
+    end
+
     def save_rakefile_info( block )
       if RUBY_VERSION < '1.9'
         # Hack the path from the block String representation
@@ -454,8 +475,8 @@ module Rake
       source_files + header_files
     end
 
-    def file_list( files )
-      files.join( " " )
+    def file_list( files, delimiter = ' ' )
+      files.join( delimiter )
     end
     
     def library_paths_list
