@@ -57,7 +57,6 @@ module Compiler
         end
       end
 
-      puts "#{__FILE__}:#{__LINE__}: %% paths: #{paths.inspect}"
       @paths[ language ] = paths
     end
 
