@@ -29,7 +29,7 @@ module Rake
       @architecture          = 'i386'
       @programming_language  = 'c++'
       @header_file_extension = 'h'
-      @frameworks            = [ 'QtGui', 'QtCore' ]
+      @frameworks            = []
       @framework_paths       = [ '/Library/Frameworks' ]
       @compilation_defines   = '-DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED'
       @moc_defines           = '-D__APPLE__ -D__GNUC__'
@@ -49,11 +49,6 @@ module Rake
       @compilation_options.uniq!
       @architecture        ||= 'i386'
       @compilation_options += [ architecture_option ]
-
-      @frameworks.each do | framework |
-        @include_paths << "/Library/Frameworks/#{ framework }.framework/Versions/#{ qt_major }/Headers"
-        @include_paths << "/usr/include/#{ framework }"
-      end
       @include_paths << @objects_path # for UI headers
     end
 
@@ -66,6 +61,10 @@ module Rake
 
     def generated_files
       super + moc_files + ui_headers + qrc_files
+    end
+
+    def generated_headers
+      super + ui_headers
     end
 
     def source_files
@@ -82,6 +81,39 @@ module Rake
 
     def link_flags
       [ '-headerpad_max_install_names', architecture_option, @linker_options, library_paths_list, library_dependencies_list, framework_path_list, framework_list ].join( " " )
+    end
+
+    # Exclude paths like QtFoo/Bar, but grab frameworks
+    def missing_headers
+      super
+      @missing_headers.reject! do | path |
+        m = path.match( /^(Qt\w+)\/(\w+?(?:\.h)?)$/ )
+        if m
+          framework      = m[ 1 ]
+          @frameworks << framework
+          framework_path = Compiler::GCC.framework_path( framework, qt_major )
+          header_path    = "#{ framework_path }/#{ m[ 2 ] }"
+          File.exist?( header_path )
+        else
+          false
+        end
+      end
+
+      @frameworks.each do | framework |
+        @include_paths << Compiler::GCC.framework_path( framework, qt_major )
+        @include_paths << "/usr/include/#{ framework }"
+      end
+
+      # Last chance: exclude headers of the form 'Aaaaaa' if found under frameworks
+      @missing_headers.reject! do | header |
+        @frameworks.any? do | framework |
+          framework_path = Compiler::GCC.framework_path( framework, qt_major )
+          header_path    = "#{ framework_path }/#{ header }"
+          File.exist?( header_path )
+        end
+      end
+
+      @missing_headers
     end
 
     # QT-specific
@@ -108,7 +140,7 @@ module Rake
     def define_ui_tasks
       @ui_files.each do | ui_file |
         ui_header = ui_header_path( ui_file )
-        file ui_header => [ ui_file ] do |t|
+        file ui_header => [ @objects_path, ui_file ] do |t|
           command = "uic #{ ui_file } -o #{ ui_header }"
           shell command
         end

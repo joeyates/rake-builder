@@ -7,26 +7,6 @@ require 'rake/path'
 require 'rake/file_task_alias'
 require 'compiler'
 
-namespace :rake_builder do
-
-  desc "Generate the local configuration file '.rake-builder'"
-  task :local_config, [ :language, :include_paths, :source_files ] => [] do | task, args |
-    compiler         = Compiler::Base.for( :gcc )
-    project_includes = args[ :include_paths ].split( ':' )
-    default_includes = compiler.default_include_paths( args[ :language ] )
-    all_includes     = default_includes + project_includes
-    source_files     = args[ :source_files ].split( ':' )
-    missing_headers  = compiler.missing_headers( all_includes, source_files )
-    added_includes   = compiler.include_paths( missing_headers )
-    config           = { :rake_builder  => { :config_file => { :version=>"1.0" } },
-                         :include_paths => added_includes }
-    File.open( '.rake-builder', 'w' ) do | file |
-      file.write config.to_yaml
-    end
-  end
-
-end
-
 module Rake
 
   class Formatter < Logger::Formatter
@@ -186,6 +166,7 @@ module Rake
     end
 
     def initialize_attributes
+      @compiler_data         = Compiler::Base.for( :gcc )
       @logger                = Logger.new( STDOUT )
       @logger.level          = Logger::UNKNOWN
       @logger.formatter      = Formatter.new
@@ -286,13 +267,16 @@ module Rake
 
       directory @objects_path
 
-      file local_config do
-        Rake::Task[ 'rake_builder:local_config' ].execute( :language      => @programming_language,
-                                                           :include_paths => file_list( @include_paths, ':' ),
-                                                           :source_files  => file_list( source_files, ':' ) )
+      file local_config => :missing_headers do
+        added_includes   = @compiler_data.include_paths( missing_headers )
+        config           = { :rake_builder  => { :config_file => { :version=> '1.0' } },
+                             :include_paths => added_includes }
+        File.open( local_config, 'w' ) do | file |
+          file.write config.to_yaml
+        end
       end
 
-      file @makedepend_file => [ :load_local_config, @objects_path, *project_files ] do
+      file @makedepend_file => [ :load_local_config, :missing_headers, @objects_path, *project_files ] do
         @logger.add( Logger::DEBUG, "Analysing dependencies" )
         command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
         shell command
@@ -306,6 +290,10 @@ module Rake
 
         config[ :include_paths ] ||= []
         @include_paths += Rake::Path.expand_all_with_root( config[ :include_paths ], @rakefile_path )
+      end
+
+      task :missing_headers => [ *generated_headers ] do
+        missing_headers
       end
 
       # Reimplemented mkdepend file loading to make objects depend on
@@ -370,6 +358,10 @@ module Rake
       end
     end
 
+    def generated_headers
+      []
+    end
+
     def scoped_task( task )
       if @task_namespace
         "#{ task_namespace }:#{ task }"
@@ -408,6 +400,15 @@ module Rake
       else
         :executable
       end
+    end
+
+    # Discovery
+
+    def missing_headers
+      return @missing_headers if @missing_headers
+      default_includes = @compiler_data.default_include_paths( @programming_language )
+      all_includes     = default_includes + @include_paths
+      @missing_headers = @compiler_data.missing_headers( all_includes, source_files )
     end
 
     # Compiling and linking parameters

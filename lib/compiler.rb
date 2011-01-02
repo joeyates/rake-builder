@@ -37,6 +37,10 @@ module Compiler
 
   class GCC < Base
 
+    def self.framework_path( framework, qt_major )
+      "/Library/Frameworks/#{ framework }.framework/Versions/#{ qt_major }/Headers"
+    end
+
     def default_include_paths( language )
       return @paths[ language ] if @paths[ language ]
 
