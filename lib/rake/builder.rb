@@ -60,7 +60,7 @@ module Rake
     # The types of file that can be built
     TARGET_TYPES = [ :executable, :static_library, :shared_library ]
 
-    # The programming language: 'c++' or 'c' (default 'c++')
+    # The programming language: 'c++', 'c' or 'objective-c' (default 'c++')
     # This also sets defaults for source_file_extension
     attr_accessor :programming_language
 

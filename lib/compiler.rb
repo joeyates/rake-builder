@@ -51,7 +51,7 @@ module Compiler
         when line =~ /End of search list\./
           collecting = false
         when line =~ / \(framework directory\)/
-          # TODO: strip and include for objective-C?
+          # Skip frameworks
         else
           paths << line.strip if collecting
         end
