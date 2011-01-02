@@ -13,9 +13,6 @@ module Rake
     attr_accessor :resource_files
     attr_accessor :ui_files
 
-    # processor type: 'i386', 'x86_64', 'ppc' or 'ppc64'.
-    attr_accessor :architecture
-
     def initialize( &block )
       super( &block )
     end
@@ -26,7 +23,6 @@ module Rake
 
     def initialize_attributes
       super
-      @architecture          = 'i386'
       @programming_language  = 'c++'
       @header_file_extension = 'h'
       @frameworks            = []
@@ -46,9 +42,6 @@ module Rake
       @resource_files      = Rake::Path.expand_all_with_root( @resource_files, @rakefile_path )
       @ui_files            = Rake::Path.expand_all_with_root( @ui_files, @rakefile_path )
       @compilation_options += [ '-pipe', '-g', '-gdwarf-2', '-Wall', '-W' ]
-      @compilation_options.uniq!
-      @architecture        ||= 'i386'
-      @compilation_options += [ architecture_option ]
       @include_paths << @objects_path # for UI headers
     end
 
@@ -120,10 +113,6 @@ module Rake
 
     def qt_major
       @qt_version.match( /^(\d+)/ )[ 1 ]
-    end
-
-    def architecture_option
-      "-arch #{ @architecture }"
     end
 
     def framework_path_list

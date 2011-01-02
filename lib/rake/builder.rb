@@ -40,6 +40,9 @@ module Rake
     # The types of file that can be built
     TARGET_TYPES = [ :executable, :static_library, :shared_library ]
 
+    # processor type: 'i386', 'x86_64', 'ppc' or 'ppc64'.
+    attr_accessor :architecture
+
     # The programming language: 'c++', 'c' or 'objective-c' (default 'c++')
     # This also sets defaults for source_file_extension
     attr_accessor :programming_language
@@ -166,6 +169,7 @@ module Rake
     end
 
     def initialize_attributes
+      @architecture          = 'x86_64'
       @compiler_data         = Compiler::Base.for( :gcc )
       @logger                = Logger.new( STDOUT )
       @logger.level          = Logger::UNKNOWN
@@ -184,6 +188,9 @@ module Rake
     end
 
     def configure
+      @compilation_options   += [ architecture_option ]
+      @compilation_options.uniq!
+
       @programming_language.downcase!
       raise "Don't know how to build '#{ @programming_language }' programs" if KNOWN_LANGUAGES[ @programming_language ].nil?
       @compiler              ||= KNOWN_LANGUAGES[ @programming_language ][ :compiler ]
@@ -267,7 +274,7 @@ module Rake
 
       directory @objects_path
 
-      file local_config => :missing_headers do
+      file local_config => scoped_task( :missing_headers ) do
         added_includes   = @compiler_data.include_paths( missing_headers )
         config           = { :rake_builder  => { :config_file => { :version=> '1.0' } },
                              :include_paths => added_includes }
@@ -276,7 +283,10 @@ module Rake
         end
       end
 
-      file @makedepend_file => [ :load_local_config, :missing_headers, @objects_path, *project_files ] do
+      file @makedepend_file => [ scoped_task( :load_local_config ),
+                                 scoped_task( :missing_headers ),
+                                 @objects_path,
+                                 *project_files ] do
         @logger.add( Logger::DEBUG, "Analysing dependencies" )
         command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
         shell command
@@ -375,7 +385,8 @@ module Rake
       @generated_files << object
       file object => [ source ] do |t|
         @logger.add( Logger::INFO, "Compiling '#{ source }'" )
-        shell "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
+        command = "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
+        shell command
       end
     end
 
@@ -421,8 +432,12 @@ module Rake
       include_path + ' ' + compilation_options.join( " " )
     end
 
+    def architecture_option
+      "-arch #{ @architecture }"
+    end
+
     def link_flags
-      [ @linker_options, library_paths_list, library_dependencies_list ].join( " " )
+      [ @linker_options, architecture_option, library_paths_list, library_dependencies_list ].join( " " )
     end
 
     # Paths
