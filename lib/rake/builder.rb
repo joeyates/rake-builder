@@ -169,7 +169,7 @@ module Rake
     end
 
     def initialize_attributes
-      @architecture          = 'x86_64'
+      @architecture          = 'i386'
       @compiler_data         = Compiler::Base.for( :gcc )
       @logger                = Logger.new( STDOUT )
       @logger.level          = Logger::UNKNOWN
