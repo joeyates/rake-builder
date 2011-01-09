@@ -48,7 +48,7 @@ module Compiler
       # Below is the recommended(!) way of getting standard serach paths from GCC
       output = `echo | gcc -v -x #{ language } -E - 2>&1 1>/dev/null`
       collecting = false
-      output.each do | line |
+      output.each_line do | line |
         case
         when line =~ /#include <\.\.\.> search starts here:/
           collecting = true
