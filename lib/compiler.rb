@@ -69,7 +69,7 @@ module Compiler
       command      = "makedepend -f- -- #{ include_path } -- #{ source_files.join( ' ' ) } 2>&1 1>/dev/null"
       output       = `#{ command }`
       missing      = []
-      output.each do | line |
+      output.each_line do | line |
         match = line.match( /cannot find include file "([^"]*)"/m )
         missing << match[ 1 ] if match
       end

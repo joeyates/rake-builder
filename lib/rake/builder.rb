@@ -185,10 +185,11 @@ module Rake
       @target                = 'a.out'
       @generated_files       = []
       @compilation_options   = []
+      @include_paths         = []
     end
 
     def configure
-      @compilation_options   += [ architecture_option ]
+      @compilation_options   += [ architecture_option ] if RUBY_PLATFORM =~ /apple/i
       @compilation_options.uniq!
 
       @programming_language.downcase!
@@ -210,8 +211,8 @@ module Rake
       @install_path          ||= default_install_path( @target_type )
 
       @linker_options        ||= ''
-      @include_paths         ||= @header_search_paths.dup
-      @include_paths         = Rake::Path.expand_all_with_root( @include_paths, @rakefile_path )
+      @include_paths         += []
+      @include_paths         = Rake::Path.expand_all_with_root( @include_paths.uniq, @rakefile_path )
       @generated_files       = Rake::Path.expand_all_with_root( @generated_files, @rakefile_path )
 
       @default_task          ||= :build
@@ -437,7 +438,9 @@ module Rake
     end
 
     def link_flags
-      [ @linker_options, architecture_option, library_paths_list, library_dependencies_list ].join( " " )
+      flags = [ @linker_options, architecture_option, library_paths_list, library_dependencies_list ]
+      flags << architecture_option if RUBY_PLATFORM =~ /apple/i
+      flags.join( " " )
     end
 
     # Paths

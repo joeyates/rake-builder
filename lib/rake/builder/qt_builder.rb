@@ -26,9 +26,16 @@ module Rake
       @programming_language  = 'c++'
       @header_file_extension = 'h'
       @frameworks            = []
-      @framework_paths       = [ '/Library/Frameworks' ]
+      case
+      when RUBY_PLATFORM =~ /linux$/
+        @include_paths         << '/usr/include/qt4'
+        @compilation_defines   = '-DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED'
+        @moc_defines           = '-D__GNUC__'
+      when RUBY_PLATFORM =~ /apple/i
+        @framework_paths       = [ '/Library/Frameworks' ]
+        @moc_defines           = '-D__APPLE__ -D__GNUC__'
+      end
       @compilation_defines   = '-DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED'
-      @moc_defines           = '-D__APPLE__ -D__GNUC__'
       @resource_files        = []
       @ui_files              = []
     end
@@ -69,11 +76,15 @@ module Rake
     end
 
     def compiler_flags
-      [ compilation_options.join( ' ' ), @compilation_defines, include_path, framework_path_list ].join( ' ' )
+      flags = [ compilation_options.join( ' ' ), @compilation_defines, include_path ]
+      flags << framework_path_list if RUBY_PLATFORM =~ /apple/i
+      flags.join( ' ' )
     end
 
     def link_flags
-      [ '-headerpad_max_install_names', architecture_option, @linker_options, library_paths_list, library_dependencies_list, framework_path_list, framework_list ].join( " " )
+      flags = [ @linker_options, library_paths_list, library_dependencies_list ]
+      flags += [ '-headerpad_max_install_names', architecture_option, framework_path_list, framework_list ] if RUBY_PLATFORM =~ /apple/i
+      flags.join( " " )
     end
 
     # Exclude paths like QtFoo/Bar, but grab frameworks
@@ -155,7 +166,10 @@ module Rake
         moc         = moc_pathname( header_file )
 
         file moc => [ header_file ] do |t|
-          command = "moc #{ @compilation_defines } #{ framework_path_list } #{ @moc_defines } #{ header_file } -o #{ moc }"
+          options = @compilation_defines
+          options << framework_path_list if RUBY_PLATFORM =~ /apple/i
+          options << @moc_defines
+          command = "moc #{ options.join( ' ' ) } #{ header_file } -o #{ moc }"
           shell command
         end
 
