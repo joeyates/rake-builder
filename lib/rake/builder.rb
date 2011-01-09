@@ -452,7 +452,7 @@ module Rake
         # Hack the path from the block String representation
         @rakefile = block.to_s.match( /@([^\:]+):/ )[ 1 ]
       else
-        @rakefile = block.source_location
+        @rakefile = block.source_location[ 0 ]
       end
       @rakefile_path = File.expand_path( File.dirname( @rakefile ) )
     end
