@@ -29,13 +29,14 @@ module Rake
       case
       when RUBY_PLATFORM =~ /linux$/
         @include_paths         << '/usr/include/qt4'
-        @compilation_defines   = '-DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED'
-        @moc_defines           = '-D__GNUC__'
-      when RUBY_PLATFORM =~ /apple/i
+        @moc_defines           = [ '-D__GNUC__' ]
+      when RUBY_PLATFORM =~ /darwin/i
         @framework_paths       = [ '/Library/Frameworks' ]
-        @moc_defines           = '-D__APPLE__ -D__GNUC__'
+        @moc_defines           = [ '-D__APPLE__',  '-D__GNUC__' ]
+      else
+        raise "Unrecognised platform"
       end
-      @compilation_defines   = '-DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED'
+      @compilation_defines   = [ '-DQT_GUI_LIB', '-DQT_CORE_LIB', '-DQT_SHARED' ]
       @resource_files        = []
       @ui_files              = []
     end
@@ -76,15 +77,21 @@ module Rake
     end
 
     def compiler_flags
-      flags = [ compilation_options.join( ' ' ), @compilation_defines, include_path ]
-      flags << framework_path_list if RUBY_PLATFORM =~ /apple/i
+      flags = compilation_options + @compilation_defines + [ include_path ]
+      if RUBY_PLATFORM =~ /darwin/i
+        flags += framework_paths
+        flags << architecture_option
+      end
       flags.join( ' ' )
     end
 
     def link_flags
       flags = [ @linker_options, library_paths_list, library_dependencies_list ]
-      flags += [ '-headerpad_max_install_names', architecture_option, framework_path_list, framework_list ] if RUBY_PLATFORM =~ /apple/i
-      flags.join( " " )
+      if RUBY_PLATFORM =~ /darwin/i
+        flags += [ '-headerpad_max_install_names', architecture_option ]
+        flags += framework_paths + framework_options
+      end
+      flags.join( ' ' )
     end
 
     # Exclude paths like QtFoo/Bar, but grab frameworks
@@ -126,12 +133,12 @@ module Rake
       @qt_version.match( /^(\d+)/ )[ 1 ]
     end
 
-    def framework_path_list
-      @framework_paths.map { |p| "-F#{ p }" }.join( " " )
+    def framework_paths
+      @framework_paths.map { |p| "-F#{ p }" }
     end
 
-    def framework_list
-      @frameworks.map { |p| "-framework #{ p }" }.join( " " )
+    def framework_options
+      @frameworks.map { |p| "-framework #{ p }" }
     end
 
     # UI
@@ -167,8 +174,8 @@ module Rake
 
         file moc => [ header_file ] do |t|
           options = @compilation_defines
-          options << framework_path_list if RUBY_PLATFORM =~ /apple/i
-          options << @moc_defines
+          options += framework_paths if RUBY_PLATFORM =~ /darwin/i
+          options += @moc_defines
           command = "moc #{ options.join( ' ' ) } #{ header_file } -o #{ moc }"
           shell command
         end
