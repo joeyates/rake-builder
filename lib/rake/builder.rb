@@ -263,7 +263,7 @@ module Rake
       if @target_type == :executable
         desc "Run '#{ target_basename }'"
         task :run => :build do
-          command = "cd #{ @rakefile_path } && #{ @target }" 
+          command = "cd #{ @rakefile_path } && #{ @target }"
           puts shell( command, Logger::INFO )
         end
       end
