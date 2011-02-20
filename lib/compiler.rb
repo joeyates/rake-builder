@@ -16,7 +16,7 @@ module Compiler
       paths = []
       headers.each do | header |
         path = find_header( header )
-        raise BuilderError.new( "Can't find header '#{ header }' in any known include path" ) if path.nil?
+        raise "Can't find header '#{ header }' in any known include path" if path.nil?
         paths << path
       end
       paths.uniq
