@@ -1,9 +1,9 @@
 require 'rubygems' if RUBY_VERSION < '1.9'
 require 'logger'
-require 'yaml'
 require 'rake'
 require 'rake/tasklib'
 require 'rake/path'
+require 'rake/local_config'
 require 'rake/file_task_alias'
 require 'compiler'
 
@@ -292,12 +292,10 @@ module Rake
       directory @objects_path
 
       file local_config => scoped_task( :missing_headers ) do
-        added_includes   = @compiler_data.include_paths( missing_headers )
-        config           = { :rake_builder  => { :config_file => { :version=> '1.0' } },
-                             :include_paths => added_includes }
-        File.open( local_config, 'w' ) do | file |
-          file.write config.to_yaml
-        end
+        added_includes = @compiler_data.include_paths( missing_headers )
+        config = Rake::LocalConfig.new( local_config )
+        config.include_paths = added_includes
+        config.save
       end
 
       file @makedepend_file => [ scoped_task( :load_local_config ),
@@ -310,13 +308,9 @@ module Rake
       end
 
       task :load_local_config => local_config do
-        config = YAML.load_file( local_config )
-
-        version = config[ :rake_builder ][ :config_file ][ :version ]
-        raise BuilderError.new( "Config file version missing", task_namespace ) if version.nil?
-
-        config[ :include_paths ] ||= []
-        @include_paths += Rake::Path.expand_all_with_root( config[ :include_paths ], @rakefile_path )
+        config = LocalConfig.new( local_config )
+        config.load
+        @include_paths += Rake::Path.expand_all_with_root( config.include_paths, @rakefile_path )
       end
 
       task :missing_headers => [ *generated_headers ] do
