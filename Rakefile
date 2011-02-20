@@ -23,6 +23,7 @@ spec = Gem::Specification.new do |s|
   s.homepage         = 'http://github.com/joeyates/rake-builder'
   s.author           = 'Joe Yates'
   s.email            = 'joe.g.yates@gmail.com'
+  s.rubyforge_project = 'nowarning'
 
   s.files            = ADMIN_FILES +
                        SOURCE_FILES +

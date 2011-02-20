@@ -24,8 +24,8 @@ module Rake
     module VERSION #:nodoc:
       MAJOR = 0
       MINOR = 0
-      TINY  = 12
- 
+      TINY  = 13
+
       STRING = [ MAJOR, MINOR, TINY ].join('.')
     end
 
@@ -430,7 +430,9 @@ module Rake
     end
 
     def compiler_flags
-      include_path + ' ' + compilation_options.join( " " )
+      flags = include_path + ' ' + compilation_options.join( ' ' )
+      flags << ' ' << architecture_option if RUBY_PLATFORM =~ /darwin/i
+      flags
     end
 
     def architecture_option
@@ -439,7 +441,7 @@ module Rake
 
     def link_flags
       flags = [ @linker_options, architecture_option, library_paths_list, library_dependencies_list ]
-      flags << architecture_option if RUBY_PLATFORM =~ /apple/i
+      flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags.join( " " )
     end
 
