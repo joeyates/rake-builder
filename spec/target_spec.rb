@@ -6,13 +6,17 @@ describe 'when creating tasks' do
     Rake::Task.clear
   end
 
+  after( :each ) do
+    `rm -f spec/.rake-builder.foo`
+  end
+
   it 'raises an error when the target is an empty string' do
     lambda do
       Rake::Builder.new do |builder|
         builder.target = ''
         builder.source_search_paths = [ 'cpp_project' ]
       end
-    end.should raise_error( RuntimeError )
+    end.should raise_error( Rake::Builder::BuilderError, 'The target name cannot be an empty string' )
   end
 
   it 'raises an error when the target is set to nil' do
@@ -21,7 +25,7 @@ describe 'when creating tasks' do
         builder.target = nil
         builder.source_search_paths = [ 'cpp_project' ]
       end
-    end.should raise_error( RuntimeError )
+    end.should raise_error( Rake::Builder::BuilderError, 'The target name cannot be nil' )
   end
 
   it 'sets the target to \'a.out\' if it is not set' do

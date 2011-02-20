@@ -15,10 +15,6 @@ module Rake
     end
   end
 
-  # Error indicating that the project failed to build.
-  class BuildFailureError < StandardError
-  end
-
   class Builder < TaskLib
 
     module VERSION #:nodoc:
@@ -27,6 +23,25 @@ module Rake
       TINY  = 13
 
       STRING = [ MAJOR, MINOR, TINY ].join('.')
+    end
+
+    class BuilderError < StandardError
+      attr_accessor :namespace
+
+      def initialize( message, namespace = nil )
+        super( message )
+        @namespace = namespace
+      end
+
+      def to_s
+        message = super
+        message = "#{ @namespace }: #{ message }" if @namespace
+        message
+      end
+    end
+
+    # Error indicating that the project failed to build.
+    class BuildFailure < BuilderError
     end
 
     # The file to be built
@@ -192,8 +207,8 @@ module Rake
       @compilation_options   += [ architecture_option ] if RUBY_PLATFORM =~ /apple/i
       @compilation_options.uniq!
 
-      @programming_language.downcase!
-      raise "Don't know how to build '#{ @programming_language }' programs" if KNOWN_LANGUAGES[ @programming_language ].nil?
+      @programming_language = @programming_language.to_s.downcase
+      raise BuilderError.new( "Don't know how to build '#{ @programming_language }' programs", task_namespace ) if KNOWN_LANGUAGES[ @programming_language ].nil?
       @compiler              ||= KNOWN_LANGUAGES[ @programming_language ][ :compiler ]
       @linker                ||= KNOWN_LANGUAGES[ @programming_language ][ :linker ]
       @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
@@ -202,12 +217,13 @@ module Rake
       @header_search_paths   = Rake::Path.expand_all_with_root( @header_search_paths, @rakefile_path )
       @library_paths         = Rake::Path.expand_all_with_root( @library_paths, @rakefile_path )
 
-      raise "The target name cannot be nil" if @target.nil?
-      raise "The target name cannot be an empty string" if @target == ''
+      raise BuilderError.new( "The target name cannot be nil", task_namespace )             if @target.nil?
+      raise BuilderError.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
       @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
       @target                = Rake::Path.expand_with_root( @target, @objects_path )
       @target_type           ||= type( @target )
-      raise "Building #{ @target_type } targets is not supported" if ! TARGET_TYPES.include?( @target_type )
+      raise BuilderError.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
+
       @install_path          ||= default_install_path( @target_type )
 
       @linker_options        ||= ''
@@ -220,7 +236,7 @@ module Rake
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
 
-      raise "No source files found" if source_files.length == 0
+      raise BuilderError.new( "No source files found", task_namespace ) if source_files.length == 0
     end
 
     def define_tasks
@@ -261,7 +277,7 @@ module Rake
         build_commands.each do | command |
           shell command
         end
-        raise BuildFailureError if ! File.exist?( t.name )
+        raise BuildFailure.new( "The build command failed" ) if ! File.exist?( t.name )
       end
 
       desc "Compile all sources"
@@ -297,7 +313,7 @@ module Rake
         config = YAML.load_file( local_config )
 
         version = config[ :rake_builder ][ :config_file ][ :version ]
-        raise "Config file version missing" if version.nil?
+        raise BuilderError.new( "Config file version missing", task_namespace ) if version.nil?
 
         config[ :include_paths ] ||= []
         @include_paths += Rake::Path.expand_all_with_root( config[ :include_paths ], @rakefile_path )
@@ -364,7 +380,7 @@ module Rake
         begin
           shell "rm '#{ destination }'", Logger::INFO
         rescue Errno::EACCES => e
-          raise "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }"
+          raise BuilderError.new( "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }", task_namespace )
         end
       end
     end
@@ -517,7 +533,7 @@ module Rake
         begin
           `mkdir -p '#{ destination_path }'`
         rescue Errno::EACCES => e
-          raise "Permission denied to created directory '#{ destination_path }'"
+          raise BuilderError.new( "Permission denied to created directory '#{ destination_path }'", task_namespace )
         end
         install( installable_header[ :source_file ], destination_path )
       end
@@ -556,7 +572,7 @@ module Rake
         shell "cp '#{ source_pathname }' '#{ destination_path }'", Logger::INFO
       rescue Errno::EACCES => e
         source_filename = File.basename( source_pathname ) rescue '????'
-        raise "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install"
+        raise BuilderError.new( "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install", task_namespace )
       end
     end
 
