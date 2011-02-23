@@ -292,6 +292,7 @@ module Rake
       directory @objects_path
 
       file local_config => scoped_task( :missing_headers ) do
+        @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
         added_includes = @compiler_data.include_paths( missing_headers )
         config = Rake::LocalConfig.new( local_config )
         config.include_paths = added_includes
@@ -378,29 +379,49 @@ module Rake
         end
       end
 
-      desc "Create a 'Makefile.#{ task_namespace }' to build the project"
-      file "Makefile.#{ task_namespace }" => [ @makedepend_file, scoped_task( :load_makedepend ) ] do | t |
+      desc "Create a '#{ makefile_name }' to build the project"
+      file "#{ makefile_name }" => [ @makedepend_file, scoped_task( :load_makedepend ) ] do | t |
         objects       = object_files.collect { | f | f.sub( "#{ @objects_path }", '$(OBJECT_DIR)' ) }
         objects_list  = objects.join( ' ' )
+        case @target_type
+        when :executable
+          target_name = '$(EXECUTABLE_TARGET)'
+          target_actions =
+"	$(LINKER) $(LINK_FLAGS) -o #{ target_name } $(OBJECTS)
+"
+        when :static_library
+          target_name = '$(LIB_TARGET)'
+          target_actions =
+"	rm -f #{ target_name }
+	ar -cq #{ target_name } $(OBJECTS)
+	ranlib #{ target_name }
+"
+        when :shared_library
+          target_name = '$(LIB_TARGET)'
+          target_actions =
+"	$(LINKER) -shared -o #{ target_name } $(OBJECTS) $(LINK_FLAGS)
+"
+        end
+
         variables = <<EOT
 COMPILER       = #{ @compiler }
 COMPILER_FLAGS = #{ compiler_flags }
+LINKER         = #{ @linker }
+LINK_FLAGS     = #{ link_flags }
 OBJECT_DIR     = #{ @objects_path }
 OBJECTS        = #{ objects_list }
-LIB_TARGET     = #{ @target }
+#{ target_name } = #{ @target }
 EOT
         rules     = <<EOT
 
 clean:
 	rm -f $(OBJECTS)
-	rm -f $(LIB_TARGET)
+	rm -f #{ target_name }
 
-$(LIB_TARGET): $(OBJECTS)
+#{ target_name }: $(OBJECTS)
 
-all: $(LIB_TARGET)
-	rm -f $(LIB_TARGET)
-	ar -cq $(LIB_TARGET) $(OBJECTS)
-	ranlib $(LIB_TARGET)
+all: #{ target_name }
+#{ target_actions }
 EOT
 
         source_groups = group_files_by_path( source_files )
@@ -535,8 +556,19 @@ EOT
       end
     end
 
+    # Files
+
     def target_basename
       File.basename( @target )
+    end
+
+    def makefile_name
+      extension = if ! task_namespace.nil? && ! task_namespace.empty?
+                    '.' + task_namespace
+                  else
+                    ''
+                  end
+      "Makefile#{ extension }"
     end
 
     # Lists of files
