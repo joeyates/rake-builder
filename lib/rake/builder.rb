@@ -387,21 +387,24 @@ module Rake
         objects_list  = objects.join( ' ' )
         case @target_type
         when :executable
-          target_name = '$(EXECUTABLE_TARGET)'
+          target_name = 'EXECUTABLE_TARGET'
+          target_ref  = "$(#{ target_name })"
           target_actions =
-"	$(LINKER) $(LINK_FLAGS) -o #{ target_name } $(OBJECTS)
+"	$(LINKER) $(LINK_FLAGS) -o #{ target_ref } $(OBJECTS)
 "
         when :static_library
-          target_name = '$(LIB_TARGET)'
+          target_name = 'LIB_TARGET'
+          target_ref  = "$(#{ target_name })"
           target_actions =
-"	rm -f #{ target_name }
-	ar -cq #{ target_name } $(OBJECTS)
-	ranlib #{ target_name }
+"	rm -f #{ target_ref }
+	ar -cq #{ target_ref } $(OBJECTS)
+	ranlib #{ target_ref }
 "
         when :shared_library
-          target_name = '$(LIB_TARGET)'
+          target_name = 'LIB_TARGET'
+          target_ref  = "$(#{ target_name })"
           target_actions =
-"	$(LINKER) -shared -o #{ target_name } $(OBJECTS) $(LINK_FLAGS)
+"	$(LINKER) -shared -o #{ target_ref } $(OBJECTS) $(LINK_FLAGS)
 "
         end
 
@@ -416,13 +419,13 @@ OBJECTS        = #{ objects_list }
 EOT
         rules     = <<EOT
 
+all: #{ target_ref }
+
 clean:
 	rm -f $(OBJECTS)
-	rm -f #{ target_name }
+	rm -f #{ target_ref }
 
-#{ target_name }: $(OBJECTS)
-
-all: #{ target_name }
+#{ target_ref }: $(OBJECTS)
 #{ target_actions }
 EOT
 
