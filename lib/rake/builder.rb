@@ -377,6 +377,48 @@ module Rake
           raise BuilderError.new( "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }", task_namespace )
         end
       end
+
+      desc "Create a 'Makefile.#{ task_namespace }' to build the project"
+      file "Makefile.#{ task_namespace }" => [ @makedepend_file, scoped_task( :load_makedepend ) ] do | t |
+        objects       = object_files.collect { | f | f.sub( "#{ @objects_path }", '$(OBJECT_DIR)' ) }
+        objects_list  = objects.join( ' ' )
+        variables = <<EOT
+COMPILER       = #{ @compiler }
+COMPILER_FLAGS = #{ compiler_flags }
+OBJECT_DIR     = #{ @objects_path }
+OBJECTS        = #{ objects_list }
+LIB_TARGET     = #{ @target }
+EOT
+        rules     = <<EOT
+
+clean:
+	rm -f $(OBJECTS)
+	rm -f $(LIB_TARGET)
+
+$(LIB_TARGET): $(OBJECTS)
+
+all: $(LIB_TARGET)
+	rm -f $(LIB_TARGET)
+	ar -cq $(LIB_TARGET) $(OBJECTS)
+	ranlib $(LIB_TARGET)
+EOT
+
+        source_groups = group_files_by_path( source_files )
+        source_groups.each.with_index do | gp, i |
+          variables << "SOURCE_#{ i + 1 } = #{ gp[ 0 ] }\n"
+          rules     << <<EOT
+
+$(OBJECT_DIR)/%.o: $(SOURCE_#{ i + 1 })/%.cpp
+	$(COMPILER) -c $(COMPILER_FLAGS) -o $@ $<
+EOT
+        end
+
+        File.open( t.name, 'w' ) do | file |
+          file.write variables
+          file.write rules
+        end
+      end
+
     end
 
     def generated_headers
@@ -481,8 +523,15 @@ module Rake
       case target_type
       when :executable
         '/usr/local/bin'
-      else  
+      else
         '/usr/local/lib'
+      end
+    end
+
+    def group_files_by_path( files )
+      files.group_by do | f |
+        m = f.match( /(.*?)?\/?([^\/]+)$/ )
+        m[ 1 ]
       end
     end
 
