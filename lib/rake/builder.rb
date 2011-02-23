@@ -291,12 +291,14 @@ module Rake
 
       directory @objects_path
 
-      file local_config => scoped_task( :missing_headers ) do
-        @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
-        added_includes = @compiler_data.include_paths( missing_headers )
-        config = Rake::LocalConfig.new( local_config )
-        config.include_paths = added_includes
-        config.save
+      task :local_config => scoped_task( :missing_headers ) do
+        if ! File.exist?( local_config )
+          @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
+          added_includes = @compiler_data.include_paths( missing_headers )
+          config = Rake::LocalConfig.new( local_config )
+          config.include_paths = added_includes
+          config.save
+        end
       end
 
       file @makedepend_file => [ scoped_task( :load_local_config ),
@@ -308,7 +310,7 @@ module Rake
         shell command
       end
 
-      task :load_local_config => local_config do
+      task :load_local_config => :local_config do
         config = LocalConfig.new( local_config )
         config.load
         @include_paths += Rake::Path.expand_all_with_root( config.include_paths, @rakefile_path )
