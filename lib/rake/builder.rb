@@ -291,7 +291,7 @@ module Rake
 
       directory @objects_path
 
-      task :local_config => scoped_task( :missing_headers ) do
+      task :local_config do
         if ! File.exist?( local_config )
           @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
           added_includes = @compiler_data.include_paths( missing_headers )
