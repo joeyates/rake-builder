@@ -310,7 +310,7 @@ module Rake
         shell command
       end
 
-      task :load_local_config => :local_config do
+      task :load_local_config => scoped_task( :local_config ) do
         config = LocalConfig.new( local_config )
         config.load
         @include_paths += Rake::Path.expand_all_with_root( config.include_paths, @rakefile_path )
