@@ -260,6 +260,10 @@ module Rake
     end
 
     def define
+      task :environment do
+        logger.level = Logger::DEBUG if ENV[ 'DEBUG' ]
+      end
+
       if @target_type == :executable
         desc "Run '#{ target_basename }'"
         task :run => :build do
@@ -272,7 +276,7 @@ module Rake
       FileTaskAlias.define_task( :build, @target )
 
       desc "Build '#{ target_basename }'"
-      file @target => [ scoped_task( :compile ), *@target_prerequisites ] do |t|
+      file @target => [ :environment, scoped_task( :compile ), *@target_prerequisites ] do |t|
         shell "rm -f #{ t.name }"
         build_commands.each do | command |
           shell command
@@ -283,7 +287,7 @@ module Rake
       desc "Compile all sources"
       # Only import dependencies when we're compiling
       # otherwise makedepend gets run on e.g. 'rake -T'
-      task :compile => [ @makedepend_file, scoped_task( :load_makedepend ), *object_files ]
+      task :compile => [ :environment, @makedepend_file, scoped_task( :load_makedepend ), *object_files ]
 
       source_files.each do |src|
         define_compile_task( src )
@@ -463,7 +467,7 @@ EOT
       object = object_path( source )
       @generated_files << object
       file object => [ source ] do |t|
-        @logger.add( Logger::INFO, "Compiling '#{ source }'" )
+        @logger.add( Logger::DEBUG, "Compiling '#{ source }'" )
         command = "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
         shell command
       end
