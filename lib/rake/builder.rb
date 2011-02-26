@@ -276,7 +276,9 @@ module Rake
       FileTaskAlias.define_task( :build, @target )
 
       desc "Build '#{ target_basename }'"
-      file @target => [ :environment, scoped_task( :compile ), *@target_prerequisites ] do |t|
+      file @target => [ scoped_task( :environment ),
+                        scoped_task( :compile ),
+                        *@target_prerequisites ] do | t |
         shell "rm -f #{ t.name }"
         build_commands.each do | command |
           shell command
@@ -287,7 +289,10 @@ module Rake
       desc "Compile all sources"
       # Only import dependencies when we're compiling
       # otherwise makedepend gets run on e.g. 'rake -T'
-      task :compile => [ :environment, @makedepend_file, scoped_task( :load_makedepend ), *object_files ]
+      task :compile => [ scoped_task( :environment ),
+                         @makedepend_file,
+                         scoped_task( :load_makedepend ),
+                         *object_files ]
 
       source_files.each do |src|
         define_compile_task( src )
