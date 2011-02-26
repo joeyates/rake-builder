@@ -568,8 +568,8 @@ EOT
     end
 
     def makefile_name
-      extension = if ! task_namespace.nil? && ! task_namespace.empty?
-                    '.' + task_namespace
+      extension = if ! task_namespace.nil? && ! task_namespace.to_s.empty?
+                    '.' + task_namespace.to_s
                   else
                     ''
                   end
