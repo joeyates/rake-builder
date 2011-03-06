@@ -527,7 +527,7 @@ EOT
     end
 
     def link_flags
-      flags = [ @linker_options, architecture_option, library_paths_list, library_dependencies_list ]
+      flags = [ @linker_options, library_paths_list, library_dependencies_list ]
       flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags.join( " " )
     end
