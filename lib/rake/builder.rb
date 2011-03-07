@@ -481,7 +481,7 @@ EOT
     def build_commands
       case @target_type
       when :executable
-        [ "#{ @linker } #{ link_flags } -o #{ @target } #{ file_list( object_files ) }" ]
+        [ "#{ @linker } -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       when :static_library
         [ "ar -cq #{ @target } #{ file_list( object_files ) }",
           "ranlib #{ @target }" ]
