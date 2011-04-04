@@ -2,6 +2,8 @@ require 'rubygems' if RUBY_VERSION < '1.9'
 require 'rake'
 require 'rake/rdoctask'
 require 'spec/rake/spectask'
+$:.unshift( File.dirname( __FILE__ ) + '/lib' )
+require 'rake/builder/version'
 
 RDOC_FILES           = FileList[ 'COPYING', 'README.rdoc' ] +
                        FileList[ 'lib/**/*.rb' ] +
@@ -32,7 +34,7 @@ task :build do
   system "gem build rake-builder.gemspec"
 end
 
-desc "Publish a new version of the gem"
+desc "Publish gem version #{ Rake::Builder::VERSION::STRING }"
 task :release => :build do
-  system "gem push rake-builder-#{Rake::Builder::VERSION}"
+  system "gem push rake-builder-#{ Rake::Builder::VERSION::STRING }.gem"
 end
