@@ -1,46 +1,13 @@
 require 'rubygems' if RUBY_VERSION < '1.9'
 require 'rake'
-require 'rake/gempackagetask'
-require 'spec/rake/spectask'
 require 'rake/rdoctask'
-$:.unshift( File.dirname( __FILE__ ) + '/lib' )
-require 'rake/builder'
+require 'spec/rake/spectask'
 
-ADMIN_FILES          = FileList[ 'CHANGES', 'COPYING', 'Rakefile', 'README.rdoc' ]
-SOURCE_FILES         = FileList[ 'lib/**/*.rb' ]
-SPEC_FILES           = FileList[ 'spec/**/*' ]
-EXAMPLE_EXTRA_FILES  = FileList[ 'examples/README.rdoc' ] + FileList[ 'examples/**/Rakefile' ]
-EXAMPLE_SOURCE_FILES = FileList[ 'examples/**/*.{h,c,cpp,m}' ]
-RDOC_FILES           = FileList[ 'COPYING', 'README.rdoc' ] + SOURCE_FILES + EXAMPLE_EXTRA_FILES
+RDOC_FILES           = FileList[ 'COPYING', 'README.rdoc' ] +
+                       FileList[ 'lib/**/*.rb' ] +
+                       FileList[ 'examples/README.rdoc' ] +
+                       FileList[ 'examples/**/Rakefile' ]
 RDOC_OPTS            = [ '--quiet', '--main', 'README.rdoc', '--inline-source' ]
-
-spec = Gem::Specification.new do |s|
-  s.name             = 'rake-builder'
-  s.summary          = 'Rake for C/C++ Projects'
-  s.description      = 'Provides Rake:Builder, a specific rake TaskLib for building C, C++, Objective-C and Objective-C++ projects'
-  s.version          = Rake::Builder::VERSION::STRING
-
-  s.homepage         = 'http://github.com/joeyates/rake-builder'
-  s.author           = 'Joe Yates'
-  s.email            = 'joe.g.yates@gmail.com'
-  s.rubyforge_project = 'nowarning'
-
-  s.files            = ADMIN_FILES +
-                       SOURCE_FILES +
-                       EXAMPLE_SOURCE_FILES +
-                       EXAMPLE_EXTRA_FILES
-  s.require_paths    = [ 'lib' ]
-  s.add_dependency( 'rake', '>= 0.8.7' )
-
-  s.has_rdoc         = true
-  s.rdoc_options     += RDOC_OPTS
-  s.extra_rdoc_files = RDOC_FILES
-
-  s.test_files       = SPEC_FILES
-end
-
-Rake::GemPackageTask.new( spec ) do |pkg|
-end
 
 Spec::Rake::SpecTask.new do |t|
   t.spec_files       = FileList[ 'spec/**/*_spec.rb' ]
@@ -58,4 +25,14 @@ Rake::RDocTask.new do |rdoc|
   rdoc.options       += RDOC_OPTS
   rdoc.title         = 'Rake for C/C++/Objective-C/Objective-C++ Projects'
   rdoc.rdoc_files.add RDOC_FILES
+end
+
+desc "Build the gem"
+task :build do
+  system "gem build rake-builder.gemspec"
+end
+
+desc "Publish a new version of the gem"
+task :release => :build do
+  system "gem push rake-builder-#{Rake::Builder::VERSION}"
 end

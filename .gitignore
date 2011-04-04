@@ -3,3 +3,5 @@ pkg/
 html/
 *.depend.mf
 *.o
+Gemfile.lock
+*.gem
