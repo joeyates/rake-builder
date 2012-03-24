@@ -166,6 +166,22 @@ module Rake
     # Each instance has its own logger
     attr_accessor :logger
 
+    # All Rake::Builder instaces that get defined
+    # This allows us to create scripts for configure
+    @instances = []
+
+    def self.instances
+      @instances
+    end
+
+    def self.define_global
+      desc "Create input files for configure script creation"
+      task :autoconf, [] => [] do
+      end
+    end
+
+    self.define_global
+
     def initialize( &block )
       save_rakefile_info( block )
       initialize_attributes
@@ -173,6 +189,7 @@ module Rake
       configure
       define_tasks
       define_default
+      self.class.instances << self
     end
 
     private
