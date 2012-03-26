@@ -176,8 +176,137 @@ module Rake
 
     def self.define_global
       desc "Create input files for configure script creation"
-      task :autoconf, [] => [] do
+      task :autoconf, [:project_title, :version] => [] do | task, args |
+        project_title = args.project_title or raise "Please supply a project_title parameter"
+        version       = decide_version( args.version )
+        if File.exist?( 'configure.ac' )
+          raise "The file 'configure.ac' already exists"
+        end
+        if File.exist?( 'Makefile.am' )
+          raise "The file 'Makefile.am' already exists"
+        end
+        create_configure_ac project_title, version
+        create_makefile_am
       end
+
+      desc "A file containing the major.minor.revision version information"
+      file 'VERSION' do
+        raise <<-EOT
+        In order to create autoconf files, you need to create a file called VERSION in the root directory of the project.
+        The file should contain the version of the project, like this:
+            1.2.3
+        EOT
+      end
+    end
+
+    def self.create_configure_ac( project_title, version )
+      File.open( 'configure.ac', 'w' ) do | f |
+        f.write <<EOT
+AC_PREREQ(2.61)
+AC_INIT(#{project_title}, #{ version })
+AC_CONFIG_SRCDIR([examples/01_create_database/main.cpp])
+AC_CONFIG_HEADER([config.h])
+AM_INIT_AUTOMAKE([#{project_title}], [#{ version }])
+
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_RANLIB
+
+# Checks for libraries.
+
+# Checks for header files.
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+AC_STRUCT_TM
+
+# Checks for library functions.
+AC_FUNC_LSTAT
+AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+AC_FUNC_MEMCMP
+AC_HEADER_STDC
+AC_CHECK_FUNCS([memset strcasecmp])
+
+AC_CONFIG_FILES([Makefile])
+
+AC_OUTPUT
+EOT
+      end
+    end
+
+    def self.create_makefile_am
+      File.open( 'Makefile.am', 'w' ) do | f |
+        instances.each do | instance |
+          f.write instance.makefile_am_entry
+        end
+      end
+    end
+
+    def makefile_am_entry
+      primary_name = name
+      case @target_type
+      when :static_library, :shared_library
+        primary_label = 'lib_LIBRARIES'
+      else
+        primary_label = 'bin_PROGRAMS'
+      end
+
+      return <<EOT
+#{ primary_label } = #{ target }
+#{ primary_name }_SOURCES = #{ source_files.join( ' ' ) }
+#{ primary_name }_CPPFLAGS = #{ include_path }
+
+EOT
+    end
+
+    #########################################
+    # VERSION file
+
+    def self.decide_version( parameter_version )
+      acceptable_version_string = %r(^(\d+)\.(\d+)\.(\d+)$)
+      if parameter_version && parameter_version !~ acceptable_version_string
+        raise "The supplied version number '#{ parameter_version }' is badly formatted. It should consist of three numbers separated by ."
+      end
+      file_version = load_file_version
+      if file_version && file_version !~ acceptable_version_string
+        raise "Your VERSION file contains a version number '#{ parameter_version }' which is badly formatted. It should consist of three numbers separated by ."
+      end
+      case
+      when parameter_version.nil? && file_version.nil?
+        raise <<-EOT
+        This task requires a project version: major.minor.revision (e.g. 1.03.0567)
+        Please do one of the following:
+        - supply a version parameter: rake autoconf[project_name,version]
+        - create a VERSION file.
+        EOT
+      when file_version.nil?
+        save_file_version parameter_version
+        return parameter_version
+      when parameter_version.nil?
+        return file_version
+      when file_version != parameter_version
+        raise <<-EOT
+        The version parameter supplied is different to the value in the VERSION file
+        EOT
+      else
+        return file_version
+      end
+    end
+
+    def self.load_file_version
+      if File.exist?( 'VERSION' )
+        version = File.read( 'VERSION' )
+        version.strip!
+      else
+        nil
+      end
+    end
+
+    def self.save_file_version( version )
+      File.open( 'VERSION', 'w' ) { | f | f.write "#{ version }/n" }
     end
 
     self.define_global
@@ -513,6 +642,10 @@ EOT
       when :shared_library
         [ "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       end
+    end
+
+    def name
+      target.gsub( %r(\.), '_' )
     end
 
     def type( target )
