@@ -18,12 +18,15 @@ spec = Gem::Specification.new do |s|
   example_files       = FileList[ 'examples/**/*.{h,c,cpp,m}' ] +
                         FileList[ 'examples/README.rdoc' ] +
                         FileList[ 'examples/**/Rakefile' ]
-  spec_files          = FileList[ 'spec/**/*' ]
   s.files             = admin_files +
                         source_files +
                         example_files
   s.require_paths    = [ 'lib' ]
 
-  s.test_files       = spec_files
+  s.add_runtime_dependency     'rake',   '>= 0.8.7'
+
+  s.add_development_dependency 'rspec',  '1.3.1'
+
+  s.test_files       = FileList[ 'spec/**/*' ]
 end
 
