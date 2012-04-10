@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper.rb'
+load File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe 'when building a C project' do
 
@@ -21,7 +21,8 @@ describe 'when building a C project' do
     `rm -f #{ @test_output_file }`
   end
 
-  it 'builds the program with \'build\'' do
+  it "builds the program with 'build'" do
+    chdir @project.rakefile_path
     Rake::Task[ 'build' ].invoke
     exist?( @project.target ).should be_true
   end

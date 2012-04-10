@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper.rb'
+load File.dirname(__FILE__) + '/spec_helper.rb'
 
 PATHS_SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
 

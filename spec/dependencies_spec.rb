@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper.rb'
+load File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe 'the dependencies system' do
 
