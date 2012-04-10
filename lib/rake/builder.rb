@@ -220,7 +220,7 @@ module Rake
       raise BuilderError.new( "The target name cannot be nil", task_namespace )             if @target.nil?
       raise BuilderError.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
       @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
-      @target                = @target
+      @target                = File.expand_path( @target, @rakefile_path )
       @target_type           ||= type( @target )
       raise BuilderError.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
 
@@ -546,7 +546,8 @@ EOT
       else
         @rakefile = block.source_location[ 0 ]
       end
-      @rakefile_path = File.expand_path( File.dirname( @rakefile ) )
+      @rakefile      = File.expand_path( @rakefile )
+      @rakefile_path = File.dirname( @rakefile )
     end
 
     def object_path( source_path_name )

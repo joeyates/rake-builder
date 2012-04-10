@@ -27,7 +27,7 @@ describe 'when building a C project' do
     exist?( @project.target ).should be_true
   end
 
-  it 'runs the program with \'run\'' do
+  it "runs the program with 'run'" do
     Rake::Task[ 'run' ].invoke
     exist?( @test_output_file ).should be_true
   end
