@@ -3,7 +3,7 @@ require 'rake'
 require 'rake/rdoctask'
 require 'spec/rake/spectask'
 $:.unshift( File.dirname( __FILE__ ) + '/lib' )
-require 'rake/builder/version'
+require 'rake/builder'
 
 RDOC_FILES           = FileList[ 'COPYING', 'README.rdoc' ] +
                        FileList[ 'lib/**/*.rb' ] +
