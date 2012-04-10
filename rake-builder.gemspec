@@ -2,13 +2,6 @@ require 'rake'
 $:.unshift( File.dirname( __FILE__ ) + '/lib' )
 require 'rake/builder/version'
 
-ADMIN_FILES   = FileList[ 'CHANGES', 'COPYING', 'Rakefile', 'README.rdoc' ]
-SOURCE_FILES  = FileList[ 'lib/**/*.rb' ]
-EXAMPLE_FILES = FileList[ 'examples/**/*.{h,c,cpp,m}' ] +
-                FileList[ 'examples/README.rdoc' ] +
-                FileList[ 'examples/**/Rakefile' ]
-SPEC_FILES    = FileList[ 'spec/**/*' ]
-
 spec = Gem::Specification.new do |s|
   s.name              = 'rake-builder'
   s.summary           = 'Rake for C/C++ Projects'
@@ -20,10 +13,17 @@ spec = Gem::Specification.new do |s|
   s.email             = 'joe.g.yates@gmail.com'
   s.rubyforge_project = 'nowarning'
 
-  s.files            = ADMIN_FILES +
-                       SOURCE_FILES +
-                       EXAMPLE_FILES
+  admin_files         = FileList[ 'CHANGES', 'COPYING', 'Rakefile', 'README.rdoc' ]
+  source_files        = FileList[ 'lib/**/*.rb' ]
+  example_files       = FileList[ 'examples/**/*.{h,c,cpp,m}' ] +
+                        FileList[ 'examples/README.rdoc' ] +
+                        FileList[ 'examples/**/Rakefile' ]
+  spec_files          = FileList[ 'spec/**/*' ]
+  s.files             = admin_files +
+                        source_files +
+                        example_files
   s.require_paths    = [ 'lib' ]
 
-  s.test_files       = SPEC_FILES
+  s.test_files       = spec_files
 end
+
