@@ -23,7 +23,7 @@ spec = Gem::Specification.new do |s|
                         example_files
   s.require_paths    = [ 'lib' ]
 
-  s.add_runtime_dependency     'rake',   '>= 0.8.7'
+  s.add_runtime_dependency     'rake',   '0.8.7'
 
   s.add_development_dependency 'rspec',  '1.3.1'
 
