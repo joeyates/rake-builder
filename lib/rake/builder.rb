@@ -154,6 +154,9 @@ module Rake
     # Name of the generated file containing source - header dependencies
     attr_reader   :makedepend_file
 
+    # The file containing local settings such as include paths
+    attr_reader   :local_config
+
     # Temporary files generated during compilation and linking
     attr_accessor :generated_files
 
@@ -233,6 +236,7 @@ module Rake
 
       @default_task          ||= :build
       @target_prerequisites  << @rakefile
+      @local_config          = Rake::Path.expand_with_root( '.rake-builder', @rakefile_path )
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
 
