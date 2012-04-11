@@ -538,11 +538,6 @@ EOT
 
     # Paths
 
-    def local_config
-      filename = '.rake-builder'
-      Rake::Path.expand_with_root( filename, @rakefile_path )
-    end
-
     def save_rakefile_info( block )
       if RUBY_VERSION < '1.9'
         # Hack the path from the block String representation
