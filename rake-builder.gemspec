@@ -25,7 +25,7 @@ spec = Gem::Specification.new do |s|
 
   s.add_runtime_dependency     'rake',   '0.8.7'
 
-  s.add_development_dependency 'rspec',  '1.3.1'
+  s.add_development_dependency 'rspec',  '>= 2.3.0'
 
   s.test_files       = FileList[ 'spec/**/*' ]
 end
