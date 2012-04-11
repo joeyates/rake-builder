@@ -5,6 +5,7 @@ require 'rake/tasklib'
 require 'rake/path'
 require 'rake/local_config'
 require 'rake/file_task_alias'
+require 'rake/once_task'
 require 'compiler'
 
 module Rake
@@ -321,7 +322,7 @@ module Rake
         shell command
       end
 
-      task :load_local_config => scoped_task( :local_config ) do
+      once_task scoped_task( :load_local_config ) => scoped_task( local_config ) do
         config = LocalConfig.new( local_config )
         config.load
         @include_paths += Rake::Path.expand_all_with_root( config.include_paths, @rakefile_path )
