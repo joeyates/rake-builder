@@ -304,14 +304,12 @@ module Rake
 
       directory @objects_path
 
-      task :local_config do
-        if ! File.exist?( local_config )
-          @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
-          added_includes = @compiler_data.include_paths( missing_headers )
-          config = Rake::LocalConfig.new( local_config )
-          config.include_paths = added_includes
-          config.save
-        end
+      file scoped_task( local_config ) do
+        @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
+        added_includes = @compiler_data.include_paths( missing_headers )
+        config = Rake::LocalConfig.new( local_config )
+        config.include_paths = added_includes
+        config.save
       end
 
       file @makedepend_file => [ scoped_task( :load_local_config ),
