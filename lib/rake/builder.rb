@@ -176,14 +176,14 @@ module Rake
 
     # Source files found in source_search_paths
     def source_files
-      @source_files ||= find_files( @source_search_paths, @source_file_extension ).uniq
-      @source_files
+      return @source_files if @source_files
+      @source_files = find_files( @source_search_paths, @source_file_extension ).uniq
     end
 
     # Header files found in header_search_paths
     def header_files
-      @header_files ||= find_files( @header_search_paths, @header_file_extension ).uniq
-      @header_files
+      return @header_files if @header_files
+      @header_files = find_files( @header_search_paths, @header_file_extension ).uniq
     end
 
     def initialize_attributes
