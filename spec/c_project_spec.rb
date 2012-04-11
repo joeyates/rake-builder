@@ -19,10 +19,10 @@ describe 'when building a C project' do
   after( :each ) do
     Rake::Task[ 'clean' ].invoke
     `rm -f #{ @test_output_file }`
+    `rm -f '#{ @project.local_config }'`
   end
 
   it "builds the program with 'build'" do
-    chdir @project.rakefile_path
     Rake::Task[ 'build' ].invoke
     exist?( @project.target ).should be_true
   end
