@@ -1,7 +1,7 @@
 require 'rubygems' if RUBY_VERSION < '1.9'
 require 'rake'
 require 'rake/rdoctask'
-require 'spec/rake/spectask'
+require 'rspec/core/rake_task'
 $:.unshift( File.dirname( __FILE__ ) + '/lib' )
 require 'rake/builder'
 
@@ -11,13 +11,13 @@ RDOC_FILES           = FileList[ 'COPYING', 'README.rdoc' ] +
                        FileList[ 'examples/**/Rakefile' ]
 RDOC_OPTS            = [ '--quiet', '--main', 'README.rdoc', '--inline-source' ]
 
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files       = FileList[ 'spec/**/*_spec.rb' ]
-  t.spec_opts        += [ '--color', '--format specdoc' ]
+RSpec::Core::RakeTask.new do |t|
+  t.pattern           = 'spec/**/*_spec.rb'
+  t.rspec_opts        = [ '--color', '--format documentation' ]
 end
 
-Spec::Rake::SpecTask.new( 'spec:rcov' ) do |t|
-  t.spec_files       = FileList[ 'spec/**/*_spec.rb' ]
+RSpec::Core::RakeTask.new( 'spec:rcov' ) do |t|
+  t.pattern          = 'spec/**/*_spec.rb'
   t.rcov             = true
   t.rcov_opts        = [ '--exclude spec' ]
 end
