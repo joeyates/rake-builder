@@ -200,11 +200,12 @@ module Rake
     end
 
     def self.create_configure_ac( project_title, version )
+      source = Rake::Path.relative_path( instances[ 0 ].source_files[ 0 ], instances[ 0 ].rakefile_path  )
       File.open( 'configure.ac', 'w' ) do | f |
         f.write <<EOT
 AC_PREREQ(2.61)
 AC_INIT(#{project_title}, #{ version })
-AC_CONFIG_SRCDIR([examples/01_create_database/main.cpp])
+AC_CONFIG_SRCDIR([#{ source }])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([#{project_title}], [#{ version }])
 
@@ -246,7 +247,10 @@ EOT
     end
 
     def makefile_am_entry
-      primary_name = name
+      primary_name = Rake::Path.relative_path( name, @rakefile_path)
+      sources      = source_files.map{ | file | Rake::Path.relative_path( file, @rakefile_path) }
+      include_path = @include_paths.map{ | file | Rake::Path.relative_path( file, @rakefile_path) }.map { |p| "-I#{ p }" }.join( " " )
+
       case @target_type
       when :static_library, :shared_library
         primary_label = 'lib_LIBRARIES'
@@ -255,8 +259,8 @@ EOT
       end
 
       return <<EOT
-#{ primary_label } = #{ target }
-#{ primary_name }_SOURCES = #{ source_files.join( ' ' ) }
+#{ primary_label } = #{ primary_name }
+#{ primary_name }_SOURCES = #{ sources.join( ' ' ) }
 #{ primary_name }_CPPFLAGS = #{ include_path }
 
 EOT
@@ -321,8 +325,6 @@ EOT
       self.class.instances << self
     end
 
-    private
-
     # Source files found in source_search_paths
     def source_files
       return @source_files if @source_files
@@ -334,6 +336,8 @@ EOT
       return @header_files if @header_files
       @header_files = find_files( @header_search_paths, @header_file_extension ).uniq
     end
+
+    private
 
     def initialize_attributes
       @architecture          = 'i386'
@@ -801,7 +805,7 @@ EOT
           FileList[ search ].each do | pathname |
             full_path = Rake::Path.expand_with_root( pathname, @rakefile_path )
             directory = File.dirname( full_path )
-            relative  = Rake::Path.relative_path( non_glob_search, directory )
+            relative  = Rake::Path.relative_path( directory, non_glob_search )
             memo << { :source_file => pathname, :relative_path => relative }
           end
         else
