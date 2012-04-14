@@ -32,8 +32,13 @@ module Rake
       paths.map{ |path| expand_with_root( path, root ) }
     end
 
-    def self.subtract_prefix( prefix, path )
-      path[ prefix.size .. -1 ]
+    def self.relative_path( prefix, path )
+      m = path.match( /^#{prefix}/ )
+      if ! m.nil?
+        m.post_match
+      else
+        path
+      end
     end
 
   end

@@ -801,7 +801,7 @@ EOT
           FileList[ search ].each do | pathname |
             full_path = Rake::Path.expand_with_root( pathname, @rakefile_path )
             directory = File.dirname( full_path )
-            relative  = Rake::Path.subtract_prefix( non_glob_search, directory )
+            relative  = Rake::Path.relative_path( non_glob_search, directory )
             memo << { :source_file => pathname, :relative_path => relative }
           end
         else
