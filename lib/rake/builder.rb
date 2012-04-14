@@ -239,31 +239,57 @@ EOT
     end
 
     def self.create_makefile_am
-      File.open( 'Makefile.am', 'w' ) do | f |
-        instances.each do | instance |
-          f.write instance.makefile_am_entry
+      libraries = []
+      binaries  = []
+      instances.each do | instance |
+        entry = instance.makefile_am_entry
+        case entry[ :type ]
+        when :static_library, :shared_library
+          libraries << entry
+        else
+          binaries << entry
         end
+      end
+
+      File.open( 'Makefile.am', 'w' ) do | f |
+        if libraries.size > 0
+          names = libraries.map { | lib | lib[ :name ] }.join( ' ' )
+          f.write "lib_LIBRARIES = #{ names }\n\n"
+          libraries.each do | lib |
+            f.write <<EOT
+#{ lib[ :label ] }_SOURCES = #{ lib[ :sources ] }
+#{ lib[ :label ] }_CPPFLAGS = #{ lib[ :compiler_flags ] }
+
+EOT
+          end
+        end
+        if binaries.size > 0
+          names = binaries.map { | bin | bin[ :name ] }.join( ' ' )
+          f.write "bin_PROGRAMS = #{ names }\n\n"
+          binaries.each do | bin |
+            f.write <<EOT
+#{ bin[ :label ] }_SOURCES = #{ bin[ :sources ] }
+#{ bin[ :label ] }_CPPFLAGS = #{ bin[ :compiler_flags ] }
+
+EOT
+          end
+        end
+
       end
     end
 
     def makefile_am_entry
-      primary_name = Rake::Path.relative_path( name, @rakefile_path)
-      sources      = source_files.map{ | file | Rake::Path.relative_path( file, @rakefile_path) }
-      include_path = @include_paths.map{ | file | Rake::Path.relative_path( file, @rakefile_path) }.map { |p| "-I#{ p }" }.join( " " )
+      primary_name = Rake::Path.relative_path( target, rakefile_path, :initial_dot_slash => false )
+      sources      = source_files.map{ | file | Rake::Path.relative_path( file, rakefile_path) }.join( ' ' )
+      sources_label = primary_name.gsub( %r(\.), '_' )
 
-      case @target_type
-      when :static_library, :shared_library
-        primary_label = 'lib_LIBRARIES'
-      else
-        primary_label = 'bin_PROGRAMS'
-      end
-
-      return <<EOT
-#{ primary_label } = #{ primary_name }
-#{ primary_name }_SOURCES = #{ sources.join( ' ' ) }
-#{ primary_name }_CPPFLAGS = #{ include_path }
-
-EOT
+      {
+      :type         => @target_type,
+      :name         => primary_name, 
+      :label        => sources_label,
+      :sources      => sources,
+      :compiler_flags => compiler_flags
+      }
     end
 
     #########################################
@@ -648,10 +674,6 @@ EOT
       end
     end
 
-    def name
-      target.gsub( %r(\.), '_' )
-    end
-
     def type( target )
       case target
       when /\.a/
@@ -675,7 +697,8 @@ EOT
     # Compiling and linking parameters
 
     def include_path
-      @include_paths.map { |p| "-I#{ p }" }.join( " " )
+      paths = @include_paths.map{ | file | Rake::Path.relative_path( file, rakefile_path) }
+      paths.map { |p| "-I#{ p }" }.join( ' ' )
     end
 
     def compiler_flags

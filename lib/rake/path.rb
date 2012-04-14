@@ -32,11 +32,15 @@ module Rake
       paths.map{ |path| expand_with_root( path, root ) }
     end
 
-    def self.relative_path( path, prefix )
+    def self.relative_path( path, prefix, options = {} )
       return path if prefix.nil?
       m = path.match( /^#{ prefix }\/?/ )
       if ! m.nil?
-        "./#{ m.post_match }"
+        if options[ :initial_dot_slash ]
+          "./#{ m.post_match }"
+        else
+          m.post_match
+        end
       else
         path
       end
