@@ -7,14 +7,17 @@ module Rake
   class OnceTask < Task
 
     attr_accessor :invoked
+    attr_accessor :timestamp
 
     def self.define_task( *args, &block )
       task = super( *args, &block )
+      task.timestamp = nil
       task.invoked = false
       task
     end
 
     def execute(*args)
+      @timestamp = Time.now
       @invoked = true
       super(*args)
     end

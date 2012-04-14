@@ -77,8 +77,8 @@ describe 'when using namespaces' do
   end
 
   it 'creates the correct tasks' do
-    expected_tasks = expected_tasks( [ @project.target ], 'my_namespace' )
-    missing_tasks = expected_tasks - task_names
+    expected = expected_tasks( scoped_tasks( [ @project.target ], 'my_namespace' ), 'my_namespace' )
+    missing_tasks = expected - task_names
     missing_tasks.should == []
   end
 

@@ -5,6 +5,7 @@ require 'rake/tasklib'
 require 'rake/path'
 require 'rake/local_config'
 require 'rake/file_task_alias'
+require 'rake/microsecond'
 require 'rake/once_task'
 require 'compiler'
 
@@ -265,7 +266,7 @@ module Rake
     end
 
     def define
-      task :environment do
+      once_task :environment do
         logger.level = Logger::DEBUG if ENV[ 'DEBUG' ]
       end
 
@@ -281,7 +282,7 @@ module Rake
       FileTaskAlias.define_task( :build, @target )
 
       desc "Build '#{ target_basename }'"
-      file @target => [ scoped_task( :environment ),
+      microsecond_file @target => [ scoped_task( :environment ),
                         scoped_task( :compile ),
                         *@target_prerequisites ] do | t |
         shell "rm -f #{ t.name }"
@@ -294,7 +295,7 @@ module Rake
       desc "Compile all sources"
       # Only import dependencies when we're compiling
       # otherwise makedepend gets run on e.g. 'rake -T'
-      task :compile => [ scoped_task( :environment ),
+      once_task :compile => [ scoped_task( :environment ),
                          @makedepend_file,
                          scoped_task( :load_makedepend ),
                          *object_files ]
@@ -303,7 +304,7 @@ module Rake
         define_compile_task( src )
       end
 
-      directory @objects_path
+      microsecond_directory @objects_path
 
       file scoped_task( local_config ) do
         @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
@@ -313,7 +314,7 @@ module Rake
         config.save
       end
 
-      file @makedepend_file => [ scoped_task( :load_local_config ),
+      microsecond_file @makedepend_file => [ scoped_task( :load_local_config ),
                                  scoped_task( :missing_headers ),
                                  @objects_path,
                                  *project_files ] do
@@ -328,7 +329,7 @@ module Rake
         @include_paths += Rake::Path.expand_all_with_root( config.include_paths, @rakefile_path )
       end
 
-      task :missing_headers => [ *generated_headers ] do
+      once_task scoped_task( :missing_headers ) => [ *generated_headers ] do
         missing_headers
       end
 
@@ -599,6 +600,7 @@ EOT
     def project_files
       source_files + header_files
     end
+    public :project_files
 
     def file_list( files, delimiter = ' ' )
       files.join( delimiter )
