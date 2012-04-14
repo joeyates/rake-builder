@@ -1,11 +1,10 @@
 require 'rspec'
 require File.expand_path( File.dirname(__FILE__) + '/../lib/rake/builder' )
 
-SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
-
 module RakeBuilderHelper
 
-  TARGET = {
+  SPEC_PATH ||= File.expand_path( File.dirname(__FILE__) )
+  TARGET    ||= {
     :executable      => 'the_executable',
     :static_library  => 'libthe_static_library.a',
     :shared_library  => 'libthe_dynamic_library.so',

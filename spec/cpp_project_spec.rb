@@ -6,10 +6,10 @@ describe 'when building an executable' do
 
   before( :all ) do
     @test_output_file = Rake::Path.expand_with_root(
-                          'rake-builder-testfile.txt', SPEC_PATH )
+                          'rake-builder-testfile.txt', RakeBuilderHelper::SPEC_PATH )
     @expected_target  = Rake::Path.expand_with_root(
                           RakeBuilderHelper::TARGET[ :executable ],
-                          SPEC_PATH )
+                          RakeBuilderHelper::SPEC_PATH )
   end
 
   before( :each ) do
