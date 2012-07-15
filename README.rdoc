@@ -49,7 +49,7 @@ the correct directory:
    builder.target               = 'my_program'
    builder.source_search_paths  = [ 'src' ]
    builder.header_search_paths  = [ 'include' ]
-   builder.cross_compiel        = 'arm-none-eabi-'
+   builder.cross_compile        = 'arm-none-eabi-'
    builder.compilation_options  = [ '-mthumb', '-mcpu=cortex-m3' ]
  end
 
