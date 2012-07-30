@@ -13,7 +13,7 @@ describe 'when handling generated files' do
                              'rake-builder-testfile.txt',
                              @project.makedepend_file,
                              @project.target ],
-                            SPEC_PATH )
+                            RakeBuilderHelper::SPEC_PATH )
   end
 
   after( :each ) do
@@ -50,7 +50,7 @@ describe 'when adding generated files' do
 
   before( :each ) do
     @file = 'foobar.txt'
-    @file_with_path = Rake::Path.expand_with_root( @file, SPEC_PATH )
+    @file_with_path = Rake::Path.expand_with_root( @file, RakeBuilderHelper::SPEC_PATH )
   end
 
   it 'includes added files' do

@@ -77,7 +77,7 @@ describe 'when using namespaces' do
   end
 
   it 'creates the correct tasks' do
-    expected = expected_tasks( scoped_tasks( [ @project.target ], 'my_namespace' ), 'my_namespace' )
+    expected = expected_tasks( [ @project.target ], 'my_namespace' )
     missing_tasks = expected - task_names
     missing_tasks.should == []
   end
@@ -120,6 +120,7 @@ describe 'when building a shared library' do
   before( :each ) do
     Rake::Task.clear
     @project = cpp_task( :shared_library )
+    @project.compilation_options << '-fPIC'
     `rm -f #{ @project.target }`
   end
 

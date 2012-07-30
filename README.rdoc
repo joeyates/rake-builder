@@ -39,6 +39,46 @@ the correct directory:
  $ cd `gem environment gemdir`/gems/rake-builder-nnn
  $ cd examples
 
+= Usage for cross compilation
+
+ require 'rubygems' if RUBY_VERSION < '1.9'
+ require 'rake'
+ require 'rake/builder'
+ 
+ Rake::Builder.new do |builder|
+   builder.target               = 'my_program'
+   builder.source_search_paths  = [ 'src' ]
+   builder.header_search_paths  = [ 'include' ]
+   builder.cross_compile        = 'arm-none-eabi-'
+   builder.compilation_options  = [ '-mthumb', '-mcpu=cortex-m3' ]
+ end
+
+As you see, this is not much different from standard usage ;-)
+The more difficult part is to set up your compilation environment and figure
+out the right compiler switches.
+
+It gets much more interesting in combination with namespaces where you can
+compile your source in different configurations for different systems.
+
+ Rake::Builder new do |builder|
+   builder.task_namespace      = :test
+   builder.target              = 'testrunner'
+   builder.objects_path        = 'output/test'
+   # source paths, include paths, test libraries etc.
+ end
+ 
+ Rake::Builder new do |builder|
+   builder.task_namespace      = :arm
+   builder.target              = 'libmy_library.a'
+   builder.objects_path        = 'output/arm'
+   # source paths, include paths, libraries etc.
+   builder.cross_compile       = 'arm-none-eabi-'
+ end
+
+This fragment will create two targets, one executable created with your host
+gcc under output/test named testrunner and a static library created with the
+arm-none-eabi-gcc found in your $PATH in the directory output/arm.
+
 == Project Configuration
 
 In order to build on a specific computer, you will need

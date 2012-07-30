@@ -5,7 +5,6 @@ require 'rake/tasklib'
 require 'rake/path'
 require 'rake/local_config'
 require 'rake/file_task_alias'
-require 'rake/microsecond'
 require 'rake/once_task'
 require 'compiler'
 
@@ -88,6 +87,9 @@ module Rake
 
     # The linker that will be used
     attr_accessor :linker
+
+    # Cross compilation prefix
+    attr_accessor :cross_compile
 
     # Extension of source files (default 'cpp' for C++ and 'c' for C)
     attr_accessor :source_file_extension
@@ -225,7 +227,7 @@ module Rake
       raise BuilderError.new( "The target name cannot be nil", task_namespace )             if @target.nil?
       raise BuilderError.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
       @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
-      @target                = File.expand_path( @target, @rakefile_path )
+      @target                = File.expand_path( @target, @objects_path )
       @target_type           ||= type( @target )
       raise BuilderError.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
 
@@ -239,6 +241,9 @@ module Rake
       @default_task          ||= :build
       @target_prerequisites  << @rakefile
       @local_config          = Rake::Path.expand_with_root( '.rake-builder', @rakefile_path )
+      if @task_namespace
+        @local_config = "#{ @local_config }.#{ @task_namespace }"
+      end
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
 
@@ -282,14 +287,14 @@ module Rake
       FileTaskAlias.define_task( :build, @target )
 
       desc "Build '#{ target_basename }'"
-      microsecond_file @target => [ scoped_task( :environment ),
+      file @target => [ scoped_task( :environment ),
                         scoped_task( :compile ),
                         *@target_prerequisites ] do | t |
         shell "rm -f #{ t.name }"
         build_commands.each do | command |
           shell command
         end
-        raise BuildFailure.new( "The build command failed" ) if ! File.exist?( t.name )
+        raise BuildFailure.new( "The build command failed" ) if ! File.exist?( @target )
       end
 
       desc "Compile all sources"
@@ -304,9 +309,9 @@ module Rake
         define_compile_task( src )
       end
 
-      microsecond_directory @objects_path
+      directory @objects_path
 
-      file scoped_task( local_config ) do
+      file local_config do
         @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
         added_includes = @compiler_data.include_paths( missing_headers )
         config = Rake::LocalConfig.new( local_config )
@@ -314,7 +319,7 @@ module Rake
         config.save
       end
 
-      microsecond_file @makedepend_file => [ scoped_task( :load_local_config ),
+      file @makedepend_file => [ scoped_task( :load_local_config ),
                                  scoped_task( :missing_headers ),
                                  @objects_path,
                                  *project_files ] do
@@ -323,7 +328,7 @@ module Rake
         shell command
       end
 
-      once_task scoped_task( :load_local_config ) => scoped_task( local_config ) do
+      once_task scoped_task( :load_local_config ) => local_config do
         config = LocalConfig.new( local_config )
         config.load
         @include_paths += Rake::Path.expand_all_with_root( config.include_paths, @rakefile_path )
@@ -477,7 +482,7 @@ EOT
       @generated_files << object
       file object => [ source ] do |t|
         @logger.add( Logger::DEBUG, "Compiling '#{ source }'" )
-        command = "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
+        command = "#{ @cross_compile }#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
         shell command
       end
     end
@@ -485,12 +490,12 @@ EOT
     def build_commands
       case @target_type
       when :executable
-        [ "#{ @linker } -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
+        [ "#{ @cross_compile }#{ @linker } -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       when :static_library
-        [ "ar -cq #{ @target } #{ file_list( object_files ) }",
-          "ranlib #{ @target }" ]
+        [ "#{ @cross_compile }ar -cq #{ @target } #{ file_list( object_files ) }",
+          "#{ @cross_compile }ranlib #{ @target }" ]
       when :shared_library
-        [ "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
+        [ "#{ @cross_compile }#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       end
     end
 
