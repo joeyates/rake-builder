@@ -1,5 +1,8 @@
 load File.dirname(__FILE__) + '/spec_helper.rb'
 
+# Only run on OS X
+if RUBY_PLATFORM['darwin']
+
 describe 'when building an Objective-C executable' do
 
   include RakeBuilderHelper
@@ -64,3 +67,6 @@ describe 'when building an Objective-C executable' do
   end
 
 end
+
+end
+
