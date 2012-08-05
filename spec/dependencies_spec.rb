@@ -144,7 +144,7 @@ describe 'the dependencies system' do
     end
     Rake::Task.clear
     @project = cpp_task( :executable )
-    object_file_path = Rake::Path.expand_with_root( 'main.o', SPEC_PATH )
+    object_file_path = Rake::Path.expand_with_root( 'main.o', RakeBuilderHelper::SPEC_PATH )
     Rake::Task[ object_file_path ].needed?.should be_false
   end
 
@@ -154,16 +154,16 @@ describe 'the dependencies system' do
     end
     Rake::Task.clear
     @project = cpp_task( :executable )
-    source_file_path = Rake::Path.expand_with_root( 'cpp_project/main.cpp', SPEC_PATH )
-    object_file_path = Rake::Path.expand_with_root( 'main.o', SPEC_PATH )
+    source_file_path = Rake::Path.expand_with_root( 'cpp_project/main.cpp', RakeBuilderHelper::SPEC_PATH )
+    object_file_path = Rake::Path.expand_with_root( 'main.o', RakeBuilderHelper::SPEC_PATH )
     touching_temporarily( source_file_path, File.mtime( object_file_path ) + 1 ) do
       Rake::Task[ object_file_path ].needed?.should be_true
     end
   end
 
   it 'recompiles source files, if header dependencies are more recent' do
-    header_file_path = Rake::Path.expand_with_root( 'cpp_project/main.h', SPEC_PATH )
-    object_file_path = Rake::Path.expand_with_root( 'main.o', SPEC_PATH )
+    header_file_path = Rake::Path.expand_with_root( 'cpp_project/main.h', RakeBuilderHelper::SPEC_PATH )
+    object_file_path = Rake::Path.expand_with_root( 'main.o', RakeBuilderHelper::SPEC_PATH )
     isolating_seconds do
       Rake::Task[ 'compile' ].invoke
     end
