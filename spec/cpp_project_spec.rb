@@ -119,7 +119,9 @@ describe 'when building a shared library' do
 
   before( :each ) do
     Rake::Task.clear
-    @project = cpp_task( :shared_library )
+    @project = cpp_task( :shared_library ) do |builder|
+      builder.compilation_options += ['-fPIC']
+    end
     `rm -f #{ @project.target }`
   end
 
