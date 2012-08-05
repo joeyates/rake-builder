@@ -318,6 +318,8 @@ module Rake
                                  scoped_task( :missing_headers ),
                                  @objects_path,
                                  *project_files ] do
+        system('which makedepend >/dev/null')
+        raise 'makedepend not found' unless $?.success?
         @logger.add( Logger::DEBUG, "Analysing dependencies" )
         command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
         shell command
@@ -675,3 +677,4 @@ EOT
   end
 
 end
+

@@ -15,6 +15,12 @@ Here is a typical example:
    builder.header_search_paths  = [ 'include' ]
  end
 
+= Dependencies
+
+* makedepend
+** linux: package 'xutils-dev'
+** OS X: already installed
+
 = Installation
 
  $ sudo gem install rake-builder

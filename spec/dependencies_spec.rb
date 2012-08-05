@@ -171,8 +171,10 @@ describe 'the dependencies system' do
     @project = cpp_task( :executable )
     # Header dependencies aren't loaded until we call :compile
     Rake::Task[ :load_makedepend ].invoke
+
     touching_temporarily( header_file_path, File.mtime( object_file_path ) + 1 ) do
-      Rake::Task[ object_file_path ].needed?.should be_true
+      Rake::Task[ object_file_path ].needed?.
+                                  should be_true
     end
   end
 
