@@ -30,13 +30,13 @@ describe 'local config files' do
     config.include_paths.     should         include( @expected_path )
   end
 
-  it 'fails if there\'s no version' do
+  it 'fails if the file version is incorrect' do
     @config[ :rake_builder ][ :config_file ].delete( :version )
     save_config
     lambda do
       config = Rake::LocalConfig.new( @local_config_file )
       config.load
-    end.should raise_error( Rake::Builder::BuilderError, 'Config file version missing' )
+    end.should raise_error( Rake::Builder::BuilderError, 'Config file version incorrect' )
   end
 
   context 'dependencies' do

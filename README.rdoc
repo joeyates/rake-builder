@@ -57,6 +57,7 @@ The file should be a YAML structure, and must include a version.
 
 Currently, the following can be configured:
 * extra include paths: :include_paths
+* extra compilation options (e.g. defines): :compilation_options
 
 === Example '.rake-builder'
 
