@@ -1,9 +1,9 @@
-coverage/
-pkg/
-html/
 *.depend.mf
 *.o
-*.gem
-Gemfile.lock
-.rvmrc
+/.bundle/
+/coverage/
+/pkg/
+/html/
+/Gemfile.lock
+/vendor/
 
