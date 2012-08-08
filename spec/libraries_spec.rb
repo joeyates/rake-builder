@@ -22,12 +22,14 @@ describe 'when using libraries' do
   end
 
   it 'fails to build if libraries are missing' do
+    @project = cpp_task( :executable ) do |builder|
+      builder.library_dependencies = [ 'library_that_doesnt_exist' ]
+    end
+
     expect do
-      @project = cpp_task( :executable ) do |builder|
-        builder.library_dependencies = [ 'library_that_doesnt_exist' ]
-      end
       Rake::Task[ 'build' ].invoke
-    end.to raise_error( Rake::Builder::BuildFailure )
+    end.                          to        raise_error( Rake::Builder::BuildFailure )
   end
 
 end
+
