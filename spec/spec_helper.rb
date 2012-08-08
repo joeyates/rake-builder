@@ -81,12 +81,13 @@ module RakeBuilderHelper
   end
 
   def capturing_output
-    output = StringIO.new
-    $stdout = output
+    originals = [$stdout, $stderr]
+    stdout, stderr = StringIO.new, StringIO.new
+    $stdout, $stderr = stdout, stderr
     yield
-    output.string
+    [stdout.string, stderr.string]
   ensure
-    $stdout = STDOUT
+    $stdout, $stderr = *originals
   end
 
   # Most file systems have a 1s resolution
