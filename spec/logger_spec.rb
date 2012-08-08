@@ -22,3 +22,4 @@ describe 'the logger' do
   # builder.logger.level = Logger::DEBUG
 
 end
+
