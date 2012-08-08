@@ -10,6 +10,8 @@ require 'rake/microsecond'
 require 'rake/once_task'
 require 'compiler'
 
+include Rake::DSL
+
 module Rake
 
   class Formatter < Logger::Formatter
