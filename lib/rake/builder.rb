@@ -20,14 +20,6 @@ module Rake
 
   class Builder < TaskLib
 
-    module VERSION #:nodoc:
-      MAJOR = 0
-      MINOR = 0
-      TINY  = 14
-
-      STRING = [ MAJOR, MINOR, TINY ].join('.')
-    end
-
     class BuilderError < StandardError
       attr_accessor :namespace
 
@@ -338,7 +330,7 @@ EOT
     def self.save_file_version( version )
       File.open( 'VERSION', 'w' ) { | f | f.write "#{ version }/n" }
     end
-
+ 
     self.define_global
 
     def initialize( &block )

@@ -1,6 +1,6 @@
 require 'rake'
 $:.unshift( File.dirname( __FILE__ ) + '/lib' )
-require 'rake/builder'
+require 'rake/builder/version'
 
 spec = Gem::Specification.new do |s|
   s.name              = 'rake-builder'
