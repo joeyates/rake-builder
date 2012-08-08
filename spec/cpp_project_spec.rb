@@ -48,7 +48,7 @@ describe 'when building an executable' do
   end
 
   it 'has a \'run\' task' do
-    Rake::Task[ 'run' ].should_not be_nil
+    task_names.include?('run').   should     be_true
   end
 
   it 'builds the program with \'run\'' do
