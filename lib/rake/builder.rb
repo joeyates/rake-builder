@@ -173,10 +173,10 @@ module Rake
       task :autoconf, [:project_title, :version] => [] do | task, args |
         project_title = args.project_title or raise "Please supply a project_title parameter"
         version       = decide_version( args.version )
-        if File.exist?( 'configure.ac' )
+        if File.exist?('configure.ac')
           raise "The file 'configure.ac' already exists"
         end
-        if File.exist?( 'Makefile.am' )
+        if File.exist?('Makefile.am')
           raise "The file 'Makefile.am' already exists"
         end
         create_configure_ac project_title, version
@@ -186,7 +186,7 @@ module Rake
 
     def self.create_configure_ac( project_title, version )
       source = Rake::Path.relative_path( instances[ 0 ].source_files[ 0 ], instances[ 0 ].rakefile_path  )
-      File.open( 'configure.ac', 'w' ) do | f |
+      File.open('configure.ac', 'w') do | f |
         f.write <<EOT
 AC_PREREQ(2.61)
 AC_INIT(#{project_title}, #{ version })
