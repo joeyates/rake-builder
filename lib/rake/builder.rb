@@ -182,15 +182,6 @@ module Rake
         create_configure_ac project_title, version
         create_makefile_am
       end
-
-      desc "A file containing the major.minor.revision version information"
-      file 'VERSION' do
-        raise <<-EOT
-        In order to create autoconf files, you need to create a file called VERSION in the root directory of the project.
-        The file should contain the version of the project, like this:
-            1.2.3
-        EOT
-      end
     end
 
     def self.create_configure_ac( project_title, version )
