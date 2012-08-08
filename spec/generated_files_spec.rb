@@ -1,5 +1,7 @@
 load File.dirname(__FILE__) + '/spec_helper.rb'
 
+require 'json'
+
 describe 'when handling generated files' do
 
   include RakeBuilderHelper
@@ -25,10 +27,10 @@ describe 'when handling generated files' do
   end
 
   it 'lists generated files, via the task' do
-    output = capturing_output do
+    stdout, _ = capturing_output do
       Rake::Task[ 'generated_files' ].invoke
     end
-    eval( output ).should =~ @expected_generated
+    JSON.load(stdout).            should    =~ @expected_generated
   end
 
   it 'removes generated files with \'clean\'' do

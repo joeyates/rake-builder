@@ -1,4 +1,5 @@
 require 'rubygems' if RUBY_VERSION < '1.9'
+require 'json'
 require 'logger'
 require 'rake'
 require 'rake/tasklib'
@@ -361,7 +362,7 @@ module Rake
 
       desc "List generated files (which are removed with 'rake #{ scoped_task( :clean ) }')"
       task :generated_files do
-        puts generated_files.inspect
+        puts generated_files.to_json
       end
 
       # Re-implement :clean locally for project and within namespace
