@@ -671,8 +671,8 @@ EOT
     end
 
     def shell( command, log_level = Logger::DEBUG )
-      @logger.add( log_level, command )
-      `#{ command }`
+      @logger.add(log_level, command)
+      system command, {:out => '/dev/null', :err => '/dev/null'}
     end
 
   end
