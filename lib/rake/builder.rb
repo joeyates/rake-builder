@@ -253,8 +253,10 @@ EOT
           f.write "bin_PROGRAMS = #{ names }\n\n"
           binaries.each do | bin |
             f.write <<EOT
-#{ bin[ :label ] }_SOURCES = #{ bin[ :sources ] }
+#{ bin[ :label ] }_SOURCES  = #{ bin[ :sources ] }
 #{ bin[ :label ] }_CPPFLAGS = #{ bin[ :compiler_flags ] }
+#{ bin[ :label ] }_LDFLAGS  = -L.
+#{ bin[ :label ] }_LDADD    = #{ bin[ :libraries ] }
 
 EOT
           end
@@ -273,7 +275,8 @@ EOT
       :name         => primary_name, 
       :label        => sources_label,
       :sources      => sources,
-      :compiler_flags => compiler_flags
+      :compiler_flags => compiler_flags,
+      :libraries      => library_dependencies_list,
       }
     end
 

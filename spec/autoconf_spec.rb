@@ -170,13 +170,19 @@ describe 'autoconf' do
     it 'has sources' do
       Rake::Task['autoconf'].execute(@args)
 
-      @output['Makefile.am'].     should     =~ /the_executable_SOURCES = cpp_project\/main\.cpp/
+      @output['Makefile.am'].     should     =~ /the_executable_SOURCES\s*=\s+cpp_project\/main\.cpp/
     end
 
     it 'has flags' do
       Rake::Task['autoconf'].execute(@args)
 
-      @output['Makefile.am'].     should     =~ /the_executable_CPPFLAGS =/
+      @output['Makefile.am'].     should     =~ /the_executable_CPPFLAGS\s*=/
+    end
+
+    it 'has libraries' do
+      Rake::Task['autoconf'].execute(@args)
+
+      @output['Makefile.am'].     should     =~ /the_executable_LDADD\s*=/
     end
 
   end
