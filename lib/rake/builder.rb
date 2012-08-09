@@ -336,7 +336,7 @@ EOT
     # Source files found in source_search_paths
     def source_files
       return @source_files if @source_files
-      @source_files = find_files( @source_search_paths, @source_file_extension ).uniq
+      @source_files = find_files( @source_search_paths, @source_file_extension ).uniq.sort
     end
 
     # Header files found in header_search_paths
