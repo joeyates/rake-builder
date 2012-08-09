@@ -283,7 +283,7 @@ EOT
     def self.decide_version( parameter_version )
       acceptable_version_string = %r(^(\d+)\.(\d+)\.(\d+)$)
       if parameter_version && parameter_version !~ acceptable_version_string
-        raise "The supplied version number '#{ parameter_version }' is badly formatted. It should consist of three numbers separated by ."
+        raise "The supplied version number '#{parameter_version}' is badly formatted. It should consist of three numbers separated by ."
       end
       file_version = load_file_version
       if file_version && file_version !~ acceptable_version_string
