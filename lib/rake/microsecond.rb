@@ -45,8 +45,10 @@ module Rake
       end
 
       def needed?
-        exists = File.directory?( self.name )
-        @timestamp = File.stat( self.name ).mtime if exists
+        exists = File.directory?(self.path)
+        if exists && @timestamp.nil?
+          @timestamp = File.stat(self.path).mtime
+        end
         ! exists
       end
 
