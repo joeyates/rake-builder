@@ -35,9 +35,11 @@ module Rake
       include FileUtils
 
       attr_accessor :timestamp
+      attr_accessor :path
 
       def self.define_task( *args, &block )
-        task = super( *args, &block )
+        task           = super(*args, &block)
+        task.path      = args[0]
         task.timestamp = nil
         task
       end
@@ -49,7 +51,7 @@ module Rake
       end
 
       def execute(*args)
-        mkdir_p self.name, :verbose => false
+        mkdir_p self.path, :verbose => false
         @timestamp = Time.now
         super(*args)
       end
