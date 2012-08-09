@@ -684,8 +684,10 @@ EOT
     end
 
     def compiler_flags
-      flags = include_path + ' ' + compilation_options.join( ' ' )
-      flags << ' ' << architecture_option if RUBY_PLATFORM =~ /darwin/i
+      flags = include_path
+      options = compilation_options.join( ' ' )
+      flags << ' ' + options             if options != ''
+      flags << ' ' + architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags
     end
 
