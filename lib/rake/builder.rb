@@ -318,7 +318,7 @@ EOT
     end
 
     def self.save_file_version( version )
-      File.open( 'VERSION', 'w' ) { | f | f.write "#{ version }/n" }
+      File.open('VERSION', 'w') { |f| f.write "#{version}\n" }
     end
  
     self.define_global
