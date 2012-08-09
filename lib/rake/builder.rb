@@ -287,7 +287,7 @@ EOT
       end
       file_version = load_file_version
       if file_version && file_version !~ acceptable_version_string
-        raise "Your VERSION file contains a version number '#{ parameter_version }' which is badly formatted. It should consist of three numbers separated by ."
+        raise "Your VERSION file contains a version number '#{file_version}' which is badly formatted. It should consist of three numbers separated by ."
       end
       case
       when parameter_version.nil? && file_version.nil?
