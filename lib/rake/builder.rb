@@ -451,7 +451,7 @@ EOT
         build_commands.each do | command |
           shell command
         end
-        raise BuildFailure.new( "The build command failed" ) if ! File.exist?( t.name )
+        raise BuildFailure.new("The build command failed to create '#{@target}'") if not File.exist?(@target)
       end
 
       desc "Compile all sources"
