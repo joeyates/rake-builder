@@ -312,12 +312,9 @@ EOT
     end
 
     def self.load_file_version
-      if File.exist?('VERSION')
-        version = File.read('VERSION')
-        version.strip
-      else
-        nil
-      end
+      return nil unless File.exist?('VERSION')
+      version = File.read('VERSION')
+      version.strip
     end
 
     def self.save_file_version( version )
