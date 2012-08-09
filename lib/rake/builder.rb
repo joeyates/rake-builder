@@ -476,10 +476,12 @@ EOT
         config.save
       end
 
-      microsecond_file @makedepend_file => [ scoped_task( :load_local_config ),
-                                 scoped_task( :missing_headers ),
-                                 @objects_path,
-                                 *project_files ] do
+      microsecond_file @makedepend_file => [
+          scoped_task( :load_local_config ),
+          scoped_task( :missing_headers ),
+          @objects_path,
+          *project_files
+      ] do
         system('which makedepend >/dev/null')
         raise 'makedepend not found' unless $?.success?
         @logger.add( Logger::DEBUG, "Analysing dependencies" )
