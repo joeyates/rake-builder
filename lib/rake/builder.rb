@@ -449,9 +449,10 @@ EOT
                         *@target_prerequisites ] do | t |
         shell "rm -f #{ t.name }"
         build_commands.each do | command |
-          shell command
+          stdout, stderr = shell(command)
+          raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
         end
-        raise BuildFailure.new("The build command failed to create '#{@target}'") if not File.exist?(@target)
+        raise BuildFailure.new("'#{@target}' not created") if not File.exist?(@target)
       end
 
       desc "Compile all sources"
@@ -836,9 +837,14 @@ EOT
       end
     end
 
-    def shell( command, log_level = Logger::DEBUG )
+    def shell(command, log_level = Logger::DEBUG)
       @logger.add(log_level, command)
-      system command, {:out => '/dev/null', :err => '/dev/null'}
+      originals        = $stdout, $stderr
+      stdout, stderr   = StringIO.new, StringIO.new
+      $stdout, $stderr = stdout, stderr
+      system command, {:out => :out, :err => :err}
+      $stdout, $stderr = *originals
+      [stdout.read, stderr.read]
     end
 
   end
