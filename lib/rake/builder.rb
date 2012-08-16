@@ -654,7 +654,7 @@ EOT
       @generated_files << object
       file object => [ source ] do |t|
         @logger.add( Logger::DEBUG, "Compiling '#{ source }'" )
-        command = "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
+        command = "#{ @cross_compile }#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
         shell command
       end
     end
