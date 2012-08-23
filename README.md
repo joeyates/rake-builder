@@ -52,13 +52,15 @@ Dependencies
 ------------
 
 * makedepend
-** linux: package 'xutils-dev'
-** OS X: already installed
+ * linux: package 'xutils-dev'
+ * OS X: already installed
 
 Gem
 ---
 
- $ (sudo) gem install rake-builder
+```shell
+$ (sudo) gem install rake-builder
+```
 
 Usage
 =====
@@ -85,10 +87,7 @@ include paths.
 Rake::Builder collects all such information in one file:
 '.rake-builder'
 
-For namespaced tasks, e.g. 'test:build', the file is '.rake-builer.test'
-
-This file should be created in the same
-directory as the Rakefile.
+This file should be created in the same directory as the Rakefile.
 
 The file should be a YAML structure, and must include a version.
 
@@ -98,15 +97,18 @@ Currently, the following can be configured:
 
 ### Example '.rake-builder'
 
- ---
- :rake_builder:
-   :config_file:
-     :version: "1.0"
- :include_paths:
- - /opt/local/include
- - /usr/include/c++/4.2.1
+```yaml
+---
+:rake_builder:
+  :config_file:
+    :version: "1.0"
+:include_paths:
+- /opt/local/include
+- /usr/include/c++/4.2.1
+```
 
-= Default Tasks
+Default Tasks
+-------------
 
 * compile
 * build
@@ -134,7 +136,7 @@ Dependency Resolution
 
 Task dependencies must ensure that out of date files are recreated as needed.
 
-http://github.com/downloads/joeyates/rake-builder/RakeBuilderDependencyStructure.png
+![rake-builder Dependency Resolution](http://github.com/downloads/joeyates/rake-builder/RakeBuilderDependencyStructure.png "rake-builder Dependency Resolution")
 
 Limitations
 -----------
@@ -142,11 +144,11 @@ Limitations
 ### File Modification Times
 
 Rake's FileTask decides whether a file needs rebuilding by comparing on disk file
-modification times (see the private method <em>out_of_date?</em>, which returns true if the
+modification times (see the private method *out_of_date?*, which returns true if the
 dependency was modified *after* the dependent).
 Unfortunately, most modern file systems hold modification times in whole
 seconds. If a dependency and a dependent were modificed during the same second,
-<b>even if the dependency were modified later</b>, <em>out_of_date?</em> returns *false*
+**even if the dependency were modified later**, *out_of_date?* returns *false*
 which is not the correct answer.
 
 This problem is mostly felt in testing, where file modification times are temporarily
@@ -154,10 +156,10 @@ modified to test dependencies. Also, tests wait for second to complete after bui
 
 #### File Modification Time Resolutions
 
-* Ext3[http://en.wikipedia.org/wiki/Ext3] - resolution: 1s
-* Ext4[http://en.wikipedia.org/wiki/Ext4] - resolution: 1 microsecond
-* Hierarchical_File_System[http://en.wikipedia.org/wiki/Hierarchical_File_System] - resolution: 1s
-* HFS_Plus[http://en.wikipedia.org/wiki/HFS_Plus] - resolution: 1s
+* [Ext3](http://en.wikipedia.org/wiki/Ext3) - resolution: 1s
+* [Ext4](http://en.wikipedia.org/wiki/Ext4) - resolution: 1 microsecond
+* [Hierarchical_File_System](http://en.wikipedia.org/wiki/Hierarchical_File_System) - resolution: 1s
+* [HFS_Plus](http://en.wikipedia.org/wiki/HFS_Plus) - resolution: 1s
 
 ### Source Files with the Same Name
 
