@@ -129,7 +129,7 @@ Project
 Status
 ------
 
-* Builds C, C++ and Objective-C projects using GCC[http://gcc.gnu.org/].
+* Builds C, C++ and Objective-C projects using [GCC](http://gcc.gnu.org/).
 
 Dependency Resolution
 ---------------------
@@ -170,10 +170,9 @@ Alternatives
 ------------
 
 * GNU build system, a.k.a. Autotools: autoconf, configure, make, etc.
-* Boost.Build
-* CMake
-* rakepp - another customisation of Rake for C++ projects
-* Scons
-* waf[http://code.google.com/p/waf/]
-* http://felix-lang.org/blog/2010/aug/30/fbuild-0-2/
+* [Boost.Build](http://www.boost.org/boost-build2/)
+* [CMake](http://www.cmake.org/)
+* [SCons](http://www.scons.org/)
+* [waf](http://code.google.com/p/waf/)
+* [fbuild](https://github.com/felix-lang/fbuild)
 
