@@ -1,51 +1,82 @@
-= rake-builder - Rake for C, C++, Objective-C and Objective-C++ Projects
+rake-builder
+============
 
-rake-builder builds C, C++, Objective-C and Objective-C++
-projects.
+*Rake for C, C++, Objective-C and Objective-C++ Projects*
 
-Here is a typical example:
+* [Source code]
+* [Documentation]
+* [Rubygem]
 
- require 'rubygems' if RUBY_VERSION < '1.9'
- require 'rake'
- require 'rake/builder'
- 
- Rake::Builder.new do |builder|
-   builder.target               = 'my_program'
-   builder.source_search_paths  = [ 'src' ]
-   builder.header_search_paths  = [ 'include' ]
- end
+[Source code]:   http://github.com/joeyates/rake-builder         "Source code at GitHub"
+[Documentation]: http://rdoc.info/projects/joeyates/rake-builder "Documentation at Rubydoc.info"
+[Rubygem]:       http://rubygems.org/gems/rake-builder           "Ruby gem at rubygems.org"
 
-= Dependencies
+Hello World! Example
+====================
+
+(See the 'examples' directory for source).
+
+Rakefile:
+```ruby
+require 'rubygems' if RUBY_VERSION < '1.9'
+require 'rake'
+require 'rake/builder'
+
+Rake::Builder.new do |builder|
+  builder.target = 'hello_world_cpp'
+end
+```
+
+main.cpp
+```cpp
+#include <iostream>
+
+int main(int argc, char *argv[]) {
+  std::cout << "Hello World!\n";
+
+  return 0;
+}
+```
+
+The Hello World! project should build and run:
+
+```shell
+$ rake run
+Hello World!
+```
+
+Installation
+============
+
+Dependencies
+------------
 
 * makedepend
 ** linux: package 'xutils-dev'
 ** OS X: already installed
 
-= Installation
+Gem
+---
 
- $ sudo gem install rake-builder
+ $ (sudo) gem install rake-builder
 
-= Hello World! Example
+Usage
+=====
 
-See the 'examples' directory.
-
-The Hello World! project should build and run:
-
- $ cd examples/01_hello_world_cpp
- $ rake run
- Hello World!
-
-= Usage
-
+Examples
+--------
 See the 'examples' directory.
 
 If you've installed the gem system-wide, type the following to go to
 the correct directory:
 
- $ cd `gem environment gemdir`/gems/rake-builder-nnn
- $ cd examples
+```shell
+$ cd `gem environment gemdir`/gems/rake-builder-nnn
+$ cd examples
+```
 
-== Project Configuration
+Project Configuration
+---------------------
 
 In order to build on a specific computer, you will need
 to indicate information like non-standard
@@ -65,7 +96,7 @@ Currently, the following can be configured:
 * extra include paths: :include_paths
 * extra compilation options (e.g. defines): :compilation_options
 
-=== Example '.rake-builder'
+### Example '.rake-builder'
 
  ---
  :rake_builder:
@@ -83,27 +114,32 @@ Currently, the following can be configured:
 * install
 * clean
 
-= Installing Headers
+Installing Headers
+------------------
 
 If you install a static library, your headers will also be installed.
 Ensure that you use file globs, e.g. './include/**/*.h',
 as these will ensure that your headers are installed in the correct subdirectories.
 
-= Online
+Project
+=======
 
-* {Source code}[http://github.com/joeyates/rake-builder]
-* Documentation[http://rdoc.info/projects/joeyates/rake-builder]
-* Gem[http://rubygems.org/gems/rake-builder]
+Status
+------
 
-= Dependencies
+* Builds C, C++ and Objective-C projects using GCC[http://gcc.gnu.org/].
+
+Dependency Resolution
+---------------------
 
 Task dependencies must ensure that out of date files are recreated as needed.
 
 http://github.com/downloads/joeyates/rake-builder/RakeBuilderDependencyStructure.png
 
-= Limitations
+Limitations
+-----------
 
-== File Modification Times
+### File Modification Times
 
 Rake's FileTask decides whether a file needs rebuilding by comparing on disk file
 modification times (see the private method <em>out_of_date?</em>, which returns true if the
@@ -116,23 +152,20 @@ which is not the correct answer.
 This problem is mostly felt in testing, where file modification times are temporarily
 modified to test dependencies. Also, tests wait for second to complete after building.
 
-=== File Modification Time Resolutions
+#### File Modification Time Resolutions
 
 * Ext3[http://en.wikipedia.org/wiki/Ext3] - resolution: 1s
 * Ext4[http://en.wikipedia.org/wiki/Ext4] - resolution: 1 microsecond
 * Hierarchical_File_System[http://en.wikipedia.org/wiki/Hierarchical_File_System] - resolution: 1s
 * HFS_Plus[http://en.wikipedia.org/wiki/HFS_Plus] - resolution: 1s
 
-== Source Files with the Same Name
+### Source Files with the Same Name
 
 Currently, object files from all source files are placed in the same directory.
 So, if there are two source files with the same name, they will overwrite each other.
 
-= Status
-
-* Builds C, C++ and Objective-C projects using GCC[http://gcc.gnu.org/].
-
-= Alternatives
+Alternatives
+------------
 
 * GNU build system, a.k.a. Autotools: autoconf, configure, make, etc.
 * Boost.Build
@@ -141,3 +174,4 @@ So, if there are two source files with the same name, they will overwrite each o
 * Scons
 * waf[http://code.google.com/p/waf/]
 * http://felix-lang.org/blog/2010/aug/30/fbuild-0-2/
+
