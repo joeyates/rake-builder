@@ -1,5 +1,24 @@
 load File.dirname(__FILE__) + '/spec_helper.rb'
 
+describe '#source_files' do
+
+  include RakeBuilderHelper
+
+  before( :each ) do
+    Rake::Path.stub!(:find_files).with(anything, 'h').and_return(['a.h'])
+    Rake::Path.stub!(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
+
+    Rake::Task.clear
+  end
+
+  it 'should find files with the .cpp extension' do
+    Rake::Path.should_receive(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
+
+    @project = cpp_task(:executable)
+  end
+
+end
+
 describe 'when building an executable' do
 
   include RakeBuilderHelper
