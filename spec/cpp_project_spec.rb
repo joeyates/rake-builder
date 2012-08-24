@@ -14,7 +14,13 @@ describe '#source_files' do
   it 'should find files with the .cpp extension' do
     Rake::Path.should_receive(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
 
-    @project = cpp_task(:executable)
+    cpp_task(:executable)
+  end
+
+  it 'should allow configuration of source extension' do
+    Rake::Path.should_receive(:find_files).with(anything, 'cc').and_return(['a.cc'])
+
+    cpp_task(:executable) { |p| p.source_file_extension = 'cc' }
   end
 
 end
