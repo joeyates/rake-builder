@@ -1,0 +1,16 @@
+require 'rubygems' if RUBY_VERSION < '1.9'
+require 'rake'
+require 'rake/builder'
+
+Rake::Builder.new do |builder|
+  builder.target               = 'foo/target_1'
+  builder.objects_path         = 'foo/objects'
+  builder.programming_language = 'c'
+end
+
+Rake::Builder.new do |builder|
+  builder.target               = 'bar/target_2'
+  builder.objects_path         = 'bar/objects'
+  builder.programming_language = 'c'
+end
+
