@@ -55,6 +55,9 @@ module Rake
     # processor type: 'i386', 'x86_64', 'ppc' or 'ppc64'.
     attr_accessor :architecture
 
+    # Prefix for cross comiler
+    attr_accessor :cross_compile
+
     # The programming language: 'c++', 'c' or 'objective-c' (default 'c++')
     # This also sets defaults for source_file_extension
     attr_accessor :programming_language
@@ -645,7 +648,7 @@ EOT
       @generated_files << object
       file object => [ source ] do |t|
         @logger.add( Logger::DEBUG, "Compiling '#{ source }'" )
-        command = "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
+        command = "#{ @cross_compile }#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
         shell command
       end
     end
@@ -653,12 +656,12 @@ EOT
     def build_commands
       case @target_type
       when :executable
-        [ "#{ @linker } -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
+        [ "#{ @cross_compile }#{ @linker } -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       when :static_library
-        [ "ar -cq #{ @target } #{ file_list( object_files ) }",
-          "ranlib #{ @target }" ]
+        [ "#{ @cross_compile }ar -cq #{ @target } #{ file_list( object_files ) }",
+          "#{ @cross_compile }ranlib #{ @target }" ]
       when :shared_library
-        [ "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
+        [ "#{ @cross_compile }#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       end
     end
 
