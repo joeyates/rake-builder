@@ -64,17 +64,23 @@ module Rake
       'c' => {
         :source_file_extension => 'c',
         :compiler              => 'gcc',
-        :linker                => 'gcc'
+        :linker                => 'gcc',
+        :ar                    => 'ar',
+        :ranlib                => 'ranlib'
       },
       'c++' => {
         :source_file_extension => 'cpp',
         :compiler              => 'g++',
-        :linker                => 'g++'
+        :linker                => 'g++',
+        :ar                    => 'ar',
+        :ranlib                => 'ranlib'
       },
       'objective-c' => {
         :source_file_extension => 'm',
         :compiler              => 'gcc',
-        :linker                => 'gcc'
+        :linker                => 'gcc',
+        :ar                    => 'ar',
+        :ranlib                => 'ranlib'
       },
     }
 
@@ -83,6 +89,12 @@ module Rake
 
     # The linker that will be used
     attr_accessor :linker
+
+    # Toolchain setting - ar
+    attr_accessor :ar
+
+    # Toolchain setting - ranlib
+    attr_accessor :ranlib
 
     # Extension of source files (default 'cpp' for C++ and 'c' for C)
     attr_accessor :source_file_extension
@@ -378,6 +390,8 @@ EOT
       raise BuilderError.new( "Don't know how to build '#{ @programming_language }' programs", task_namespace ) if KNOWN_LANGUAGES[ @programming_language ].nil?
       @compiler              ||= KNOWN_LANGUAGES[ @programming_language ][ :compiler ]
       @linker                ||= KNOWN_LANGUAGES[ @programming_language ][ :linker ]
+      @ar                    ||= KNOWN_LANGUAGES[ @programming_language ][ :ar ]
+      @ranlib                ||= KNOWN_LANGUAGES[ @programming_language ][ :ranlib ]
       @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
 
       @source_search_paths   = Rake::Path.expand_all_with_root( @source_search_paths, @rakefile_path )
@@ -655,8 +669,8 @@ EOT
       when :executable
         [ "#{ @linker } -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       when :static_library
-        [ "ar -cq #{ @target } #{ file_list( object_files ) }",
-          "ranlib #{ @target }" ]
+        [ "#{ @ar } -cq #{ @target } #{ file_list( object_files ) }",
+          "#{ @ranlib } #{ @target }" ]
       when :shared_library
         [ "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
       end
