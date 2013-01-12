@@ -528,7 +528,7 @@ EOT
         File.open( @makedepend_file ).each_line do |line|
           next if line !~ /:\s/
           mapped_object_file = $`
-          header_file = $'.gsub( "\n", '' )
+          header_file = $'.chomp
           # TODO: Why does it work,
           # if I make the object (not the source) depend on the header?
           source_file = object_to_source[ mapped_object_file ]
