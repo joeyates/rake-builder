@@ -240,8 +240,7 @@ EOT
       binaries  = []
       instances.each do | instance |
         entry = instance.makefile_am_entry
-        case entry[ :type ]
-        when :static_library, :shared_library
+        if instance.is_library?
           libraries << entry
         else
           binaries << entry
@@ -360,6 +359,10 @@ EOT
       @header_files = find_files( @header_search_paths, @header_file_extension ).uniq
     end
 
+    def is_library?
+      [:static_library, :shared_library].include?(target_type)
+    end
+
     private
 
     def initialize_attributes
@@ -402,7 +405,7 @@ EOT
       raise BuilderError.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
       @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
       @target                = File.expand_path( @target, @rakefile_path )
-      @target_type           ||= type( @target )
+      @target_type           ||= to_target_type( @target )
       raise BuilderError.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
 
       @install_path          ||= default_install_path( @target_type )
@@ -676,7 +679,7 @@ EOT
       end
     end
 
-    def type( target )
+    def to_target_type(target)
       case target
       when /\.a/
         :static_library
