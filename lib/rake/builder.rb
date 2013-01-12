@@ -528,13 +528,13 @@ EOT
         File.open( @makedepend_file ).each_line do |line|
           next if line !~ /:\s/
           mapped_object_file = $`
-          header_file = $'.chomp
+          header_files = $'.chomp
           # TODO: Why does it work,
           # if I make the object (not the source) depend on the header?
           source_file = object_to_source[ mapped_object_file ]
           object_file = object_path( source_file )
           object_file_task = Rake.application[ object_file ]
-          object_file_task.enhance( [ header_file ] )
+          object_file_task.enhance(header_files.split(' '))
         end
       end
 
