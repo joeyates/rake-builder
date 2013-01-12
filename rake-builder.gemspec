@@ -13,7 +13,7 @@ spec = Gem::Specification.new do |s|
   s.email             = 'joe.g.yates@gmail.com'
   s.rubyforge_project = 'nowarning'
 
-  admin_files         = FileList[ 'CHANGES', 'COPYING', 'Rakefile', 'README.rdoc' ]
+  admin_files         = FileList[ 'CHANGES', 'COPYING', 'Rakefile', 'README.md' ]
   source_files        = FileList[ 'lib/**/*.rb' ]
   example_files       = FileList[ 'examples/**/*.{h,c,cpp,m}' ] +
                         FileList[ 'examples/README.rdoc' ] +
