@@ -1,8 +1,9 @@
-require 'rubygems' if RUBY_VERSION < '1.9'
 require 'json'
 require 'logger'
 require 'rake'
 require 'rake/tasklib'
+
+require 'rake/builder/makefile_am_presenter'
 require 'rake/path'
 require 'rake/local_config'
 require 'rake/file_task_alias'
@@ -239,56 +240,32 @@ EOT
       libraries = []
       binaries  = []
       instances.each do | instance |
-        entry = instance.makefile_am_entry
         if instance.is_library?
-          libraries << entry
+          libraries << instance
         else
-          binaries << entry
+          binaries << instance
         end
       end
 
       File.open( 'Makefile.am', 'w' ) do | f |
         if libraries.size > 0
-          names = libraries.map { | lib | lib[ :name ] }.join( ' ' )
+          names = libraries.map { |l| l.label}.join(' ')
           f.write "lib_LIBRARIES = #{ names }\n\n"
           libraries.each do | lib |
-            f.write <<EOT
-#{ lib[ :label ] }_SOURCES = #{ lib[ :sources ] }
-#{ lib[ :label ] }_CPPFLAGS = #{ lib[ :compiler_flags ] }
-
-EOT
+            presenter = Rake::Builder::MakefileAmPresenter.new(lib)
+            f.write presenter.to_s
           end
         end
         if binaries.size > 0
-          names = binaries.map { | bin | bin[ :name ] }.join( ' ' )
+          names = binaries.map { |b| b.label }.join(' ')
           f.write "bin_PROGRAMS = #{ names }\n\n"
           binaries.each do | bin |
-            f.write <<EOT
-#{ bin[ :label ] }_SOURCES  = #{ bin[ :sources ] }
-#{ bin[ :label ] }_CPPFLAGS = #{ bin[ :compiler_flags ] }
-#{ bin[ :label ] }_LDFLAGS  = -L.
-#{ bin[ :label ] }_LDADD    = #{ bin[ :libraries ] }
-
-EOT
+            presenter = Rake::Builder::MakefileAmPresenter.new(bin)
+            f.write presenter.to_s
           end
         end
 
       end
-    end
-
-    def makefile_am_entry
-      primary_name = Rake::Path.relative_path( target, rakefile_path, :initial_dot_slash => false )
-      sources      = source_files.map{ | file | Rake::Path.relative_path( file, rakefile_path) }.join( ' ' )
-      sources_label = primary_name.gsub( %r(\.), '_' )
-
-      {
-      :type         => @target_type,
-      :name         => primary_name, 
-      :label        => sources_label,
-      :sources      => sources,
-      :compiler_flags => compiler_flags,
-      :libraries      => library_dependencies_list,
-      }
     end
 
     #########################################
@@ -361,6 +338,30 @@ EOT
 
     def is_library?
       [:static_library, :shared_library].include?(target_type)
+    end
+
+    def primary_name
+      Rake::Path.relative_path(target, rakefile_path, :initial_dot_slash => false)
+    end
+
+    def label
+      primary_name.gsub(%r(\.), '_')
+    end
+
+    def source_paths
+      source_files.map{ |file| Rake::Path.relative_path(file, rakefile_path) }
+    end
+
+    def compiler_flags
+      flags = include_path
+      options = compilation_options.join( ' ' )
+      flags << ' ' + options             if options != ''
+      flags << ' ' + architecture_option if RUBY_PLATFORM =~ /darwin/i
+      flags
+    end
+
+    def library_dependencies_list
+      @library_dependencies.map { |lib| "-l#{ lib }"}.join('')
     end
 
     private
@@ -706,14 +707,6 @@ EOT
       paths.map { |p| "-I#{ p }" }.join( ' ' )
     end
 
-    def compiler_flags
-      flags = include_path
-      options = compilation_options.join( ' ' )
-      flags << ' ' + options             if options != ''
-      flags << ' ' + architecture_option if RUBY_PLATFORM =~ /darwin/i
-      flags
-    end
-
     def architecture_option
       "-arch #{ @architecture }"
     end
@@ -796,10 +789,6 @@ EOT
     
     def library_paths_list
       @library_paths.map { | path | "-L#{ path }" }.join( " " )
-    end
-    
-    def library_dependencies_list
-      @library_dependencies.map { | lib | "-l#{ lib }" }.join( " " )
     end
 
     def install_headers
