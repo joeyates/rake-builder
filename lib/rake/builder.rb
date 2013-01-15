@@ -4,6 +4,7 @@ require 'rake'
 require 'rake/tasklib'
 
 require 'rake/builder/presenters/makefile_am/builder_presenter'
+require 'rake/builder/presenters/makefile_am/builder_collection_presenter'
 require 'rake/path'
 require 'rake/local_config'
 require 'rake/file_task_alias'
@@ -237,34 +238,9 @@ EOT
     end
 
     def self.create_makefile_am
-      libraries = []
-      binaries  = []
-      instances.each do | instance |
-        if instance.is_library?
-          libraries << instance
-        else
-          binaries << instance
-        end
-      end
-
-      File.open( 'Makefile.am', 'w' ) do | f |
-        if libraries.size > 0
-          names = libraries.map { |l| l.label}.join(' ')
-          f.write "lib_LIBRARIES = #{ names }\n\n"
-          libraries.each do | lib |
-            presenter = Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(lib)
-            f.write presenter.to_s
-          end
-        end
-        if binaries.size > 0
-          names = binaries.map { |b| b.label }.join(' ')
-          f.write "bin_PROGRAMS = #{ names }\n\n"
-          binaries.each do | bin |
-            presenter = Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(bin)
-            f.write presenter.to_s
-          end
-        end
-
+      presenter = Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.new(instances)
+      File.open('Makefile.am', 'w') do |f|
+        f.write presenter.to_s
       end
     end
 

@@ -159,32 +159,11 @@ describe 'autoconf' do
   end
 
   context 'Makefile.am' do
-
     it 'is created' do
-      File.                       should_receive(:open).
-                                  with('Makefile.am', 'w')
+      Rake::Builder.should_receive(:create_makefile_am)
 
       Rake::Task['autoconf'].execute(@args)
     end
-
-    it 'has sources' do
-      Rake::Task['autoconf'].execute(@args)
-
-      @output['Makefile.am'].     should     =~ /the_executable_SOURCES\s*=\s+cpp_project\/main\.cpp/
-    end
-
-    it 'has flags' do
-      Rake::Task['autoconf'].execute(@args)
-
-      @output['Makefile.am'].     should     =~ /the_executable_CPPFLAGS\s*=/
-    end
-
-    it 'has libraries' do
-      Rake::Task['autoconf'].execute(@args)
-
-      @output['Makefile.am'].     should     =~ /the_executable_LDADD\s*=/
-    end
-
   end
 
 end
