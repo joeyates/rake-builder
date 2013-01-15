@@ -640,7 +640,8 @@ EOT
       file object => [ source ] do |t|
         @logger.add( Logger::DEBUG, "Compiling '#{ source }'" )
         command = "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
-        shell command
+        stdout, stderr = shell(command)
+        raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
       end
     end
 
