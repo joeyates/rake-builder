@@ -552,7 +552,7 @@ EOT
         begin
           shell "rm '#{ destination }'", Logger::INFO
         rescue Errno::EACCES => e
-          raise BuilderError.new( "You do not have premission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }", task_namespace )
+          raise BuilderError.new( "You do not have permission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }", task_namespace )
         end
       end
 
