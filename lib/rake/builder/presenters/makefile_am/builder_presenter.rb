@@ -1,5 +1,5 @@
-module Rake; class Builder
-  class MakefileAmPresenter
+module Rake; class Builder; module Presenters; module MakefileAm
+  class BuilderPresenter
     attr_accessor :builder
 
     def initialize(builder)
@@ -36,5 +36,5 @@ module Rake; class Builder
       end
     end
   end
-end; end
+end; end; end; end
 

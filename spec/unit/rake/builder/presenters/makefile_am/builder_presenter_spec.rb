@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-describe Rake::Builder::MakefileAmPresenter do
+describe Rake::Builder::Presenters::MakefileAm::BuilderPresenter do
   context '.new' do
     it 'takes one parameter' do
       expect {
-        Rake::Builder::MakefileAmPresenter.new
+        Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new
       }.to raise_error(ArgumentError, 'wrong number of arguments (0 for 1)')
     end
   end
@@ -30,7 +30,7 @@ describe Rake::Builder::MakefileAmPresenter do
       builder
     end
 
-    subject { Rake::Builder::MakefileAmPresenter.new(builder) }
+    subject { Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(builder) }
 
     it 'lists sources' do
       sources_match = %r(fubar_SOURCES\s+=\s+path/to/1 path/to/2)
@@ -44,7 +44,7 @@ describe Rake::Builder::MakefileAmPresenter do
     it 'ends with a blank line'
 
     context 'library builder' do
-      subject { Rake::Builder::MakefileAmPresenter.new(library) }
+      subject { Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(library) }
 
       it "doesn't show ld flags" do
         expect(subject.to_s).to_not include('fubar_LDFLAGS')
@@ -56,7 +56,7 @@ describe Rake::Builder::MakefileAmPresenter do
     end
 
     context 'executable builder' do
-      subject { Rake::Builder::MakefileAmPresenter.new(binary) }
+      subject { Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(binary) }
 
       it 'shows ld flags' do
         expect(subject.to_s).to match(%r(fubar_LDFLAGS\s+=\s+-L))

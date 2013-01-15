@@ -3,7 +3,7 @@ require 'logger'
 require 'rake'
 require 'rake/tasklib'
 
-require 'rake/builder/makefile_am_presenter'
+require 'rake/builder/presenters/makefile_am/builder_presenter'
 require 'rake/path'
 require 'rake/local_config'
 require 'rake/file_task_alias'
@@ -252,7 +252,7 @@ EOT
           names = libraries.map { |l| l.label}.join(' ')
           f.write "lib_LIBRARIES = #{ names }\n\n"
           libraries.each do | lib |
-            presenter = Rake::Builder::MakefileAmPresenter.new(lib)
+            presenter = Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(lib)
             f.write presenter.to_s
           end
         end
@@ -260,7 +260,7 @@ EOT
           names = binaries.map { |b| b.label }.join(' ')
           f.write "bin_PROGRAMS = #{ names }\n\n"
           binaries.each do | bin |
-            presenter = Rake::Builder::MakefileAmPresenter.new(bin)
+            presenter = Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(bin)
             f.write presenter.to_s
           end
         end
