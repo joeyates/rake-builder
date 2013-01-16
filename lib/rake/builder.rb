@@ -3,6 +3,7 @@ require 'logger'
 require 'rake'
 require 'rake/tasklib'
 
+require 'rake/builder/error'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_collection_presenter'
 require 'rake/path'
@@ -23,25 +24,8 @@ module Rake
   end
 
   class Builder < TaskLib
-
-    class Error < StandardError
-      attr_accessor :namespace
-
-      def initialize( message, namespace = nil )
-        super( message )
-        @namespace = namespace
-      end
-
-      def to_s
-        message = super
-        message = "#{ @namespace }: #{ message }" if @namespace
-        message
-      end
-    end
-
     # Error indicating that the project failed to build.
-    class BuildFailure < Error
-    end
+    class BuildFailure < Error; end
 
     # The file to be built
     attr_accessor :target
