@@ -1,28 +1,51 @@
 require 'spec_helper'
 
 describe Rake::Builder do
-  context '.create_makefile_am' do
-    let(:presenter) { stub('Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter', :to_s => 'contents') }
+  context '.create_autoconf' do
+    let(:version) { stub('Rake::Builder::Autoconf::Version', :decide => 'qux') }
+    let(:presenter) { stub('Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter', :save => nil) }
+    let(:configure_ac) { stub('Rake::Builder::ConfigureAc', :save => nil) }
 
     before do
+      Rake::Builder::Version.stub(:new).and_return(version)
+      File.stub(:exist?).with('configure.ac').and_return(false)
+      File.stub(:exist?).with('Makefile.am').and_return(false)
+      Rake::Builder::ConfigureAc.stub(:new => configure_ac)
       Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.stub(:new).and_return(presenter)
-      File.stub(:open).with('Makefile.am', 'w')
     end
 
-    it 'uses the presenter' do
+    it 'fails if project_title is nil' do
+      expect {
+        Rake::Builder.create_autoconf(nil, 'bar', 'baz')
+      }.to raise_error(RuntimeError, 'Please supply a project_title parameter')
+    end
+
+    it 'fails if configure.ac exists' do
+      File.should_receive(:exist?).with('configure.ac').and_return(true)
+
+      expect {
+        Rake::Builder.create_autoconf('foo', 'bar', 'baz')
+      }.to raise_error(RuntimeError, "The file 'configure.ac' already exists")
+    end
+
+    it 'fails if Makefile.am exists' do
+      File.should_receive(:exist?).with('Makefile.am').and_return(true)
+
+      expect {
+        Rake::Builder.create_autoconf('foo', 'bar', 'baz')
+      }.to raise_error(RuntimeError, "The file 'Makefile.am' already exists")
+    end
+
+    it 'creates configure.ac' do
+      Rake::Builder::ConfigureAc.should_receive(:new).and_return(configure_ac)
+
+      Rake::Builder.create_autoconf('foo', 'bar', 'baz')
+    end
+
+    it 'creates Makefile.am' do
       Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.should_receive(:new).and_return(presenter)
 
-      Rake::Builder.create_makefile_am
-    end
-
-    it 'writes Makefile.am' do
-      file = stub('File')
-      file.should_receive(:write).with('contents')
-      File.should_receive(:open).with('Makefile.am', 'w') do |&block|
-        block.call file
-      end
-
-      Rake::Builder.create_makefile_am
+      Rake::Builder.create_autoconf('foo', 'bar', 'baz')
     end
   end
 

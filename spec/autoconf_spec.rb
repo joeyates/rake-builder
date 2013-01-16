@@ -5,9 +5,6 @@ describe 'autoconf' do
   include RakeBuilderHelper
 
   before :each do
-    Rake::Task.clear
-    Rake::Builder.define_global
-
     @project = cpp_task(:executable)
 
     @args = Rake::TaskArguments.new(
@@ -160,11 +157,10 @@ describe 'autoconf' do
 
   context 'Makefile.am' do
     it 'is created' do
-      Rake::Builder.should_receive(:create_makefile_am)
+      Rake::Builder.should_receive(:create_autoconf)
 
       Rake::Task['autoconf'].execute(@args)
     end
   end
-
 end
 

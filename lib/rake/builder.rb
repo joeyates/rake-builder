@@ -162,31 +162,24 @@ module Rake
       @instances
     end
 
-    def self.define_global
-      desc "Create input files for configure script creation"
-      task :autoconf, [:project_title, :version] => [] do | task, args |
-        project_title = args.project_title or raise "Please supply a project_title parameter"
-        version       = Rake::Builder::Version.new(args.version).decide
-        if File.exist?('configure.ac')
-          raise "The file 'configure.ac' already exists"
-        end
-        if File.exist?('Makefile.am')
-          raise "The file 'Makefile.am' already exists"
-        end
-        source = Rake::Path.relative_path( instances[ 0 ].source_files[ 0 ], instances[ 0 ].rakefile_path  )
-        ConfigureAc.new(project_title, version, source).save
-        create_makefile_am
+    def self.create_autoconf(project_title, version, source_file)
+      raise "Please supply a project_title parameter" if project_title.nil?
+      version = Rake::Builder::Version.new(version).decide
+      if File.exist?('configure.ac')
+        raise "The file 'configure.ac' already exists"
       end
-    end
-
-    def self.create_makefile_am
-      presenter = Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.new(instances)
-      File.open('Makefile.am', 'w') do |f|
-        f.write presenter.to_s
+      if File.exist?('Makefile.am')
+        raise "The file 'Makefile.am' already exists"
       end
+      ConfigureAc.new(project_title, version, source_file).save
+      Presenters::MakefileAm::BuilderCollectionPresenter.new(instances).save
     end
  
-    self.define_global
+    desc "Create input files for configure script creation"
+    task :autoconf, [:project_title, :version] => [] do |task, args|
+      source = Rake::Path.relative_path(instances[0].source_files[0], instances[0].rakefile_path)
+      create_autoconf(args.project_title, args.version, source)
+    end
 
     def initialize( &block )
       save_rakefile_info( block )

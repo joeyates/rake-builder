@@ -10,6 +10,12 @@ module Rake; class Builder; module Presenters; module MakefileAm
       programs_list + program_sections + libraries_list + library_sections
     end
 
+    def save
+      File.open('Makefile.am', 'w') do |f|
+        f.write to_s
+      end
+    end
+
     private
 
     def programs
