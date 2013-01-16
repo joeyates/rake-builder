@@ -227,7 +227,7 @@ EOT
 
     def initialize( &block )
       save_rakefile_info( block )
-      initialize_attributes
+      set_defaults
       block.call( self )
       configure
       define_tasks
@@ -277,7 +277,7 @@ EOT
 
     private
 
-    def initialize_attributes
+    def set_defaults
       @architecture          = 'i386'
       @compiler_data         = Compiler::Base.for( :gcc )
       @logger                = Logger.new( STDOUT )
