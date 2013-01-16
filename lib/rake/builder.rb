@@ -4,6 +4,7 @@ require 'rake'
 require 'rake/tasklib'
 
 require 'rake/builder/error'
+require 'rake/builder/logger/formatter'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_collection_presenter'
 require 'rake/path'
@@ -16,13 +17,6 @@ require 'compiler'
 include Rake::DSL
 
 module Rake
-
-  class Formatter < Logger::Formatter
-    def call(severity, time, progname, msg)
-      msg2str(msg) << "\n"
-    end
-  end
-
   class Builder < TaskLib
     # Error indicating that the project failed to build.
     class BuildFailure < Error; end
