@@ -22,7 +22,7 @@ module Rake
       @include_paths       = config[:include_paths]
       @compilation_options = config[:compilation_options]
       if not VERSIONS.find_index(version)
-        raise Rake::Builder::BuilderError.new('Config file version incorrect') 
+        raise Rake::Builder::Error.new('Config file version incorrect') 
       end
     end
 

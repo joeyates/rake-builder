@@ -36,7 +36,7 @@ describe 'local config files' do
     lambda do
       config = Rake::LocalConfig.new( @local_config_file )
       config.load
-    end.should raise_error( Rake::Builder::BuilderError, 'Config file version incorrect' )
+    end.should raise_error(Rake::Builder::Error, 'Config file version incorrect')
   end
 
   context 'dependencies' do

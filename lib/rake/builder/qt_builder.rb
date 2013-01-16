@@ -34,7 +34,7 @@ module Rake
         @framework_paths       = [ '/Library/Frameworks' ]
         @moc_defines           = [ '-D__APPLE__',  '-D__GNUC__' ]
       else
-        raise BuilderError.new( "Unrecognised platform" )
+        raise Error.new( "Unrecognised platform" )
       end
       @compilation_defines   = [ '-DQT_GUI_LIB', '-DQT_CORE_LIB', '-DQT_SHARED' ]
       @resource_files        = []
@@ -42,8 +42,8 @@ module Rake
     end
 
     def configure
-      raise BuilderError.new( 'programming_language must be C++' ) if @programming_language.downcase != 'c++'
-      raise BuilderError.new( 'qt_version must be set' )           if ! @qt_version
+      raise Error.new( 'programming_language must be C++' ) if @programming_language.downcase != 'c++'
+      raise Error.new( 'qt_version must be set' )           if ! @qt_version
 
       super
 

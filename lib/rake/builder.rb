@@ -24,7 +24,7 @@ module Rake
 
   class Builder < TaskLib
 
-    class BuilderError < StandardError
+    class Error < StandardError
       attr_accessor :namespace
 
       def initialize( message, namespace = nil )
@@ -40,7 +40,7 @@ module Rake
     end
 
     # Error indicating that the project failed to build.
-    class BuildFailure < BuilderError
+    class BuildFailure < Error
     end
 
     # The file to be built
@@ -367,7 +367,7 @@ EOT
       @compilation_options.uniq!
 
       @programming_language = @programming_language.to_s.downcase
-      raise BuilderError.new( "Don't know how to build '#{ @programming_language }' programs", task_namespace ) if KNOWN_LANGUAGES[ @programming_language ].nil?
+      raise Error.new( "Don't know how to build '#{ @programming_language }' programs", task_namespace ) if KNOWN_LANGUAGES[ @programming_language ].nil?
       @compiler              ||= KNOWN_LANGUAGES[ @programming_language ][ :compiler ]
       @linker                ||= KNOWN_LANGUAGES[ @programming_language ][ :linker ]
       @ar                    ||= KNOWN_LANGUAGES[ @programming_language ][ :ar ]
@@ -378,12 +378,12 @@ EOT
       @header_search_paths   = Rake::Path.expand_all_with_root( @header_search_paths, @rakefile_path )
       @library_paths         = Rake::Path.expand_all_with_root( @library_paths, @rakefile_path )
 
-      raise BuilderError.new( "The target name cannot be nil", task_namespace )             if @target.nil?
-      raise BuilderError.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
+      raise Error.new( "The target name cannot be nil", task_namespace )             if @target.nil?
+      raise Error.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
       @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
       @target                = File.expand_path( @target, @rakefile_path )
       @target_type           ||= to_target_type( @target )
-      raise BuilderError.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
+      raise Error.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
 
       @install_path          ||= default_install_path( @target_type )
 
@@ -398,7 +398,7 @@ EOT
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
 
-      raise BuilderError.new( "No source files found", task_namespace ) if source_files.length == 0
+      raise Error.new( "No source files found", task_namespace ) if source_files.length == 0
     end
 
     def define_tasks
@@ -552,7 +552,7 @@ EOT
         begin
           shell "rm '#{ destination }'", Logger::INFO
         rescue Errno::EACCES => e
-          raise BuilderError.new( "You do not have permission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }", task_namespace )
+          raise Error.new( "You do not have permission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }", task_namespace )
         end
       end
 
@@ -777,7 +777,7 @@ EOT
         begin
           `mkdir -p '#{ destination_path }'`
         rescue Errno::EACCES => e
-          raise BuilderError.new( "Permission denied to created directory '#{ destination_path }'", task_namespace )
+          raise Error.new( "Permission denied to created directory '#{ destination_path }'", task_namespace )
         end
         install( installable_header[ :source_file ], destination_path )
       end
@@ -816,7 +816,7 @@ EOT
         shell "cp '#{ source_pathname }' '#{ destination_path }'", Logger::INFO
       rescue Errno::EACCES => e
         source_filename = File.basename( source_pathname ) rescue '????'
-        raise BuilderError.new( "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install", task_namespace )
+        raise Error.new( "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install", task_namespace )
       end
     end
 
