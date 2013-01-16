@@ -4,6 +4,7 @@ require 'rake'
 require 'rake/tasklib'
 
 require 'rake/builder/autoconf/version'
+require 'rake/builder/configure_ac'
 require 'rake/builder/error'
 require 'rake/builder/logger/formatter'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
@@ -172,47 +173,9 @@ module Rake
         if File.exist?('Makefile.am')
           raise "The file 'Makefile.am' already exists"
         end
-        create_configure_ac project_title, version
+        source = Rake::Path.relative_path( instances[ 0 ].source_files[ 0 ], instances[ 0 ].rakefile_path  )
+        ConfigureAc.new(project_title, version, source).save
         create_makefile_am
-      end
-    end
-
-    def self.create_configure_ac( project_title, version )
-      source = Rake::Path.relative_path( instances[ 0 ].source_files[ 0 ], instances[ 0 ].rakefile_path  )
-      File.open('configure.ac', 'w') do | f |
-        f.write <<EOT
-AC_PREREQ(2.61)
-AC_INIT(#{project_title}, #{ version })
-AC_CONFIG_SRCDIR([#{ source }])
-AC_CONFIG_HEADER([config.h])
-AM_INIT_AUTOMAKE([#{project_title}], [#{ version }])
-
-# Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_RANLIB
-
-# Checks for libraries.
-
-# Checks for header files.
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_C_INLINE
-AC_STRUCT_TM
-
-# Checks for library functions.
-AC_FUNC_LSTAT
-AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
-AC_FUNC_MEMCMP
-AC_HEADER_STDC
-AC_CHECK_FUNCS([memset strcasecmp])
-
-AC_CONFIG_FILES([Makefile])
-
-AC_OUTPUT
-EOT
       end
     end
 
