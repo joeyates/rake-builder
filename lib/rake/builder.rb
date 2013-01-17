@@ -10,9 +10,8 @@ require 'rake/builder/logger/formatter'
 require 'rake/builder/presenters/makefile/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_collection_presenter'
+require 'rake/builder/task_definer'
 require 'rake/path'
-require 'rake/local_config'
-require 'rake/file_task_alias'
 require 'rake/microsecond'
 require 'rake/once_task'
 require 'compiler'
@@ -37,6 +36,8 @@ module Rake
 
     # processor type: 'i386', 'x86_64', 'ppc' or 'ppc64'.
     attr_accessor :architecture
+
+    attr_accessor :compiler_data # TODO: remove this hack
 
     # The programming language: 'c++', 'c' or 'objective-c' (default 'c++')
     # This also sets defaults for source_file_extension
@@ -187,7 +188,7 @@ module Rake
       set_defaults
       block.call( self )
       configure
-      define_tasks
+      TaskDefiner.new(self).run
       define_default
       self.class.instances << self
     end
@@ -227,9 +228,14 @@ module Rake
       flags << ' ' + architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags
     end
+    public :compiler_flags
 
     def library_dependencies_list
       @library_dependencies.map { |lib| "-l#{ lib }"}.join('')
+    end
+
+    def target_basename
+      File.basename(@target)
     end
 
     private
@@ -296,16 +302,6 @@ module Rake
       raise Error.new( "No source files found", task_namespace ) if source_files.length == 0
     end
 
-    def define_tasks
-      if @task_namespace
-        namespace @task_namespace do
-          define
-        end
-      else
-        define
-      end
-    end
-
     def define_default
       name = scoped_task( @default_task )
       desc "Equivalent to 'rake #{ name }'"
@@ -316,147 +312,10 @@ module Rake
       end
     end
 
-    def define
-      once_task :environment do
-        logger.level = Logger::DEBUG if ENV[ 'DEBUG' ]
-      end
-
-      if @target_type == :executable
-        desc "Run '#{ target_basename }'"
-        task :run => :build do
-          command = "cd #{ @rakefile_path } && #{ @target }"
-          puts shell( command, Logger::INFO )
-        end
-      end
-
-      desc "Compile and build '#{ target_basename }'"
-      FileTaskAlias.define_task( :build, @target )
-
-      desc "Build '#{ target_basename }'"
-      microsecond_file @target => [ scoped_task( :environment ),
-                        scoped_task( :compile ),
-                        *@target_prerequisites ] do | t |
-        shell "rm -f #{ t.name }"
-        build_commands.each do | command |
-          stdout, stderr = shell(command)
-          raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
-        end
-        raise BuildFailure.new("'#{@target}' not created") if not File.exist?(@target)
-      end
-
-      desc "Compile all sources"
-      # Only import dependencies when we're compiling
-      # otherwise makedepend gets run on e.g. 'rake -T'
-      once_task :compile => [ scoped_task( :environment ),
-                         @makedepend_file,
-                         scoped_task( :load_makedepend ),
-                         *object_files ]
-
-      source_files.each do |src|
-        define_compile_task( src )
-      end
-
-      microsecond_directory @objects_path
-
-      file scoped_task( local_config ) do
-        @logger.add( Logger::DEBUG, "Creating file '#{ local_config }'" )
-        added_includes = @compiler_data.include_paths( missing_headers )
-        config = Rake::LocalConfig.new( local_config )
-        config.include_paths = added_includes
-        config.save
-      end
-
-      microsecond_file @makedepend_file => [
-          scoped_task( :load_local_config ),
-          scoped_task( :missing_headers ),
-          @objects_path,
-          *project_files
-      ] do
-        system('which makedepend >/dev/null')
-        raise 'makedepend not found' unless $?.success?
-        @logger.add( Logger::DEBUG, "Analysing dependencies" )
-        command = "makedepend -f- -- #{ include_path } -- #{ file_list( source_files ) } 2>/dev/null > #{ @makedepend_file }"
-        shell command
-      end
-
-      once_task scoped_task( :load_local_config ) => scoped_task( local_config ) do
-        config = LocalConfig.new( local_config )
-        config.load
-        @include_paths       += Rake::Path.expand_all_with_root( config.include_paths, @rakefile_path )
-        @compilation_options += config.compilation_options
-      end
-
-      once_task scoped_task( :missing_headers ) => [ *generated_headers ] do
-        missing_headers
-      end
-
-      # Reimplemented mkdepend file loading to make objects depend on
-      # sources with the correct paths:
-      # the standard rake mkdepend loader doesn't do what we want,
-      # as it assumes files will be compiled in their own directory.
-      task :load_makedepend => @makedepend_file do
-        object_to_source = source_files.inject( {} ) do | memo, source |
-          mapped_object = source.gsub( '.' + @source_file_extension, '.o' )
-          memo[ mapped_object ] = source
-          memo
-        end
-        File.open( @makedepend_file ).each_line do |line|
-          next if line !~ /:\s/
-          mapped_object_file = $`
-          header_files = $'.chomp
-          # TODO: Why does it work,
-          # if I make the object (not the source) depend on the header?
-          source_file = object_to_source[ mapped_object_file ]
-          object_file = object_path( source_file )
-          object_file_task = Rake.application[ object_file ]
-          object_file_task.enhance(header_files.split(' '))
-        end
-      end
-
-      desc "List generated files (which are removed with 'rake #{ scoped_task( :clean ) }')"
-      task :generated_files do
-        puts generated_files.to_json
-      end
-
-      # Re-implement :clean locally for project and within namespace
-      # Standard :clean is a singleton
-      desc "Remove temporary files"
-      task :clean do
-        generated_files.each do |file|
-          shell "rm -f #{ file }"
-        end
-      end
-
-      desc "Install '#{ target_basename }' in '#{ @install_path }'"
-      task :install, [] => [ scoped_task( :build ) ] do
-        destination = File.join( @install_path, target_basename )
-        install( @target, destination )
-        install_headers if @target_type == :static_library
-      end
-
-      desc "Uninstall '#{ target_basename }' from '#{ @install_path }'"
-      task :uninstall, [] => [] do
-        destination = File.join( @install_path, target_basename )
-        if ! File.exist?( destination )
-          @logger.add( Logger::INFO, "The file '#{ destination }' does not exist" )
-          next
-        end
-        begin
-          shell "rm '#{ destination }'", Logger::INFO
-        rescue Errno::EACCES => e
-          raise Error.new( "You do not have permission to uninstall '#{ destination }'\nTry\n $ sudo rake #{ scoped_task( :uninstall ) }", task_namespace )
-        end
-      end
-
-      desc "Create a '#{makefile_name}' to build the project"
-      file "#{makefile_name}" => [@makedepend_file, scoped_task(:load_makedepend)] do
-        Rake::Builder::Presenters::Makefile::BuilderPresenter.new(self).save
-      end
-    end
-
     def generated_headers
       []
     end
+    public :generated_headers
 
     def scoped_task( task )
       if @task_namespace
@@ -465,29 +324,7 @@ module Rake
         task
       end
     end
-
-    def define_compile_task( source )
-      object = object_path( source )
-      @generated_files << object
-      file object => [ source ] do |t|
-        @logger.add( Logger::DEBUG, "Compiling '#{ source }'" )
-        command = "#{ @compiler } -c #{ compiler_flags } -o #{ object } #{ source }"
-        stdout, stderr = shell(command)
-        raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
-      end
-    end
-
-    def build_commands
-      case @target_type
-      when :executable
-        [ "#{ @linker } -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
-      when :static_library
-        [ "#{ @ar } -cq #{ @target } #{ file_list( object_files ) }",
-          "#{ @ranlib } #{ @target }" ]
-      when :shared_library
-        [ "#{ @linker } -shared -o #{ @target } #{ file_list( object_files ) } #{ link_flags }" ]
-      end
-    end
+    public :scoped_task
 
     def to_target_type(target)
       case target
@@ -508,6 +345,7 @@ module Rake
       all_includes     = default_includes + @include_paths
       @missing_headers = @compiler_data.missing_headers( all_includes, source_files )
     end
+    public :missing_headers
 
     # Compiling and linking parameters
 
@@ -515,6 +353,7 @@ module Rake
       paths = @include_paths.map{ | file | Rake::Path.relative_path( file, rakefile_path) }
       paths.map { |p| "-I#{ p }" }.join( ' ' )
     end
+    public :include_path
 
     def architecture_option
       "-arch #{ @architecture }"
@@ -525,6 +364,7 @@ module Rake
       flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags.join( " " )
     end
+    public :link_flags
 
     # Paths
 
@@ -537,11 +377,6 @@ module Rake
       end
       @rakefile      = File.expand_path( @rakefile )
       @rakefile_path = File.dirname( @rakefile )
-    end
-
-    def object_path( source_path_name )
-      o_name = File.basename( source_path_name ).gsub( '.' + @source_file_extension, '.o' )
-      Rake::Path.expand_with_root( o_name, @objects_path )
     end
 
     def default_install_path( target_type )
@@ -562,10 +397,6 @@ module Rake
 
     # Files
 
-    def target_basename
-      File.basename( @target )
-    end
-
     def makefile_name
       extension = if ! task_namespace.nil? && ! task_namespace.to_s.empty?
                     '.' + task_namespace.to_s
@@ -574,6 +405,7 @@ module Rake
                   end
       "Makefile#{ extension }"
     end
+    public :makefile_name
 
     # Lists of files
 
@@ -582,19 +414,10 @@ module Rake
       Rake::Path.expand_all_with_root( files, @rakefile_path )
     end
 
-    # TODO: make this return a FileList, not a plain Array
-    def object_files
-      source_files.map { |file| object_path( file ) }
-    end
-
     def project_files
       source_files + header_files
     end
     public :project_files
-
-    def file_list( files, delimiter = ' ' )
-      files.join( delimiter )
-    end
     
     def library_paths_list
       @library_paths.map { | path | "-L#{ path }" }.join( " " )
@@ -614,6 +437,7 @@ module Rake
         install( installable_header[ :source_file ], destination_path )
       end
     end
+    public :install_headers
 
     def project_headers
       @header_search_paths.reduce( [] ) do | memo, search |
@@ -651,6 +475,7 @@ module Rake
         raise Error.new( "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install", task_namespace )
       end
     end
+    public :install
 
     def shell(command, log_level = Logger::DEBUG)
       @logger.add(log_level, command)
