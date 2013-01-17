@@ -20,7 +20,7 @@ require 'compiler'
 include Rake::DSL
 
 module Rake
-  class Builder < TaskLib
+  class Builder
     # Error indicating that the project failed to build.
     class BuildFailure < Error; end
 
