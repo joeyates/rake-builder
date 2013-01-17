@@ -273,9 +273,11 @@ module Rake
       raise Error.new( "The target name cannot be nil", task_namespace )             if @target.nil?
       raise Error.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
       @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
+
       @target                = File.expand_path( @target, @rakefile_path )
       @target_type           ||= to_target_type( @target )
       raise Error.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
+      @generated_files << @target
 
       @install_path          ||= default_install_path( @target_type )
 
@@ -289,6 +291,7 @@ module Rake
       @local_config          = Rake::Path.expand_with_root( '.rake-builder', @rakefile_path )
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
+      @generated_files << @makedepend_file
 
       raise Error.new( "No source files found", task_namespace ) if source_files.length == 0
     end
@@ -423,9 +426,6 @@ module Rake
           shell "rm -f #{ file }"
         end
       end
-
-      @generated_files << @target
-      @generated_files << @makedepend_file
 
       desc "Install '#{ target_basename }' in '#{ @install_path }'"
       task :install, [] => [ scoped_task( :build ) ] do
