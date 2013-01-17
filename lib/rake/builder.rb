@@ -221,7 +221,7 @@ module Rake
 
     def compiler_flags
       flags = include_path
-      options = compilation_options.join( ' ' )
+      options = compilation_options.join(' ')
       flags << ' ' + options             if options != ''
       flags << ' ' + architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags
@@ -235,8 +235,8 @@ module Rake
 
     def set_defaults
       @architecture          = 'i386'
-      @compiler_data         = Compiler::Base.for( :gcc )
-      @logger                = Logger.new( STDOUT )
+      @compiler_data         = Compiler::Base.for(:gcc)
+      @logger                = Logger.new(STDOUT)
       @logger.level          = Logger::UNKNOWN
       @logger.formatter      = Formatter.new
       @programming_language  = 'c++'
@@ -245,8 +245,8 @@ module Rake
       @library_paths         = []
       @library_dependencies  = []
       @target_prerequisites  = []
-      @source_search_paths   = [ @rakefile_path.dup ]
-      @header_search_paths   = [ @rakefile_path.dup ]
+      @source_search_paths   = [@rakefile_path.dup]
+      @header_search_paths   = [@rakefile_path.dup]
       @target                = 'a.out'
       @generated_files       = []
       @compilation_options   = []
@@ -254,7 +254,7 @@ module Rake
     end
 
     def configure
-      @compilation_options   += [ architecture_option ] if RUBY_PLATFORM =~ /apple/i
+      @compilation_options   += [architecture_option] if RUBY_PLATFORM =~ /apple/i
       @compilation_options.uniq!
 
       @programming_language = @programming_language.to_s.downcase
@@ -720,8 +720,6 @@ EOT
       $stdout, $stderr = *originals
       [stdout.read, stderr.read]
     end
-
   end
-
 end
 
