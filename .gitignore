@@ -1,9 +1,10 @@
 *.depend.mf
 *.o
-/.bundle/
+.bundle
 /coverage/
+/examples/**/vendor
 /pkg/
 /html/
-/Gemfile.lock
+Gemfile.lock
 /vendor/
 
