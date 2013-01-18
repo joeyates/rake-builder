@@ -68,10 +68,10 @@ class Rake::Builder
       end
 
       microsecond_file @builder.makedepend_file => [
-          scoped_task(:load_local_config),
-          scoped_task(:missing_headers),
-          @builder.objects_path,
-          *@builder.project_files
+        scoped_task(:load_local_config),
+        scoped_task(:missing_headers),
+        @builder.objects_path,
+        *@builder.project_files
       ] do
         @builder.create_makedepend_file
       end
