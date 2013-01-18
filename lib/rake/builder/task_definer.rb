@@ -128,7 +128,7 @@ class Rake::Builder
     def define_compile_task(source)
       object = @builder.object_path(source)
       @builder.generated_files << object
-      file object => [ source ] do |t|
+      file object => [source] do |t|
         @builder.compile(source, object)
       end
     end
