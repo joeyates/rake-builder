@@ -63,7 +63,7 @@ class Rake::Builder
       # TODO: Does this need to be microsecond?
       microsecond_directory @builder.objects_path
 
-      file scoped_task(@builder.local_config) do
+      file @builder.local_config do
         @builder.create_local_config
       end
 
@@ -76,11 +76,11 @@ class Rake::Builder
         @builder.create_makedepend_file
       end
 
-      once_task scoped_task(:load_local_config) => scoped_task(@builder.local_config) do
+      once_task :load_local_config => scoped_task(@builder.local_config) do
         @builder.load_local_config
       end
 
-      once_task scoped_task(:missing_headers) => [*@builder.generated_headers] do
+      once_task :missing_headers => [*@builder.generated_headers] do
         @builder.missing_headers
       end
 
