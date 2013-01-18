@@ -92,11 +92,6 @@ class Rake::Builder
         @builder.load_makedepend
       end
 
-      desc "List generated files (which are removed with 'rake #{scoped_task(:clean)}')"
-      task :generated_files do
-        puts @builder.generated_files.to_json
-      end
-
       # Re-implement :clean locally for project and within namespace
       # Standard :clean is a singleton
       desc "Remove temporary files"
