@@ -160,9 +160,21 @@ describe Rake::Builder::TaskDefiner do
         expect(Rake::Task[task].prerequisites).to eq(expected)
       end
     end
+
+    context 'object files' do
+      it 'depend on source files'
+      it 'depend on headers'
+    end
+
+    context 'compilation' do
+      it 'fails if there are missing headers'
+      it 'is needed if a source file changes' # this check *should* be redundant if 'object files' dependencies work
+      it 'is needed if a header changes' # this check *should* be redundant if 'object files' dependencies work
+    end
   end
 
   context 'tasks' do
+    it 'runs builder tasks'
   end
 end
 
