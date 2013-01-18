@@ -2,7 +2,7 @@ require 'rake'
 $:.unshift( File.dirname( __FILE__ ) + '/lib' )
 require 'rake/builder/version'
 
-spec = Gem::Specification.new do |s|
+Gem::Specification.new do |s|
   s.name              = 'rake-builder'
   s.summary           = 'Rake for C/C++ Projects'
   s.description       = 'Provides Rake:Builder, a specific rake TaskLib for building C, C++, Objective-C and Objective-C++ projects'
