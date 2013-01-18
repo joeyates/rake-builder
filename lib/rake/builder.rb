@@ -37,7 +37,7 @@ module Rake
     # processor type: 'i386', 'x86_64', 'ppc' or 'ppc64'.
     attr_accessor :architecture
 
-    attr_accessor :compiler_data # TODO: remove this hack
+    attr_accessor :compiler_data
 
     # The programming language: 'c++', 'c' or 'objective-c' (default 'c++')
     # This also sets defaults for source_file_extension
