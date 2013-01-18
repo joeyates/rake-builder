@@ -189,8 +189,100 @@ module Rake
       block.call( self )
       configure
       TaskDefiner.new(self).run
-      define_default
       self.class.instances << self
+    end
+
+    def run
+      command = "cd #{rakefile_path} && #{target}"
+      puts shell(command, Logger::INFO)
+    end
+
+    def build
+      system "rm -f #{target}"
+      build_commands.each do |command|
+        stdout, stderr = shell(command)
+        raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
+      end
+      raise BuildFailure.new("'#{target}' not created") if not File.exist?(target)
+    end
+
+    def create_local_config
+      logger.add(Logger::DEBUG, "Creating file '#{local_config }'")
+      added_includes = compiler_data.include_paths(missing_headers)
+      config = Rake::LocalConfig.new(local_config)
+      config.include_paths = added_includes
+      config.save
+    end
+
+    def create_makedepend_file
+      system('which makedepend >/dev/null')
+      raise 'makedepend not found' unless $?.success?
+      logger.add(Logger::DEBUG, "Analysing dependencies")
+      command = "makedepend -f- -- #{include_path} -- #{file_list(source_files)} 2>/dev/null > #{makedepend_file}"
+      shell command
+    end
+
+    def load_local_config
+      config = Rake::LocalConfig.new(local_config)
+      config.load
+      @include_paths       += Rake::Path.expand_all_with_root(config.include_paths, rakefile_path)
+      @compilation_options += config.compilation_options
+    end
+
+    def load_makedepend
+      object_to_source = source_files.inject({}) do |memo, source|
+        mapped_object = source.gsub('.' + source_file_extension, '.o')
+        memo[mapped_object] = source
+        memo
+      end
+      File.open(makedepend_file).each_line do |line|
+        next if line !~ /:\s/
+        mapped_object_file = $`
+        header_files = $'.chomp
+        # TODO: Why does it work,
+        # if I make the object (not the source) depend on the header?
+        source_file = object_to_source[mapped_object_file]
+        object_file = object_path(source_file)
+        object_file_task = Rake.application[object_file]
+        object_file_task.enhance(header_files.split(' '))
+      end
+    end
+
+    def clean
+      generated_files.each do |file|
+        system "rm -f #{file}"
+      end
+    end
+
+    def install
+      destination = File.join(install_path, target_basename)
+      install_file(target, destination)
+      install_headers if target_type == :static_library
+    end
+
+    def uninstall
+      destination = File.join(install_path, target_basename)
+      if not File.exist?(destination)
+        logger.add(Logger::INFO, "The file '#{destination}' does not exist")
+        return
+      end
+      begin
+        shell "rm '#{destination}'", Logger::INFO
+      rescue Errno::EACCES => e
+        raise Error.new("You do not have permission to uninstall '#{destination}'\nTry re-running the command with 'sudo'", task_namespace)
+      end
+    end
+
+    def compile(source, object)
+      logger.add(Logger::DEBUG, "Compiling '#{source}'")
+      command = "#{compiler} -c #{compiler_flags} -o #{object} #{source}"
+      stdout, stderr = shell(command)
+      raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
+    end
+
+    # TODO: make private
+    def file_list( files, delimiter = ' ' )
+      files.join( delimiter )
     end
 
     # Source files found in source_search_paths
@@ -219,6 +311,15 @@ module Rake
 
     def source_paths
       source_files.map{ |file| Rake::Path.relative_path(file, rakefile_path) }
+    end
+
+    def object_files
+      source_files.map { |file| object_path(file) }
+    end
+
+    def object_path(source_path_name)
+      o_name = File.basename(source_path_name).gsub('.' + source_file_extension, '.o')
+      Rake::Path.expand_with_root(o_name, objects_path)
     end
 
     def compiler_flags
@@ -302,29 +403,10 @@ module Rake
       raise Error.new( "No source files found", task_namespace ) if source_files.length == 0
     end
 
-    def define_default
-      name = scoped_task( @default_task )
-      desc "Equivalent to 'rake #{ name }'"
-      if @task_namespace
-        task @task_namespace => [ name ]
-      else
-        task :default => [ name ]
-      end
-    end
-
     def generated_headers
       []
     end
     public :generated_headers
-
-    def scoped_task( task )
-      if @task_namespace
-        "#{ task_namespace }:#{ task }"
-      else
-        task
-      end
-    end
-    public :scoped_task
 
     def to_target_type(target)
       case target
@@ -434,7 +516,7 @@ module Rake
         rescue Errno::EACCES => e
           raise Error.new( "Permission denied to created directory '#{ destination_path }'", task_namespace )
         end
-        install( installable_header[ :source_file ], destination_path )
+        install_file( installable_header[ :source_file ], destination_path )
       end
     end
     public :install_headers
@@ -467,7 +549,21 @@ module Rake
       end
     end
 
-    def install( source_pathname, destination_path )
+    def build_commands
+      case target_type
+      when :executable
+        [ "#{ linker } -o #{ target } #{ file_list( object_files ) } #{ link_flags }" ]
+      when :static_library
+        [ "#{ ar } -cq #{ target } #{ file_list( object_files ) }",
+          "#{ ranlib } #{ target }" ]
+      when :shared_library
+        [ "#{ linker } -shared -o #{ target } #{ file_list( object_files ) } #{ link_flags }" ]
+      else
+        # TODO: raise an error
+      end
+    end
+
+    def install_file(source_pathname, destination_path)
       begin
         shell "cp '#{ source_pathname }' '#{ destination_path }'", Logger::INFO
       rescue Errno::EACCES => e
@@ -475,7 +571,6 @@ module Rake
         raise Error.new( "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install", task_namespace )
       end
     end
-    public :install
 
     def shell(command, log_level = Logger::DEBUG)
       @logger.add(log_level, command)
