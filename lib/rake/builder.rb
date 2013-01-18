@@ -329,7 +329,6 @@ module Rake
       flags << ' ' + architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags
     end
-    public :compiler_flags
 
     def library_dependencies_list
       @library_dependencies.map { |lib| "-l#{ lib }"}.join('')
@@ -337,6 +336,32 @@ module Rake
 
     def target_basename
       File.basename(@target)
+    end
+
+    def makefile_name
+      extension = if ! task_namespace.nil? && ! task_namespace.to_s.empty?
+                    '.' + task_namespace.to_s
+                  else
+                    ''
+                  end
+      "Makefile#{ extension }"
+    end
+
+    def project_files
+      source_files + header_files
+    end
+
+    def generated_headers
+      []
+    end
+
+    # Discovery
+
+    def missing_headers
+      return @missing_headers if @missing_headers
+      default_includes = @compiler_data.default_include_paths( @programming_language )
+      all_includes     = default_includes + @include_paths
+      @missing_headers = @compiler_data.missing_headers( all_includes, source_files )
     end
 
     private
@@ -403,11 +428,6 @@ module Rake
       raise Error.new( "No source files found", task_namespace ) if source_files.length == 0
     end
 
-    def generated_headers
-      []
-    end
-    public :generated_headers
-
     def to_target_type(target)
       case target
       when /\.a/
@@ -419,23 +439,12 @@ module Rake
       end
     end
 
-    # Discovery
-
-    def missing_headers
-      return @missing_headers if @missing_headers
-      default_includes = @compiler_data.default_include_paths( @programming_language )
-      all_includes     = default_includes + @include_paths
-      @missing_headers = @compiler_data.missing_headers( all_includes, source_files )
-    end
-    public :missing_headers
-
     # Compiling and linking parameters
 
     def include_path
       paths = @include_paths.map{ | file | Rake::Path.relative_path( file, rakefile_path) }
       paths.map { |p| "-I#{ p }" }.join( ' ' )
     end
-    public :include_path
 
     def architecture_option
       "-arch #{ @architecture }"
@@ -446,7 +455,6 @@ module Rake
       flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
       flags.join( " " )
     end
-    public :link_flags
 
     # Paths
 
@@ -479,27 +487,12 @@ module Rake
 
     # Files
 
-    def makefile_name
-      extension = if ! task_namespace.nil? && ! task_namespace.to_s.empty?
-                    '.' + task_namespace.to_s
-                  else
-                    ''
-                  end
-      "Makefile#{ extension }"
-    end
-    public :makefile_name
-
     # Lists of files
 
     def find_files( paths, extension )
       files = Rake::Path.find_files( paths, extension )
       Rake::Path.expand_all_with_root( files, @rakefile_path )
     end
-
-    def project_files
-      source_files + header_files
-    end
-    public :project_files
     
     def library_paths_list
       @library_paths.map { | path | "-L#{ path }" }.join( " " )
@@ -519,7 +512,6 @@ module Rake
         install_file( installable_header[ :source_file ], destination_path )
       end
     end
-    public :install_headers
 
     def project_headers
       @header_search_paths.reduce( [] ) do | memo, search |
