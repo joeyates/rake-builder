@@ -99,7 +99,6 @@ describe Rake::Builder::TaskDefiner do
       'install',
       'uninstall',
       makefile_name,
-      # TODO: compile tasks
       *object_files
     ].each do |task|
       it "defines '#{task}'" do
