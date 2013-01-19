@@ -140,10 +140,10 @@ describe Rake::Builder::TaskDefiner do
 
     [
       ['environment',       []],
-      [executable_target,   ['environment', 'compile', custom_prerequisite]],
-      ['build',             [executable_target]],
-      ['compile',           ['environment', makedepend_file, 'load_makedepend', *object_files]],
       ['run',               ['build']],
+      ['build',             [executable_target]],
+      [executable_target,   ['environment', 'compile', custom_prerequisite]],
+      ['compile',           ['environment', makedepend_file, 'load_makedepend', *object_files]],
       [objects_path,        []],
       [local_config,        []],
       [makedepend_file,     ['load_local_config', 'missing_headers', objects_path, *project_files]],
