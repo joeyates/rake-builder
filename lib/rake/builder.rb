@@ -183,10 +183,10 @@ module Rake
       create_autoconf(args.project_title, args.version, source)
     end
 
-    def initialize( &block )
-      save_rakefile_info( block )
+    def initialize(&block)
+      save_rakefile_info(block)
       set_defaults
-      block.call( self )
+      block.call(self)
       configure
       TaskDefiner.new(self).run
       self.class.instances << self
