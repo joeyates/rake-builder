@@ -282,11 +282,6 @@ module Rake
       raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
     end
 
-    # TODO: make private
-    def file_list( files, delimiter = ' ' )
-      files.join( delimiter )
-    end
-
     # Source files found in source_search_paths
     def source_files
       return @source_files if @source_files
@@ -498,6 +493,10 @@ module Rake
     # Files
 
     # Lists of files
+
+    def file_list(files)
+      files.join(' ')
+    end
 
     def find_files( paths, extension )
       files = Rake::Path.find_files( paths, extension )
