@@ -387,7 +387,7 @@ module Rake
       @target                = 'a.out'
       @generated_files       = []
       @compilation_options   = []
-      @include_paths         = []
+      @include_paths         = [File.join(@rakefile_path.dup, 'include')]
     end
 
     def configure
