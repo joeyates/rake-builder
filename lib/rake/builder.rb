@@ -241,8 +241,6 @@ module Rake
         next if line !~ /:\s/
         mapped_object_file = $`
         header_files = $'.chomp
-        # TODO: Why does it work,
-        # if I make the object (not the source) depend on the header?
         source_file = object_to_source[mapped_object_file]
         object_file = object_path(source_file)
         object_header_dependencies[object_file] += header_files.split(' ')
@@ -352,8 +350,7 @@ module Rake
       []
     end
 
-    # Discovery
-
+    # Raises an error if there are missing headers
     def ensure_headers
       missing = missing_headers
       return if missing.size == 0
@@ -364,6 +361,8 @@ module Rake
 
     private
 
+    # Lists headers referenced by the project's files or includes
+    # that can not be found on in any of the include paths
     def missing_headers
       return @missing_headers if @missing_headers
       default_includes = @compiler_data.default_include_paths( @programming_language )
