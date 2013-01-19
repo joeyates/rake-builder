@@ -1,5 +1,3 @@
-require 'rake/tasklib'
-
 module Rake
   class Builder
     module VERSION #:nodoc:
