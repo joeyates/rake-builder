@@ -178,8 +178,6 @@ describe Rake::Builder::TaskDefiner do
   end
 
   context 'tasks' do
-    let(:task_stub) { stub('foo', :arg_names => [], :invoke_with_call_chain => nil) }
-
     before do
       Rake::Builder::TaskDefiner.new(builder).run
     end
