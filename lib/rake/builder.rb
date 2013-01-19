@@ -359,6 +359,12 @@ module Rake
       raise Error.new(message)
     end
 
+    def link_flags
+      flags = [ @linker_options, library_paths_list, library_dependencies_list ]
+      flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
+      flags.join( " " )
+    end
+
     private
 
     # Lists headers referenced by the project's files or includes
@@ -452,12 +458,6 @@ module Rake
 
     def architecture_option
       "-arch #{ @architecture }"
-    end
-
-    def link_flags
-      flags = [ @linker_options, library_paths_list, library_dependencies_list ]
-      flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
-      flags.join( " " )
     end
 
     # Paths
