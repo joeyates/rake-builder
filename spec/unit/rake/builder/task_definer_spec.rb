@@ -29,16 +29,24 @@ describe Rake::Builder::TaskDefiner do
     ['src/file1.o']
   end
 
+  def self.header_files
+    ['include/file1.h']
+  end
+
   def self.custom_prerequisite
     'custom_prerequisite'
   end
 
   def self.project_files
-    source_files + ['include/file1.h']
+    source_files + header_files
   end
 
   def self.generated_headers
     ['config.h']
+  end
+
+  def clear_prerequisites(task)
+    Rake::Task[task].instance_variable_set('@prerequisites', [])
   end
 
   let(:executable_target) { self.class.executable_target }
@@ -145,6 +153,8 @@ describe Rake::Builder::TaskDefiner do
       [executable_target,   ['environment', 'compile', custom_prerequisite]],
       ['compile',           ['environment', makedepend_file, 'load_makedepend', *object_files]],
       [objects_path,        []],
+      ['src/file1.cpp',     []],
+      ['include/file1.h',   []],
       [local_config,        []],
       [makedepend_file,     ['load_local_config', 'missing_headers', objects_path, *project_files]],
       ['load_local_config', [local_config]],
@@ -161,19 +171,86 @@ describe Rake::Builder::TaskDefiner do
     end
 
     context 'object files' do
-      it 'depend on source files'
-      it 'depend on headers'
-    end
-
-    context 'compilation' do
-      it 'fails if there are missing headers'
-      it 'is needed if a source file changes' # this check *should* be redundant if 'object files' dependencies work
-      it 'is needed if a header changes' # this check *should* be redundant if 'object files' dependencies work
+      it 'depend on source files' do
+        expect(Rake::Task[self.class.object_files[0]].prerequisites).to include('src/file1.cpp')
+      end
     end
   end
 
   context 'tasks' do
-    it 'runs builder tasks'
+    let(:task_stub) { stub('foo', :arg_names => [], :invoke_with_call_chain => nil) }
+
+    before do
+      Rake::Builder::TaskDefiner.new(builder).run
+    end
+
+    context 'local_config' do
+      it 'creates local config' do
+        builder.should_receive(:create_local_config)
+
+        Rake::Task[self.class.local_config].invoke
+      end
+    end
+
+    context 'load_local_config' do
+      it 'loads local config' do
+        clear_prerequisites 'load_local_config'
+
+        builder.should_receive(:load_local_config)
+
+        Rake::Task['load_local_config'].invoke
+      end
+    end
+
+    context 'missing_headers' do
+      before do
+        clear_prerequisites 'missing_headers'
+      end
+
+      it 'calls ensure_headers' do
+        builder.should_receive(:ensure_headers)
+
+        Rake::Task['missing_headers'].invoke
+      end
+
+      it 'fails if builder raises an error' do
+        builder.stub(:ensure_headers).and_raise('foo')
+
+        expect {
+          Rake::Task['missing_headers'].invoke
+        }.to raise_error
+      end
+    end
+
+    context 'makedepend_file' do
+      it 'creates the makedepend file' do
+        clear_prerequisites self.class.makedepend_file
+
+        builder.should_receive(:create_makedepend_file)
+
+        Rake::Task[self.class.makedepend_file].invoke
+      end
+    end
+
+    context 'load_makedepend' do
+      before do
+        clear_prerequisites 'load_makedepend'
+        @object_file = self.class.object_files[0]
+        builder.stub(:load_makedepend).and_return({@object_file => ['include/header1.h']})
+      end
+
+      it 'gets dependency information from builder' do
+        builder.should_receive(:load_makedepend).and_return({@object_file => ['include/header1.h']})
+
+        Rake::Task['load_makedepend'].invoke
+      end
+
+      it 'makes objects files depend on headers' do
+        Rake::Task['load_makedepend'].invoke
+
+        expect(Rake::Task[@object_file].prerequisites).to include('include/header1.h')
+      end
+    end
   end
 end
 

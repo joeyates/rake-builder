@@ -235,6 +235,8 @@ module Rake
         memo[mapped_object] = source
         memo
       end
+
+      object_header_dependencies = Hash.new { |h, v| h[v] = [] }
       File.open(makedepend_file).each_line do |line|
         next if line !~ /:\s/
         mapped_object_file = $`
@@ -243,9 +245,9 @@ module Rake
         # if I make the object (not the source) depend on the header?
         source_file = object_to_source[mapped_object_file]
         object_file = object_path(source_file)
-        object_file_task = Rake.application[object_file]
-        object_file_task.enhance(header_files.split(' '))
+        object_header_dependencies[object_file] += header_files.split(' ')
       end
+      object_header_dependencies
     end
 
     def clean
@@ -357,14 +359,22 @@ module Rake
 
     # Discovery
 
+    def ensure_headers
+      missing = missing_headers
+      return if missing.size == 0
+
+      message = "Compilation cannot proceed as the following header files are missing:\n" + missing.join("\n") 
+      raise Error.new(message)
+    end
+
+    private
+
     def missing_headers
       return @missing_headers if @missing_headers
       default_includes = @compiler_data.default_include_paths( @programming_language )
       all_includes     = default_includes + @include_paths
       @missing_headers = @compiler_data.missing_headers( all_includes, source_files )
     end
-
-    private
 
     def set_defaults
       @architecture          = 'i386'

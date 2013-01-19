@@ -56,6 +56,8 @@ class Rake::Builder
         *@builder.object_files
       ]
 
+      @builder.project_files.each { |f| file f }
+
       @builder.source_files.each do |src|
         define_compile_task(src)
       end
@@ -67,6 +69,14 @@ class Rake::Builder
         @builder.create_local_config
       end
 
+      once_task :load_local_config => scoped_task(@builder.local_config) do
+        @builder.load_local_config
+      end
+
+      once_task :missing_headers => [*@builder.generated_headers] do
+        @builder.ensure_headers
+      end
+
       microsecond_file @builder.makedepend_file => [
         scoped_task(:load_local_config),
         scoped_task(:missing_headers),
@@ -76,20 +86,16 @@ class Rake::Builder
         @builder.create_makedepend_file
       end
 
-      once_task :load_local_config => scoped_task(@builder.local_config) do
-        @builder.load_local_config
-      end
-
-      once_task :missing_headers => [*@builder.generated_headers] do
-        @builder.missing_headers
-      end
-
       # Reimplemented mkdepend file loading to make objects depend on
       # sources with the correct paths:
       # the standard rake mkdepend loader doesn't do what we want,
       # as it assumes files will be compiled in their own directory.
       task :load_makedepend => @builder.makedepend_file do
-        @builder.load_makedepend
+        object_header_dependencies = @builder.load_makedepend
+        object_header_dependencies.each do |object_file, headers|
+          object_file_task = Rake.application[object_file]
+          object_file_task.enhance headers
+        end
       end
 
       # Re-implement :clean locally for project and within namespace
