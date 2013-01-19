@@ -26,13 +26,6 @@ describe 'when handling generated files' do
     @project.generated_files.should =~ @expected_generated
   end
 
-  it 'lists generated files, via the task' do
-    stdout, _ = capturing_output do
-      Rake::Task[ 'generated_files' ].invoke
-    end
-    JSON.load(stdout).            should    =~ @expected_generated
-  end
-
   it 'removes generated files with \'clean\'' do
     Rake::Task[ 'run' ].invoke
     @expected_generated.each do |f|
