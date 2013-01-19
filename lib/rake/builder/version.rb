@@ -1,7 +1,7 @@
 require 'rake/tasklib'
 
 module Rake
-  class Builder < TaskLib
+  class Builder
 
     module VERSION #:nodoc:
       MAJOR = 0
