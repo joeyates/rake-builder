@@ -352,10 +352,6 @@ module Rake
       "Makefile#{ extension }"
     end
 
-    def project_files
-      source_files + header_files
-    end
-
     def generated_headers
       []
     end

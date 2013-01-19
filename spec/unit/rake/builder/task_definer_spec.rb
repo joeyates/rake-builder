@@ -37,10 +37,6 @@ describe Rake::Builder::TaskDefiner do
     'custom_prerequisite'
   end
 
-  def self.project_files
-    source_files + header_files
-  end
-
   def self.generated_headers
     ['config.h']
   end
@@ -63,11 +59,11 @@ describe Rake::Builder::TaskDefiner do
       :makedepend_file => self.class.makedepend_file,
       :source_files => self.class.source_files,
       :object_files => self.class.object_files,
+      :header_files => self.class.header_files,
       :object_path  => self.class.object_files[0],
       :objects_path => objects_path,
       :generated_files => [],
       :local_config => self.class.local_config,
-      :project_files => self.class.project_files,
       :generated_headers => self.class.generated_headers,
       :install_path => 'install/path',
       :makefile_name => self.class.makefile_name,
@@ -156,7 +152,7 @@ describe Rake::Builder::TaskDefiner do
       ['src/file1.cpp',     []],
       ['include/file1.h',   []],
       [local_config,        []],
-      [makedepend_file,     ['load_local_config', 'missing_headers', objects_path, *project_files]],
+      [makedepend_file,     ['load_local_config', 'missing_headers', objects_path, *source_files, *header_files]],
       ['load_local_config', [local_config]],
       ['missing_headers',   generated_headers],
       ['load_makedepend',   [makedepend_file]],

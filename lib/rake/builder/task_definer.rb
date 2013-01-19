@@ -56,7 +56,8 @@ class Rake::Builder
         *@builder.object_files
       ]
 
-      @builder.project_files.each { |f| file f }
+      @builder.source_files.each { |f| file f }
+      @builder.header_files.each { |f| file f }
 
       @builder.source_files.each do |src|
         define_compile_task(src)
@@ -81,7 +82,8 @@ class Rake::Builder
         scoped_task(:load_local_config),
         scoped_task(:missing_headers),
         @builder.objects_path,
-        *@builder.project_files
+        *@builder.source_files,
+        *@builder.header_files,
       ] do
         @builder.create_makedepend_file
       end
