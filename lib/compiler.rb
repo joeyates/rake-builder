@@ -45,7 +45,7 @@ module Compiler
       return @paths[ language ] if @paths[ language ]
 
       paths = []
-      # Below is the recommended(!) way of getting standard serach paths from GCC
+      # Below is the recommended(!) way of getting standard search paths from GCC
       output = `echo | LANG=C gcc -v -x #{ language } -E - 2>&1 1>/dev/null`
       collecting = false
       output.each_line do | line |
