@@ -16,7 +16,7 @@ module RakeBuilderHelper
       builder.target               = TARGET[ type ]
       builder.task_namespace       = namespace
       builder.source_search_paths  = [ 'cpp_project' ]
-      builder.header_search_paths  = [ 'cpp_project' ]
+      builder.include_paths        = [ 'cpp_project' ]
       builder.generated_files      << 'rake-builder-testfile.txt'
       yield builder if block_given?
     end
@@ -28,7 +28,7 @@ module RakeBuilderHelper
       builder.target               = TARGET[ type ]
       builder.task_namespace       = namespace
       builder.source_search_paths  = [ 'c_project' ]
-      builder.header_search_paths  = [ 'c_project' ]
+      builder.include_paths        = [ 'c_project' ]
       builder.generated_files      << 'rake-c-testfile.txt'
       yield builder if block_given?
     end
@@ -40,7 +40,7 @@ module RakeBuilderHelper
       builder.target               = TARGET[ type ]
       builder.task_namespace       = namespace
       builder.source_search_paths  = [ 'objective_c_project' ]
-      builder.header_search_paths  = [ 'objective_c_project' ]
+      builder.include_paths        = [ 'objective_c_project' ]
       builder.generated_files      << 'rake-builder-testfile.txt'
       builder.library_dependencies = [ 'objc' ]
       builder.linker_options       = '-framework CoreFoundation -framework Foundation'

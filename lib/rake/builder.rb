@@ -98,21 +98,31 @@ module Rake
     # Directories/file globs to search for project source files
     attr_accessor :source_search_paths
 
-    # Directories/file globs to search for header files
+    # Directories/file globs to search for header files to be installed with libraries.
     # When static libraries are installed,
     # headers are installed too.
     # During installation, the destination path is:
     #   /usr/local/include + the relative path
     # This 'relative path' is calculated as follows:
-    # 1. Any files named in header_search_paths are installed directly under /usr/local/include
-    # 2. The contents of any directory named in header_search_paths are also installed directly under /usr/local/include
+    # 1. Any files named in installable_headers are installed directly under /usr/local/include
+    # 2. The contents of any directory named in installable_headers are also installed directly under /usr/local/include
     # 3. Files found by glob have the fixed part of the glob removed and
     #  the relative path calculated:
     # E.g. files found with './include/**/*' will have './include' removed to calculate the
     #  relative path.
     # So, ./include/my_lib/foo.h' produces a relative path of 'my_lib'
     # so the file will be installed as '/usr/local/include/my_lib/foo.h'
-    attr_accessor :header_search_paths
+    attr_accessor :installable_headers
+
+    def header_search_paths
+      warn 'Deprecation notice: Rake::Builder#header_search_paths has be replaced by Rake::Builder#installable_headers'
+      installable_headers
+    end
+
+    def header_search_paths=(paths)
+      warn 'Deprecation notice: Rake::Builder#header_search_paths has be replaced by Rake::Builder#installable_headers'
+      installable_headers = paths
+    end
 
     # (Optional) namespace for tasks
     attr_accessor :task_namespace
@@ -289,7 +299,7 @@ module Rake
     # Header files found in header_search_paths
     def header_files
       return @header_files if @header_files
-      @header_files = find_files( @header_search_paths, @header_file_extension ).uniq
+      @header_files = find_files(installable_headers, @header_file_extension).uniq
     end
 
     def is_library?
@@ -389,11 +399,11 @@ module Rake
       @library_dependencies  = []
       @target_prerequisites  = []
       @source_search_paths   = [@rakefile_path.dup]
-      @header_search_paths   = [@rakefile_path.dup]
       @target                = 'a.out'
       @generated_files       = []
       @compilation_options   = []
       @include_paths         = [File.join(@rakefile_path.dup, 'include')]
+      @installable_headers   = [@rakefile_path.dup]
     end
 
     def configure
@@ -409,7 +419,6 @@ module Rake
       @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
 
       @source_search_paths   = Rake::Path.expand_all_with_root( @source_search_paths, @rakefile_path )
-      @header_search_paths   = Rake::Path.expand_all_with_root( @header_search_paths, @rakefile_path )
       @library_paths         = Rake::Path.expand_all_with_root( @library_paths, @rakefile_path )
 
       raise Error.new( "The target name cannot be nil", task_namespace )             if @target.nil?
@@ -422,6 +431,7 @@ module Rake
       @generated_files << @target
 
       @install_path          ||= default_install_path( @target_type )
+      @installable_headers   = Rake::Path.expand_all_with_root( @installable_headers, @rakefile_path )
 
       @linker_options        ||= ''
       @include_paths         += []
@@ -522,7 +532,7 @@ module Rake
     end
 
     def project_headers
-      @header_search_paths.reduce( [] ) do | memo, search |
+      @installable_headers.reduce( [] ) do | memo, search |
         non_glob_search = ( search.match( /^([^\*\?]*)/ ) )[ 1 ]
         case
         when ( non_glob_search !~ /#{ @rakefile_path }/ )
