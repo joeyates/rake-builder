@@ -5,7 +5,7 @@ module Rake
     module VERSION #:nodoc:
       MAJOR = 0
       MINOR = 0
-      TINY  = 17
+      TINY  = 20
 
       STRING = [MAJOR, MINOR, TINY].join('.')
     end
