@@ -29,10 +29,13 @@ describe 'when creating tasks' do
   end
 
   it 'sets the target to \'a.out\' if it is not set' do
+    here = File.dirname(File.expand_path(__FILE__))
     builder = Rake::Builder.new do |builder|
-      builder.source_search_paths = [ 'cpp_project' ]
+      builder.source_search_paths = ['projects/cpp_project']
     end
-    builder.target.should == Rake::Path.expand_with_root( 'a.out', RakeBuilderHelper::SPEC_PATH )
+
+    expected = File.expand_path('a.out', here)
+    expect(builder.target).to eq(expected)
   end
 
   it 'raises an error when the supplied target_type is unknown' do

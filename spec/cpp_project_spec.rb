@@ -14,13 +14,13 @@ describe '#source_files' do
   it 'should find files with the .cpp extension' do
     Rake::Path.should_receive(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
 
-    cpp_task(:executable)
+    cpp_builder(:executable)
   end
 
   it 'should allow configuration of source extension' do
     Rake::Path.should_receive(:find_files).with(anything, 'cc').and_return(['a.cc'])
 
-    cpp_task(:executable) { |p| p.source_file_extension = 'cc' }
+    cpp_builder(:executable) { |p| p.source_file_extension = 'cc' }
   end
 
 end
@@ -39,7 +39,7 @@ describe 'when building an executable' do
 
   before( :each ) do
     Rake::Task.clear
-    @project = cpp_task( :executable )
+    @project = cpp_builder( :executable )
     `rm -f #{ @test_output_file }`
     `rm -f #{ @project.target }`
   end
@@ -94,7 +94,7 @@ describe 'when using namespaces' do
 
   before( :each ) do
     Rake::Task.clear
-    @project = cpp_task( :executable, 'my_namespace' )
+    @project = cpp_builder( :executable, 'my_namespace' )
   end
 
   after( :each ) do
@@ -115,7 +115,7 @@ describe 'when building a static library' do
 
   before( :each ) do
     Rake::Task.clear
-    @project = cpp_task( :static_library )
+    @project = cpp_builder( :static_library )
     `rm -f #{@project.target}`
   end
 
@@ -144,7 +144,7 @@ describe 'when building a shared library' do
 
   before( :each ) do
     Rake::Task.clear
-    @project = cpp_task( :shared_library ) do |builder|
+    @project = cpp_builder( :shared_library ) do |builder|
       builder.compilation_options += ['-fPIC']
     end
     `rm -f #{ @project.target }`
@@ -178,7 +178,7 @@ describe 'when installing' do
   before( :each ) do
     Rake::Task.clear
     `mkdir #{ INSTALL_DIRECTORY }`
-    @project = cpp_task( :executable ) do |builder|
+    @project = cpp_builder( :executable ) do |builder|
       builder.install_path = INSTALL_DIRECTORY
     end
     @installed_target = File.join( INSTALL_DIRECTORY, File.basename( @project.target ) )

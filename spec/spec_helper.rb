@@ -2,7 +2,6 @@ require 'rspec'
 require File.expand_path( File.dirname(__FILE__) + '/../lib/rake/builder' )
 
 module RakeBuilderHelper
-
   SPEC_PATH ||= File.expand_path( File.dirname(__FILE__) )
   TARGET    ||= {
     :executable      => 'the_executable',
@@ -10,13 +9,13 @@ module RakeBuilderHelper
     :shared_library  => 'libthe_dynamic_library.so',
   }
 
-  def cpp_task( type, namespace = nil )
+  def cpp_builder(type, namespace = nil)
     Rake::Builder.new do |builder|
       builder.programming_language = 'c++'
-      builder.target               = TARGET[ type ]
+      builder.target               = TARGET[type]
       builder.task_namespace       = namespace
-      builder.source_search_paths  = [ 'cpp_project' ]
-      builder.include_paths        = [ 'cpp_project' ]
+      builder.source_search_paths  = ['projects/cpp_project']
+      builder.include_paths        = ['projects/cpp_project']
       builder.generated_files      << 'rake-builder-testfile.txt'
       yield builder if block_given?
     end

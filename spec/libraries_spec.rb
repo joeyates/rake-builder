@@ -14,7 +14,7 @@ describe 'when using libraries' do
 
   it 'builds if libraries are found' do
     lambda do
-      @project = cpp_task( :executable ) do |builder|
+      @project = cpp_builder( :executable ) do |builder|
         builder.library_dependencies = [ 'gcc' ] # As we're using GCC, libgcc.a should always be present
       end
       Rake::Task[ 'build' ].invoke
@@ -22,7 +22,7 @@ describe 'when using libraries' do
   end
 
   it 'fails to build if libraries are missing' do
-    @project = cpp_task( :executable ) do |builder|
+    @project = cpp_builder( :executable ) do |builder|
       builder.library_dependencies = [ 'library_that_doesnt_exist' ]
     end
 

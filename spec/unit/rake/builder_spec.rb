@@ -63,7 +63,7 @@ describe Rake::Builder do
     it 'returns a relative path' do
       here = File.expand_path(File.dirname(__FILE__))
       target_pathname = File.join(here, 'my_prog')
-      builder = cpp_task(:executable) { |b| b.target = target_pathname }
+      builder = cpp_builder(:executable) { |b| b.target = target_pathname }
 
       expect(builder.primary_name).to eq(File.join('unit', 'rake', 'my_prog'))
     end
@@ -71,7 +71,7 @@ describe Rake::Builder do
 
   context '#label' do
     it 'replaces dots with underscores' do
-      builder = cpp_task(:executable) { |b| b.target = 'my_prog.exe' }
+      builder = cpp_builder(:executable) { |b| b.target = 'my_prog.exe' }
 
       expect(builder.label).to eq('my_prog_exe')
     end
@@ -79,14 +79,14 @@ describe Rake::Builder do
 
   context '#source_paths' do
     it 'returns source files' do
-      builder = cpp_task(:executable)
+      builder = cpp_builder(:executable)
 
-      expect(builder.source_paths).to eq(['cpp_project/main.cpp'])
+      expect(builder.source_paths).to eq(['projects/cpp_project/main.cpp'])
     end
   end
 
   context '#library_dependencies_list' do
-    subject { cpp_task(:executable) { |b| b.library_dependencies = ['foo', 'bar'] } }
+    subject { cpp_builder(:executable) { |b| b.library_dependencies = ['foo', 'bar'] } }
 
     it 'is a string' do
       expect(subject.library_dependencies_list).to be_a(String)

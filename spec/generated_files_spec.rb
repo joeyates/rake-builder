@@ -3,12 +3,11 @@ load File.dirname(__FILE__) + '/spec_helper.rb'
 require 'json'
 
 describe 'when handling generated files' do
-
   include RakeBuilderHelper
 
   before( :each ) do
     Rake::Task.clear
-    @project = cpp_task( :executable )
+    @project = cpp_builder(:executable)
     @expected_generated = Rake::Path.expand_all_with_root(
                             [
                              'main.o',
@@ -49,14 +48,14 @@ describe 'when adding generated files' do
   end
 
   it 'includes added files' do
-    @project = cpp_task( :executable ) do |app|
+    @project = cpp_builder(:executable) do |app|
       app.generated_files << @file_with_path
     end
     @project.generated_files.include?( @file_with_path ).should be_true
   end
 
   it 'expands the paths of added files' do
-    @project = cpp_task( :executable ) do |app|
+    @project = cpp_builder(:executable) do |app|
       app.generated_files << @file
     end
     @project.generated_files.include?( @file_with_path ).should be_true

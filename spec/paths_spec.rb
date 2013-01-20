@@ -1,19 +1,13 @@
-load File.dirname(__FILE__) + '/spec_helper.rb'
-
-PATHS_SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
+require 'spec_helper'
 
 describe 'when creating tasks' do
-
-  before( :each ) do
-    Rake::Task.clear
-  end
+  let(:builder) { cpp_builder('foo') }
 
   it 'remembers the Rakefile path' do
-    builder = Rake::Builder.new do |builder|
-      builder.source_search_paths = [ 'cpp_project' ]
-    end
-    builder.rakefile_path.should == PATHS_SPEC_PATH
-  end
+    here = File.dirname(File.expand_path(__FILE__))
+    builder = Rake::Builder.new { |b| b.source_search_paths = ['projects/cpp_project'] }
 
+    expect(builder.rakefile_path).to eq(here)
+  end
 end
 

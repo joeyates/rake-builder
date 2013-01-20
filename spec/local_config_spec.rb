@@ -18,7 +18,7 @@ describe 'local config files' do
 
   it 'works if the\'s no config file' do
     lambda do
-      @builder = cpp_task( :executable )
+      @builder = cpp_builder( :executable )
     end.should_not raise_error
   end
 
@@ -43,7 +43,7 @@ describe 'local config files' do
 
     before( :each ) do
       Rake::Task.clear
-      @project = cpp_task( :executable )
+      @project = cpp_builder( :executable )
       Rake::Task[ 'clean' ].execute
       `rm -f #{ @project.local_config }`
     end
