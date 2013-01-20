@@ -201,6 +201,7 @@ module Rake
     end
 
     def build
+      logger.debug "Building '#{target}'"
       system "rm -f #{target}"
       build_commands.each do |command|
         stdout, stderr = shell(command)
@@ -210,7 +211,7 @@ module Rake
     end
 
     def create_local_config
-      logger.add(Logger::DEBUG, "Creating file '#{local_config }'")
+      logger.debug "Creating file '#{local_config }'"
       added_includes = compiler_data.include_paths(missing_headers)
       config = Rake::LocalConfig.new(local_config)
       config.include_paths = added_includes
@@ -218,9 +219,9 @@ module Rake
     end
 
     def create_makedepend_file
+      logger.debug 'Creating makedepend file'
       system('which makedepend >/dev/null')
       raise 'makedepend not found' unless $?.success?
-      logger.add(Logger::DEBUG, "Analysing dependencies")
       command = "makedepend -f- -- #{include_path} -- #{file_list(source_files)} 2>/dev/null > #{makedepend_file}"
       shell command
     end
