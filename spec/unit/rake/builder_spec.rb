@@ -61,6 +61,42 @@ describe Rake::Builder do
     end
   end
 
+  context '.new' do
+    it 'fails without a block' do
+      expect {
+        Rake::Builder.new
+      }.to raise_error(RuntimeError, 'No block given')
+    end
+
+    it 'raises an error when the target is an empty string' do
+      expect {
+        Rake::Builder.new { |b| b.target = '' }
+      }.to raise_error(Rake::Builder::Error, 'The target name cannot be an empty string')
+    end
+
+    it 'raises an error when the target is nil' do
+      expect {
+        Rake::Builder.new { |b| b.target = nil }
+      }.to raise_error(Rake::Builder::Error, 'The target name cannot be nil')
+    end
+
+    it 'raises an error when the supplied target_type is unknown' do
+      expect {
+        Rake::Builder.new { |b| b.target_type = :foo }
+      }.to raise_error(Rake::Builder::Error, 'Building foo targets is not supported')
+    end
+  end
+
+  context '#target' do
+    it "defaults to 'a.out'" do
+      Rake::Path.stub(:find_files => ['main.cpp'])
+
+      builder = Rake::Builder.new {}
+
+      expect(builder.target).to end_with('/a.out')
+    end
+  end
+
   context '#primary_name' do
     it 'returns a relative path' do
       here = File.expand_path(File.dirname(__FILE__))

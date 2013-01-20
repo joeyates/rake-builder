@@ -188,6 +188,7 @@ module Rake
     Rake::Builder::BuilderCollectionTaskDefiner.new.run
 
     def initialize(&block)
+      raise 'No block given' if block.nil?
       save_rakefile_info(block)
       set_defaults
       block.call(self)
