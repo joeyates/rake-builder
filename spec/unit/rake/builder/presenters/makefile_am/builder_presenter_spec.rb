@@ -41,7 +41,9 @@ describe Rake::Builder::Presenters::MakefileAm::BuilderPresenter do
       expect(subject.to_s).to match(/fubar_CPPFLAGS\s+=\s+-D FOO -D BAR/)
     end
 
-    it 'ends with a blank line'
+    it 'ends with a blank line' do
+      expect(subject.to_s).to end_with("\n")
+    end
 
     context 'library builder' do
       subject { Rake::Builder::Presenters::MakefileAm::BuilderPresenter.new(library) }

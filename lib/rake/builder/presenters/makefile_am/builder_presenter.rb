@@ -7,7 +7,7 @@ module Rake; class Builder; module Presenters; module MakefileAm
     end
 
     def to_s
-      [sources, cpp_flags, ld_flags, libraries, ''].compact.join("/n")
+      [sources, cpp_flags, ld_flags, libraries, ''].compact.join("\n")
     end
 
     private
