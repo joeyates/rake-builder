@@ -85,6 +85,15 @@ describe Rake::Builder do
         Rake::Builder.new { |b| b.target_type = :foo }
       }.to raise_error(Rake::Builder::Error, 'Building foo targets is not supported')
     end
+
+    it 'remembers the Rakefile path' do
+      Rake::Path.stub(:find_files => ['main.cpp'])
+      here = File.dirname(File.expand_path(__FILE__))
+
+      builder = Rake::Builder.new {}
+
+      expect(builder.rakefile_path).to eq(here)
+    end
   end
 
   context '#target' do
