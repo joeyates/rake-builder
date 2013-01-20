@@ -4,6 +4,7 @@ require 'rake'
 require 'rake/builder/autoconf/version'
 require 'rake/builder/configure_ac'
 require 'rake/builder/error'
+require 'rake/builder/local_config'
 require 'rake/builder/logger/formatter'
 require 'rake/builder/presenters/makefile/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
@@ -211,9 +212,9 @@ module Rake
     end
 
     def create_local_config
-      logger.debug "Creating file '#{local_config }'"
+      logger.debug "Creating file '#{local_config}'"
       added_includes = compiler_data.include_paths(missing_headers)
-      config = Rake::LocalConfig.new(local_config)
+      config = Rake::Builder::LocalConfig.new(local_config)
       config.include_paths = added_includes
       config.save
     end
@@ -227,7 +228,7 @@ module Rake
     end
 
     def load_local_config
-      config = Rake::LocalConfig.new(local_config)
+      config = Rake::Builder::LocalConfig.new(local_config)
       config.load
       @include_paths       += Rake::Path.expand_all_with_root(config.include_paths, rakefile_path)
       @compilation_options += config.compilation_options

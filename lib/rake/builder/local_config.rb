@@ -1,9 +1,7 @@
 require 'yaml'
 
-module Rake
-
+class Rake::Builder
   class LocalConfig
-
     VERSIONS = ['1.0', '1.1']
 
     attr_accessor :include_paths
@@ -37,7 +35,6 @@ module Rake
         :include_paths       => @include_paths,
         :compilation_options => @compilation_options }
     end
-
   end
-
 end
+

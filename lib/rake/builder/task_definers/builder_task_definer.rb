@@ -1,6 +1,3 @@
-require 'rake/file_task_alias'
-require 'rake/local_config'
-
 include Rake::DSL
 
 class Rake::Builder

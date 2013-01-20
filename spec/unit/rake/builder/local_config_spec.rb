@@ -2,7 +2,7 @@ require 'spec_helper'
 
 LOCAL_CONFIG_SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
 
-describe Rake::LocalConfig do
+describe Rake::Builder::LocalConfig do
 
   include RakeBuilderHelper
 
@@ -24,7 +24,7 @@ describe Rake::LocalConfig do
 
   it 'loads config files' do
     save_config
-    config = Rake::LocalConfig.new( @local_config_file )
+    config = Rake::Builder::LocalConfig.new( @local_config_file )
     config.load
 
     config.include_paths.     should         include( @expected_path )
@@ -34,7 +34,7 @@ describe Rake::LocalConfig do
     @config[ :rake_builder ][ :config_file ].delete( :version )
     save_config
     lambda do
-      config = Rake::LocalConfig.new( @local_config_file )
+      config = Rake::Builder::LocalConfig.new( @local_config_file )
       config.load
     end.should raise_error(Rake::Builder::Error, 'Config file version incorrect')
   end
