@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Rake::Builder do
+  include RakeBuilderHelper
+
   context '.create_autoconf' do
     let(:version) { stub('Rake::Builder::Autoconf::Autoconf::Version', :decide => 'qux') }
     let(:presenter) { stub('Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter', :save => nil) }
@@ -58,20 +60,41 @@ describe Rake::Builder do
   end
 
   context '#primary_name' do
-    it 'xx'
+    it 'returns a relative path' do
+      here = File.expand_path(File.dirname(__FILE__))
+      target_pathname = File.join(here, 'my_prog')
+      builder = cpp_task(:executable) { |b| b.target = target_pathname }
+
+      expect(builder.primary_name).to eq(File.join('unit', 'rake', 'my_prog'))
+    end
   end
 
   context '#label' do
-    it 'xx'
+    it 'replaces dots with underscores' do
+      builder = cpp_task(:executable) { |b| b.target = 'my_prog.exe' }
+
+      expect(builder.label).to eq('my_prog_exe')
+    end
   end
 
   context '#source_paths' do
-    it 'returns source files'
-    it 'uses relative paths'
+    it 'returns source files' do
+      builder = cpp_task(:executable)
+
+      expect(builder.source_paths).to eq(['cpp_project/main.cpp'])
+    end
   end
 
   context '#library_dependencies_list' do
-    it 'is a string'
+    subject { cpp_task(:executable) { |b| b.library_dependencies = ['foo', 'bar'] } }
+
+    it 'is a string' do
+      expect(subject.library_dependencies_list).to be_a(String)
+    end
+
+    it 'lists libraries' do
+      expect(subject.library_dependencies_list).to eq('-lfoo -lbar')
+    end
   end
 end
 

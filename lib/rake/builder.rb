@@ -323,7 +323,7 @@ module Rake
     end
 
     def library_dependencies_list
-      @library_dependencies.map { |lib| "-l#{ lib }"}.join('')
+      @library_dependencies.map { |lib| "-l#{lib}" }.join(' ')
     end
 
     def target_basename
