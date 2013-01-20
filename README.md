@@ -19,7 +19,6 @@ Hello World! Example
 Rakefile:
 ```ruby
 require 'rubygems' if RUBY_VERSION < '1.9'
-require 'rake'
 require 'rake/builder'
 
 Rake::Builder.new do |builder|
