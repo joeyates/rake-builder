@@ -1,5 +1,3 @@
-require 'rubygems' if RUBY_VERSION < '1.9'
-require 'rake/tasklib'
 require 'fileutils'
 
 module Rake
