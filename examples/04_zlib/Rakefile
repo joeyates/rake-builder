@@ -1,13 +1,12 @@
 require 'rubygems' if RUBY_VERSION < '1.9'
-require 'rake'
 require 'rake/builder'
 
 Rake::Builder.new do |builder|
   builder.target               = 'zlib'
   builder.programming_language = 'c'
-  builder.source_search_paths  = [ 'src' ]
-  builder.header_search_paths  = [ 'include' ]
+  builder.source_search_paths  = ['src']
   builder.objects_path         = '.'
   builder.library_dependencies << 'z'
   builder.generated_files      << 'rake.gz'
 end
+

@@ -1,0 +1,5 @@
+source :rubygems
+
+gem 'rake-builder', :path => File.expand_path('../..', File.dirname(__FILE__))
+gem 'pry-plus'
+
