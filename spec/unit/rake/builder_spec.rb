@@ -193,6 +193,18 @@ describe Rake::Builder do
     end
   end
 
+  context '#is_library?' do
+    [
+      [:static_library, true],
+      [:shared_library, true],
+      [:executable,     false]
+    ].each do |type, is_library|
+      example type do
+        expect(c_task(type).is_library?).to eq(is_library)
+      end
+    end
+  end
+
   context '#source_paths' do
     it 'returns source files' do
       builder = cpp_builder(:executable)
