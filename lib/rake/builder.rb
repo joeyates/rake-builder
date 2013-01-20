@@ -287,7 +287,7 @@ module Rake
     # Source files found in source_search_paths
     def source_files
       return @source_files if @source_files
-      @source_files = find_files( @source_search_paths, @source_file_extension ).uniq.sort
+      @source_files = find_files(@source_search_paths, source_file_extension).uniq.sort
     end
 
     def is_library?
@@ -484,9 +484,9 @@ module Rake
       files.join(' ')
     end
 
-    def find_files( paths, extension )
-      files = Rake::Path.find_files( paths, extension )
-      Rake::Path.expand_all_with_root( files, @rakefile_path )
+    def find_files(paths, extension)
+      files = Rake::Path.find_files(paths, extension)
+      Rake::Path.expand_all_with_root(files, @rakefile_path)
     end
     
     def library_paths_list
