@@ -22,7 +22,8 @@ module Rake
         @timestamp = File.stat(self.name).mtime if @timestamp.nil?
         self.prerequisites.any? do |n|
           task = application[n]
-          if task.is_a?(Rake::FileTask)
+          if task.is_a?(Rake::FileTask) or
+            task.is_a?(self.class)
             task.timestamp > @timestamp
           else
             task.needed?
