@@ -173,7 +173,7 @@ module Rake
 
     def self.create_autoconf(project_title, version, source_file)
       raise "Please supply a project_title parameter" if project_title.nil?
-      version = Rake::Builder::Version.new(version).decide
+      version = Rake::Builder::Autoconf::Version.new(version).decide
       if File.exist?('configure.ac')
         raise "The file 'configure.ac' already exists"
       end

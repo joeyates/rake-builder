@@ -2,12 +2,12 @@ require 'spec_helper'
 
 describe Rake::Builder do
   context '.create_autoconf' do
-    let(:version) { stub('Rake::Builder::Autoconf::Version', :decide => 'qux') }
+    let(:version) { stub('Rake::Builder::Autoconf::Autoconf::Version', :decide => 'qux') }
     let(:presenter) { stub('Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter', :save => nil) }
     let(:configure_ac) { stub('Rake::Builder::ConfigureAc', :save => nil) }
 
     before do
-      Rake::Builder::Version.stub(:new).and_return(version)
+      Rake::Builder::Autoconf::Version.stub(:new).and_return(version)
       File.stub(:exist?).with('configure.ac').and_return(false)
       File.stub(:exist?).with('Makefile.am').and_return(false)
       Rake::Builder::ConfigureAc.stub(:new => configure_ac)
@@ -21,7 +21,7 @@ describe Rake::Builder do
     end
 
     it 'fails if Version fails' do
-      Rake::Builder::Version.stub(:new).and_raise('foo')
+      Rake::Builder::Autoconf::Version.stub(:new).and_raise('foo')
 
       expect {
         Rake::Builder.create_autoconf('foo', 'bar', 'baz')
