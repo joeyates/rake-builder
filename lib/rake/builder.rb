@@ -202,7 +202,7 @@ module Rake
 
     def build
       logger.debug "Building '#{target}'"
-      system "rm -f #{target}"
+      File.unlink(target) if File.exist?(target)
       build_commands.each do |command|
         stdout, stderr = shell(command)
         raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?

@@ -3,6 +3,8 @@ require 'spec_helper'
 describe Rake::Builder do
   include RakeBuilderHelper
 
+  let(:builder) { cpp_builder(:executable) }
+
   context '.create_autoconf' do
     let(:version) { stub('Rake::Builder::Autoconf::Autoconf::Version', :decide => 'qux') }
     let(:presenter) { stub('Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter', :save => nil) }
@@ -77,10 +79,47 @@ describe Rake::Builder do
     end
   end
 
+  context '#build' do
+    before do
+      @target_exists = [false, true]
+      File.stub(:exist?).with(builder.target) { @target_exists.shift }
+      builder.stub(:system => nil)
+      `(exit 0)` # set $? to a successful Process::Status
+    end
+
+    it 'checks if the old target exists' do
+      File.should_receive(:exist?).with(builder.target) { @target_exists.shift }
+
+      builder.build
+    end
+
+    it 'deletes the old target' do
+      @target_exists = [true, true]
+
+      File.should_receive(:unlink).with(builder.target)
+
+      builder.build
+    end
+
+    it 'fails if a build command fails' do
+      `(exit 1)` # set $? to a failing Process::Status
+
+      expect {
+        builder.build
+      }.to raise_error(Rake::Builder::BuildFailure, /command.*?failed/)
+    end
+
+    it 'fails if the target is missing afterwards' do
+      @target_exists = [false, false]
+
+      expect {
+        builder.build
+      }.to raise_error(Rake::Builder::BuildFailure, /not created/)
+    end
+  end
+
   context '#clean' do
     it 'checks if files exist' do
-      builder = cpp_builder(:executable)
-
       exists = []
       File.stub(:exist?) { |file| exists << file; false }
 
