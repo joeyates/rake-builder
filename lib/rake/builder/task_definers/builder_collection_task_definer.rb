@@ -1,0 +1,15 @@
+class Rake::Builder::BuilderCollectionTaskDefiner
+  def run
+    desc "Create input files for configure script creation"
+    task :autoconf, [:project_title, :version] => [] do |task, args|
+      raise 'No Rake::Builder projects have been defined' unless Rake::Builder.instances.size > 0
+      first = Rake::Builder.instances[0]
+      source = Rake::Path.relative_path(
+        first.source_files[0],
+        first.rakefile_path
+      )
+      Rake::Builder.create_autoconf(args.project_title, args.version, source)
+    end
+  end
+end
+

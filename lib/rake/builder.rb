@@ -11,12 +11,11 @@ require 'rake/builder/presenters/makefile/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_collection_presenter'
 require 'rake/builder/task_definers/builder_task_definer'
+require 'rake/builder/task_definers/builder_collection_task_definer'
 require 'rake/path'
 require 'rake/microsecond'
 require 'rake/once_task'
 require 'compiler'
-
-include Rake::DSL
 
 module Rake
   class Builder
@@ -166,7 +165,7 @@ module Rake
     # Each instance has its own logger
     attr_accessor :logger
 
-    # All Rake::Builder instaces that get defined
+    # All Rake::Builder instances that get defined
     # This allows us to create scripts for configure
     @instances = []
 
@@ -186,12 +185,8 @@ module Rake
       ConfigureAc.new(project_title, version, source_file).save
       Presenters::MakefileAm::BuilderCollectionPresenter.new(instances).save
     end
- 
-    desc "Create input files for configure script creation"
-    task :autoconf, [:project_title, :version] => [] do |task, args|
-      source = Rake::Path.relative_path(instances[0].source_files[0], instances[0].rakefile_path)
-      create_autoconf(args.project_title, args.version, source)
-    end
+
+    Rake::Builder::BuilderCollectionTaskDefiner.new.run
 
     def initialize(&block)
       save_rakefile_info(block)
