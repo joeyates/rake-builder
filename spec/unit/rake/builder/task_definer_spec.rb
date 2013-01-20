@@ -29,10 +29,6 @@ describe Rake::Builder::TaskDefiner do
     ['src/file1.o']
   end
 
-  def self.header_files
-    ['include/file1.h']
-  end
-
   def self.custom_prerequisite
     'custom_prerequisite'
   end
@@ -59,7 +55,6 @@ describe Rake::Builder::TaskDefiner do
       :makedepend_file => self.class.makedepend_file,
       :source_files => self.class.source_files,
       :object_files => self.class.object_files,
-      :header_files => self.class.header_files,
       :object_path  => self.class.object_files[0],
       :objects_path => objects_path,
       :generated_files => [],
@@ -150,9 +145,8 @@ describe Rake::Builder::TaskDefiner do
       ['compile',           ['environment', makedepend_file, 'load_makedepend', *object_files]],
       [objects_path,        []],
       ['src/file1.cpp',     []],
-      ['include/file1.h',   []],
       [local_config,        []],
-      [makedepend_file,     ['load_local_config', 'missing_headers', objects_path, *source_files, *header_files]],
+      [makedepend_file,     ['load_local_config', 'missing_headers', objects_path, *source_files]],
       ['load_local_config', [local_config]],
       ['missing_headers',   generated_headers],
       ['load_makedepend',   [makedepend_file]],
@@ -237,6 +231,12 @@ describe Rake::Builder::TaskDefiner do
         builder.should_receive(:load_makedepend).and_return({@object_file => ['include/header1.h']})
 
         Rake::Task['load_makedepend'].invoke
+      end
+
+      it 'creates tasks for headers' do
+        Rake::Task['load_makedepend'].invoke
+
+        expect(Rake.application.lookup('include/header1.h')).to be_a(Rake::Task)
       end
 
       it 'makes objects files depend on headers' do

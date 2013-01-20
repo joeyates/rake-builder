@@ -296,12 +296,6 @@ module Rake
       @source_files = find_files( @source_search_paths, @source_file_extension ).uniq.sort
     end
 
-    # Header files found in header_search_paths
-    def header_files
-      return @header_files if @header_files
-      @header_files = find_files(installable_headers, @header_file_extension).uniq
-    end
-
     def is_library?
       [:static_library, :shared_library].include?(target_type)
     end

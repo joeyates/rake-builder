@@ -57,7 +57,6 @@ class Rake::Builder
       ]
 
       @builder.source_files.each { |f| file f }
-      @builder.header_files.each { |f| file f }
 
       @builder.source_files.each do |src|
         define_compile_task(src)
@@ -83,7 +82,6 @@ class Rake::Builder
         scoped_task(:missing_headers),
         @builder.objects_path,
         *@builder.source_files,
-        *@builder.header_files,
       ] do
         @builder.create_makedepend_file
       end
@@ -95,6 +93,7 @@ class Rake::Builder
       task :load_makedepend => @builder.makedepend_file do
         object_header_dependencies = @builder.load_makedepend
         object_header_dependencies.each do |object_file, headers|
+          headers.each { |h| file h }
           object_file_task = Rake.application[object_file]
           object_file_task.enhance headers
         end
