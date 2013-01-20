@@ -140,8 +140,8 @@ describe Rake::Builder::BuilderTaskDefiner do
     [
       ['environment',       []],
       ['run',               ['build']],
-      ['build',             [executable_target]],
-      [executable_target,   ['environment', 'compile', custom_prerequisite]],
+      ['build',             ['compile', executable_target]],
+      [executable_target,   ['environment', 'compile', custom_prerequisite, *object_files]],
       ['compile',           ['environment', makedepend_file, 'load_makedepend', *object_files]],
       [objects_path,        []],
       ['src/file1.cpp',     []],

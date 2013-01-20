@@ -35,13 +35,14 @@ class Rake::Builder
       end
 
       desc "Compile and build '#{@builder.target_basename}'"
-      Rake::FileTaskAlias.define_task(:build, @builder.target)
+      task :build => [:compile, @builder.target]
 
       desc "Build '#{@builder.target_basename}'"
       microsecond_file @builder.target => [
         scoped_task(:environment),
         scoped_task(:compile),
-        *@builder.target_prerequisites
+        *@builder.target_prerequisites,
+        *@builder.object_files,
       ] do
         @builder.build
       end
@@ -53,7 +54,7 @@ class Rake::Builder
         scoped_task(:environment),
         @builder.makedepend_file,
         scoped_task(:load_makedepend),
-        *@builder.object_files
+        *@builder.object_files,
       ]
 
       @builder.source_files.each do |source|
@@ -91,7 +92,7 @@ class Rake::Builder
       # sources with the correct paths:
       # the standard rake mkdepend loader doesn't do what we want,
       # as it assumes files will be compiled in their own directory.
-      task :load_makedepend => @builder.makedepend_file do
+      once_task :load_makedepend => @builder.makedepend_file do
         object_header_dependencies = @builder.load_makedepend
         object_header_dependencies.each do |object_file, headers|
           headers.each { |h| file h }
