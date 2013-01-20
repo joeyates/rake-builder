@@ -5,6 +5,6 @@ require 'rake/builder'
 Rake::Builder.new do |builder|
   builder.target               = 'search-paths'
   builder.source_search_paths  = [ 'src' ]
-  builder.header_search_paths  = [ 'include' ]
   builder.objects_path         = '.'
 end
+
