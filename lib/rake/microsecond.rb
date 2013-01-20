@@ -3,24 +3,12 @@ require 'rake/tasklib'
 require 'fileutils'
 
 module Rake
-
   module Microsecond
-  # Compensate for file systems with 1s resolution
-
-    class FileTask < Task
-
+    class Base < Task
       attr_accessor :timestamp
 
-      def self.define_task( *args, &block )
-        task = super( *args, &block )
-        task.timestamp = nil
-        task
-      end
-
-      def needed?
-        return true if not File.exist?(self.name)
-        @timestamp = File.stat(self.name).mtime if @timestamp.nil?
-        self.prerequisites.any? do |n|
+      def prerequisites_needed?
+        prerequisites.any? do |n|
           task = application[n]
           if task.is_a?(Rake::FileTask) or
             task.is_a?(self.class)
@@ -30,22 +18,34 @@ module Rake
           end
         end
       end
+    end
+
+    # Compensate for file systems with 1s resolution
+    class FileTask < Base
+      def self.define_task( *args, &block )
+        task = super( *args, &block )
+        task.timestamp = nil
+        task
+      end
+
+      def needed?
+        return true if not File.exist?(self.name)
+        @timestamp = File.stat(self.name).mtime if @timestamp.nil?
+        prerequisites_needed?
+      end
 
       def execute(*args)
         @timestamp = Time.now
         super(*args)
       end
-
     end
 
-    class DirectoryTask < Task
-
+    class DirectoryTask < Base
       include FileUtils
 
-      attr_accessor :timestamp
       attr_accessor :path
 
-      def self.define_task( *args, &block )
+      def self.define_task(*args, &block)
         task           = super(*args, &block)
         task.path      = args[0]
         task.timestamp = nil
@@ -53,11 +53,11 @@ module Rake
       end
 
       def needed?
-        exists = File.directory?(self.path)
-        if exists && @timestamp.nil?
+        return true if not File.directory?(self.path)
+        if @timestamp.nil?
           @timestamp = File.stat(self.path).mtime
         end
-        ! exists
+        prerequisites_needed?
       end
 
       def execute(*args)
@@ -65,11 +65,8 @@ module Rake
         @timestamp = Time.now
         super(*args)
       end
-
     end
-
   end
-
 end
 
 def microsecond_file(*args, &block)
