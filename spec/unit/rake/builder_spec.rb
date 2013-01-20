@@ -85,6 +85,22 @@ describe Rake::Builder do
     end
   end
 
+  context '#source_files' do
+    it 'finds files with the .cpp extension' do
+      Rake::Path.should_receive(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
+
+      cpp_builder(:executable)
+    end
+
+    it 'should allow configuration of source extension' do
+      Rake::Path.should_receive(:find_files).with(anything, 'cc').and_return(['a.cc'])
+
+      builder = cpp_builder(:executable) do |b|
+        b.source_file_extension = 'cc'
+      end
+    end
+  end
+
   context '#library_dependencies_list' do
     subject { cpp_builder(:executable) { |b| b.library_dependencies = ['foo', 'bar'] } }
 
