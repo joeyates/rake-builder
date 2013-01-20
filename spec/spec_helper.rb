@@ -24,25 +24,11 @@ module RakeBuilderHelper
   def c_task( type, namespace = nil )
     Rake::Builder.new do |builder|
       builder.programming_language = 'c'
-      builder.target               = TARGET[ type ]
+      builder.target               = TARGET[type]
       builder.task_namespace       = namespace
-      builder.source_search_paths  = [ 'c_project' ]
-      builder.include_paths        = [ 'c_project' ]
+      builder.source_search_paths  = ['projects/c_project']
+      builder.include_paths        = ['projects/c_project']
       builder.generated_files      << 'rake-c-testfile.txt'
-      yield builder if block_given?
-    end
-  end
-
-  def objective_c_task( type, namespace = nil )
-    Rake::Builder.new do |builder|
-      builder.programming_language = 'objective-c'
-      builder.target               = TARGET[ type ]
-      builder.task_namespace       = namespace
-      builder.source_search_paths  = [ 'objective_c_project' ]
-      builder.include_paths        = [ 'objective_c_project' ]
-      builder.generated_files      << 'rake-builder-testfile.txt'
-      builder.library_dependencies = [ 'objc' ]
-      builder.linker_options       = '-framework CoreFoundation -framework Foundation'
       yield builder if block_given?
     end
   end
