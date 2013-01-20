@@ -18,9 +18,16 @@ module Rake
       end
 
       def needed?
-        return true if ! File.exist?( self.name )
-        @timestamp = File.stat( self.name ).mtime if @timestamp.nil?
-        return self.prerequisites.any? { | n | ! application[n].timestamp.nil? && application[n].timestamp > @timestamp }
+        return true if not File.exist?(self.name)
+        @timestamp = File.stat(self.name).mtime if @timestamp.nil?
+        self.prerequisites.any? do |n|
+          task = application[n]
+          if task.is_a?(Rake::FileTask)
+            task.timestamp > @timestamp
+          else
+            task.needed?
+          end
+        end
       end
 
       def execute(*args)
