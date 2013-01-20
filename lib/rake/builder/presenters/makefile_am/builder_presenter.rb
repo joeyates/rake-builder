@@ -1,4 +1,4 @@
-module Rake; class Builder; module Presenters; module MakefileAm
+module Rake::Builder::Presenters::MakefileAm
   class BuilderPresenter
     attr_accessor :builder
 
@@ -36,5 +36,5 @@ module Rake; class Builder; module Presenters; module MakefileAm
       end
     end
   end
-end; end; end; end
+end
 
