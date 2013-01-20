@@ -56,10 +56,11 @@ class Rake::Builder
         *@builder.object_files
       ]
 
-      @builder.source_files.each { |f| file f }
-
-      @builder.source_files.each do |src|
-        define_compile_task(src)
+      @builder.source_files.each do |source|
+        file source
+        object = @builder.object_path(source)
+        @builder.generated_files << object
+        define_compile_task(source, object)
       end
 
       # TODO: Does this need to be microsecond?
@@ -132,10 +133,8 @@ class Rake::Builder
       end
     end
 
-    def define_compile_task(source)
-      object = @builder.object_path(source)
-      @builder.generated_files << object
-      file object => [source] do |t|
+    def define_compile_task(source, object)
+      file object => [source] do
         @builder.compile(source, object)
       end
     end
