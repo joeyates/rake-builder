@@ -77,6 +77,22 @@ describe Rake::Builder do
     end
   end
 
+  context '#target_type' do
+    [
+      ['my_program',   :executable],
+      ['libstatic.a',  :static_library],
+      ['libshared.so', :shared_library],
+    ].each do |name, type|
+      it "recognises '#{name}' as '#{type}'" do
+        Rake::Path.stub(:find_files).and_return(['file'])
+
+        builder = Rake::Builder.new { |b| b.target = name }
+
+        expect(builder.target_type).to eq(type)
+      end
+    end
+  end
+
   context '#source_paths' do
     it 'returns source files' do
       builder = cpp_builder(:executable)
