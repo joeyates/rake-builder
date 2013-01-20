@@ -433,9 +433,9 @@ module Rake
 
     def to_target_type(target)
       case
-      when target.ends_with?('.a')
+      when target.end_with?('.a')
         :static_library
-      when target.ends_with?('.so')
+      when target.end_with?('.so')
         :shared_library
       else
         :executable
