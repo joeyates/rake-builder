@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Rake::Builder::TaskDefiner do
+describe Rake::Builder::BuilderTaskDefiner do
   def self.executable_target
     'executable_target'
   end
@@ -67,7 +67,7 @@ describe Rake::Builder::TaskDefiner do
   end
   let(:namespaced_builder) { builder.stub(:task_namespace => 'foo'); builder }
 
-  subject { Rake::Builder::TaskDefiner.new(builder) }
+  subject { Rake::Builder::BuilderTaskDefiner.new(builder) }
 
   before do
     Rake::Task.clear
@@ -76,7 +76,7 @@ describe Rake::Builder::TaskDefiner do
   context '#new' do
     it 'takes a parameter' do
       expect {
-        Rake::Builder::TaskDefiner.new 
+        Rake::Builder::BuilderTaskDefiner.new 
       }.to raise_error(ArgumentError)
     end
   end
@@ -116,7 +116,7 @@ describe Rake::Builder::TaskDefiner do
     end
 
     context 'with a namespace' do
-      subject { Rake::Builder::TaskDefiner.new(namespaced_builder) }
+      subject { Rake::Builder::BuilderTaskDefiner.new(namespaced_builder) }
 
       it 'namespaces tasks' do
         subject.run
@@ -134,7 +134,7 @@ describe Rake::Builder::TaskDefiner do
 
   context 'dependencies' do
     before do
-      Rake::Builder::TaskDefiner.new(builder).run
+      Rake::Builder::BuilderTaskDefiner.new(builder).run
     end
 
     [
@@ -169,7 +169,7 @@ describe Rake::Builder::TaskDefiner do
 
   context 'tasks' do
     before do
-      Rake::Builder::TaskDefiner.new(builder).run
+      Rake::Builder::BuilderTaskDefiner.new(builder).run
     end
 
     context 'local_config' do

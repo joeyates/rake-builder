@@ -10,7 +10,7 @@ require 'rake/builder/logger/formatter'
 require 'rake/builder/presenters/makefile/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_collection_presenter'
-require 'rake/builder/task_definer'
+require 'rake/builder/task_definers/builder_task_definer'
 require 'rake/path'
 require 'rake/microsecond'
 require 'rake/once_task'
@@ -198,7 +198,7 @@ module Rake
       set_defaults
       block.call(self)
       configure
-      TaskDefiner.new(self).run
+      BuilderTaskDefiner.new(self).run
       self.class.instances << self
     end
 
