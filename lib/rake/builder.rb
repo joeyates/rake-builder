@@ -432,10 +432,10 @@ module Rake
     end
 
     def to_target_type(target)
-      case target
-      when /\.a/
+      case
+      when target.ends_with?('.a')
         :static_library
-      when /\.so/
+      when target.ends_with?('.so')
         :shared_library
       else
         :executable
