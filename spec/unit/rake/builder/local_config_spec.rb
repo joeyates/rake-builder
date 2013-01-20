@@ -51,12 +51,12 @@ describe Rake::Builder::LocalConfig do
     context 'when local_config is invoked' do
 
       it 'should no longer be needed' do
-        exist?( @project.local_config ).should be_false
+        File.exist?( @project.local_config ).should be_false
         Rake::Task[ @project.local_config ].needed?.should be_true
 
         Rake::Task[ @project.local_config ].invoke
 
-        exist?( @project.local_config ).should be_true
+        File.exist?( @project.local_config ).should be_true
         Rake::Task[ @project.local_config ].needed?.should be_false
       end
 
