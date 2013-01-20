@@ -1,4 +1,4 @@
-load File.dirname(__FILE__) + '/spec_helper.rb'
+require 'spec_helper'
 
 LOCAL_CONFIG_SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
 
