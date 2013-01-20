@@ -1,7 +1,5 @@
-require 'json'
 require 'logger'
 require 'rake'
-require 'rake/tasklib'
 
 require 'rake/builder/autoconf/version'
 require 'rake/builder/configure_ac'
