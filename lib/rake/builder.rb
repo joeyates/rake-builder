@@ -254,7 +254,7 @@ module Rake
 
     def clean
       generated_files.each do |file|
-        system "rm -f #{file}"
+        File.unlink(file) if File.exist?(file)
       end
     end
 

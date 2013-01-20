@@ -77,6 +77,31 @@ describe Rake::Builder do
     end
   end
 
+  context '#clean' do
+    it 'checks if files exist' do
+      builder = cpp_builder(:executable)
+
+      exists = []
+      File.stub(:exist?) { |file| exists << file; false }
+
+      builder.clean
+
+      expect(exists).to eq(builder.generated_files)
+    end
+
+    it 'deletes generated files' do
+      builder = cpp_builder(:executable)
+
+      deletes = []
+      File.stub(:exist? => true)
+      File.stub(:unlink) { |file| deletes << file }
+
+      builder.clean
+
+      expect(deletes).to eq(builder.generated_files)
+    end
+  end
+
   context '#target_type' do
     [
       ['my_program',   :executable],
