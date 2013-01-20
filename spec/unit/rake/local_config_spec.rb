@@ -2,7 +2,7 @@ load File.dirname(__FILE__) + '/spec_helper.rb'
 
 LOCAL_CONFIG_SPEC_PATH = File.expand_path( File.dirname(__FILE__) )
 
-describe 'local config files' do
+describe Rake::LocalConfig do
 
   include RakeBuilderHelper
 
