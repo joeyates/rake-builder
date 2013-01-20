@@ -475,13 +475,6 @@ module Rake
       end
     end
 
-    def group_files_by_path( files )
-      files.group_by do | f |
-        m = f.match( /(.*?)?\/?([^\/]+)$/ )
-        m[ 1 ]
-      end
-    end
-
     # Files
 
     # Lists of files

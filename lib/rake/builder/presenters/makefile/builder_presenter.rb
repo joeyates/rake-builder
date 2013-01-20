@@ -70,6 +70,13 @@ EOT
         file.write to_s
       end
     end
+
+    def group_files_by_path( files )
+      files.group_by do | f |
+        m = f.match( /(.*?)?\/?([^\/]+)$/ )
+        m[ 1 ]
+      end
+    end
   end
 end
 
