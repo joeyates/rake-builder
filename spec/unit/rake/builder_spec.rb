@@ -184,6 +184,53 @@ describe Rake::Builder do
     end
   end
 
+  context '#run' do
+    before do
+      @old_dir = Dir.pwd
+      Dir.stub(:chdir).with(builder.rakefile_path)
+      builder.stub(:system)
+      Dir.stub(:chdir).with(@old_dir)
+    end
+
+    it 'changes directory to the Rakefile path' do
+      Dir.should_receive(:chdir).with(builder.rakefile_path)
+
+      capturing_output do
+        builder.run
+      end
+    end
+
+    it 'runs the executable' do
+      builder.should_receive(:system).with(builder.target, anything)
+
+      capturing_output do
+        builder.run
+      end
+    end
+
+    it 'outputs the stdout results, then the stderr results' do
+      builder.stub(:system) do |command|
+        $stdout.puts 'standard output'
+        $stderr.puts 'error output'
+      end
+
+      stdout, stderr = capturing_output do
+        builder.run
+      end
+
+      expect(stdout).to eq("standard output\n")
+      expect(stderr).to eq("error output\n")
+    end
+
+    it 'restores the preceding working directory, even after errors' do
+      Dir.should_receive(:chdir).with(@old_dir)
+
+      capturing_output do
+        builder.run
+      end
+    end
+  end
+
   context '#clean' do
     it 'checks if files exist' do
       exists = []

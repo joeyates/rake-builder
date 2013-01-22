@@ -198,8 +198,15 @@ module Rake
     end
 
     def run
-      command = "cd #{rakefile_path} && #{target}"
-      puts shell(command, Logger::INFO)
+      old_dir = Dir.pwd
+      Dir.chdir rakefile_path
+      begin
+        output, error = shell(target, Logger::INFO)
+        $stdout.print output
+        $stderr.print error
+      ensure
+        Dir.chdir old_dir
+      end
     end
 
     def build
@@ -568,7 +575,7 @@ module Rake
       $stdout, $stderr = stdout, stderr
       system command, {:out => :out, :err => :err}
       $stdout, $stderr = *originals
-      [stdout.read, stderr.read]
+      [stdout.string, stderr.string]
     end
   end
 end
