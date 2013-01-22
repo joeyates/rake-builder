@@ -14,5 +14,10 @@ if RUBY_VERSION < '1.9'
     t.rcov      = true
     t.rcov_opts = ['--exclude', 'spec/,/gems/']
   end
+else
+  desc 'Run specs and create coverage output'
+  RSpec::Core::RakeTask.new('spec:coverage') do |t|
+    t.pattern = ['spec/gather_rspec_coverage.rb', 'spec/**/*_spec.rb']
+  end
 end
 
