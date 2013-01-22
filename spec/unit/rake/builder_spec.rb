@@ -317,5 +317,47 @@ describe Rake::Builder do
       expect(subject.library_dependencies_list).to eq('-lfoo -lbar')
     end
   end
+
+  context '#create_makedepend_file' do
+    before do
+      builder.stub(:system).with('which makedepend >/dev/null') do
+        `(exit 0)` # set $? to a successful Process::Status
+      end
+
+      builder.stub(:system).with(/makedepend -f-/, anything)
+    end
+
+    it 'fails if makedepend is missing' do
+      builder.stub(:system).with('which makedepend >/dev/null') do
+        `(exit 1)` # set $? to a successful Process::Status
+      end
+
+      expect {
+        builder.create_makedepend_file
+      }.to raise_error(RuntimeError, 'makedepend not found')
+    end
+
+    it 'calls makedepend' do
+      builder.should_receive(:system).with(/makedepend -f-/, anything)
+
+      builder.create_makedepend_file
+    end
+  end
+
+  context '#load_local_config' do
+    it 'needs specs'
+  end
+
+  context '#load_makedepend' do
+    it 'needs specs'
+  end
+
+  context '#install' do
+    it 'needs specs'
+  end
+
+  context '#uninstall' do
+    it 'needs specs'
+  end
 end
 
