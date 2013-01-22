@@ -118,9 +118,11 @@ EOT
           expect(executable_subject.to_s).to include(expected)
         end
       end
+
       context 'for static library' do
         it 'builds the target' do
           expected = <<EOT
+$(LIB_TARGET): $(OBJECTS)
 	rm -f $(LIB_TARGET)
 	ar -cq $(LIB_TARGET) $(OBJECTS)
 	ranlib $(LIB_TARGET)
@@ -128,8 +130,14 @@ EOT
           expect(static_library_subject.to_s).to include(expected)
         end
       end
+
       context 'for shared library' do
         it 'builds the target' do
+          expected = <<EOT
+$(LIB_TARGET): $(OBJECTS)
+	$(LINKER) -shared -o $(LIB_TARGET) $(OBJECTS) $(LINK_FLAGS)
+EOT
+          expect(shared_library_subject.to_s).to include(expected)
         end
       end
     end
