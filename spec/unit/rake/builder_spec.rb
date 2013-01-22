@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe Rake::Builder do
   include RakeBuilderHelper
+  include InputOutputTestHelper
 
   let(:builder) { cpp_builder(:executable) }
 
@@ -93,6 +94,26 @@ describe Rake::Builder do
       builder = Rake::Builder.new {}
 
       expect(builder.rakefile_path).to eq(here)
+    end
+  end
+
+  context '#header_search_paths' do
+    it 'is deprecated' do
+      stdout, stderr = capturing_output do
+        builder.header_search_paths
+      end
+
+      expect(stderr).to include('Deprecation notice')
+    end
+  end
+
+  context '#header_search_paths=' do
+    it 'is deprecated' do
+      stdout, stderr = capturing_output do
+        builder.header_search_paths = []
+      end
+
+      expect(stderr).to include('Deprecation notice')
     end
   end
 

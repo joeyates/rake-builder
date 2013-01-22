@@ -113,12 +113,12 @@ module Rake
     attr_accessor :installable_headers
 
     def header_search_paths
-      warn 'Deprecation notice: Rake::Builder#header_search_paths has be replaced by Rake::Builder#installable_headers'
+      warn 'Deprecation notice: Rake::Builder#header_search_paths has been replaced by Rake::Builder#installable_headers'
       installable_headers
     end
 
     def header_search_paths=(paths)
-      warn 'Deprecation notice: Rake::Builder#header_search_paths has be replaced by Rake::Builder#installable_headers'
+      warn 'Deprecation notice: Rake::Builder#header_search_paths has been replaced by Rake::Builder#installable_headers'
       installable_headers = paths
     end
 

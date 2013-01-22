@@ -44,3 +44,17 @@ module RakeBuilderHelper
   end
 end
 
+module InputOutputTestHelper
+  def capturing_output
+    originals = $stdout, $stderr
+    stdout, stderr = StringIO.new, StringIO.new
+    $stdout, $stderr = stdout, stderr
+    begin
+      yield
+    ensure
+      $stdout, $stderr = originals
+    end
+    [stdout.string, stderr.string]
+  end
+end
+
