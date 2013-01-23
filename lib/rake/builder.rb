@@ -202,7 +202,7 @@ module Rake
       old_dir = Dir.pwd
       Dir.chdir rakefile_path
       begin
-        output, error = shell(target, Logger::INFO)
+        output, error = shell(target, ::Logger::INFO)
         $stdout.print output
         $stderr.print error
       ensure
@@ -282,7 +282,7 @@ module Rake
     end
 
     def compile(source, object)
-      logger.add(Logger::DEBUG, "Compiling '#{source}'")
+      logger.add(::Logger::DEBUG, "Compiling '#{source}'")
       command = "#{compiler} -c #{compiler_flags} -o #{object} #{source}"
       stdout, stderr = shell(command)
       raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
@@ -377,9 +377,9 @@ module Rake
     def set_defaults
       @architecture          = 'i386'
       @compiler_data         = Compiler::Base.for(:gcc)
-      @logger                = Logger.new(STDOUT)
-      @logger.level          = Logger::UNKNOWN
-      @logger.formatter      = Formatter.new
+      @logger                = ::Logger.new(STDOUT)
+      @logger.level          = ::Logger::UNKNOWN
+      @logger.formatter      = Rake::Builder::Logger::Formatter.new
       @programming_language  = 'c++'
       @header_file_extension = 'h'
       @objects_path          = @rakefile_path.dup
@@ -555,7 +555,7 @@ module Rake
       end
     end
 
-    def shell(command, log_level = Logger::DEBUG)
+    def shell(command, log_level = ::Logger::DEBUG)
       @logger.add(log_level, command)
       originals        = $stdout, $stderr
       stdout, stderr   = StringIO.new, StringIO.new
