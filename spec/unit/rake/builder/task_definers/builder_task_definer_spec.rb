@@ -129,12 +129,6 @@ describe Rake::Builder::BuilderTaskDefiner do
 
         expect(Rake::Task.task_defined?('foo')).to be_true
       end
-
-      it 'defines the local_config task' do
-        subject.run
-
-        expect(Rake::Task.task_defined?('local_config')).to be_true
-      end
     end
   end
 
