@@ -5,6 +5,12 @@ describe Rake::Builder do
   include InputOutputTestHelper
 
   let(:builder) { cpp_builder(:executable) }
+  let(:installer) do
+    stub(
+      'Rake::Builder::Installer',
+      :install => nil
+    )
+  end
 
   context '.create_autoconf' do
     let(:version) { stub('Rake::Builder::Autoconf::Autoconf::Version', :decide => 'qux') }
@@ -416,11 +422,37 @@ describe Rake::Builder do
   end
 
   context '#install' do
-    it 'needs specs'
+    before { Rake::Builder::Installer.stub(:new).and_return(installer) }
+
+    it 'installs the target' do
+      Rake::Builder::Installer.should_receive(:new).and_return(installer)
+      installer.should_receive(:install).with(builder.target, anything)
+
+      builder.install
+    end
+
+    it 'installs headers for static libraries' do
+      builder = cpp_builder(:static_library) do |b|
+        b.installable_headers = ['header.h']
+      end
+
+      installer.should_receive(:install).with(builder.target, anything)
+      File.should_receive(:file?).with(anything).and_return(true)
+      installer.should_receive(:install).with(File.join(builder.rakefile_path, 'header.h'), anything)
+
+      builder.install
+    end
   end
 
   context '#uninstall' do
-    it 'needs specs'
+    before { Rake::Builder::Installer.stub(:new).and_return(installer) }
+
+    it 'uninstalls' do
+      installed_path = File.join(builder.install_path, builder.target_basename)
+      installer.should_receive(:uninstall).with(installed_path)
+
+      builder.uninstall
+    end
   end
 end
 

@@ -4,6 +4,7 @@ require 'rake'
 require 'rake/builder/autoconf/version'
 require 'rake/builder/configure_ac'
 require 'rake/builder/error'
+require 'rake/builder/installer'
 require 'rake/builder/local_config'
 require 'rake/builder/logger/formatter'
 require 'rake/builder/presenters/makefile/builder_presenter'
@@ -271,21 +272,13 @@ module Rake
 
     def install
       destination = File.join(install_path, target_basename)
-      install_file(target, destination)
+      Rake::Builder::Installer.new.install target, destination
       install_headers if target_type == :static_library
     end
 
     def uninstall
       destination = File.join(install_path, target_basename)
-      if not File.exist?(destination)
-        logger.add(Logger::INFO, "The file '#{destination}' does not exist")
-        return
-      end
-      begin
-        shell "rm '#{destination}'", Logger::INFO
-      rescue Errno::EACCES => e
-        raise Error.new("You do not have permission to uninstall '#{destination}'\nTry re-running the command with 'sudo'", task_namespace)
-      end
+      Rake::Builder::Installer.new.uninstall destination
     end
 
     def compile(source, object)
@@ -516,7 +509,7 @@ module Rake
         rescue Errno::EACCES => e
           raise Error.new( "Permission denied to created directory '#{ destination_path }'", task_namespace )
         end
-        install_file( installable_header[ :source_file ], destination_path )
+        installer.install installable_header[:source_file], destination_path
       end
     end
 
@@ -542,7 +535,7 @@ module Rake
             memo << {:source_file => pathname, :relative_path => relative}
           end
         else
-          $stderr.puts "Bad search path: '${search}'"
+          $stderr.puts "Bad search path: '#{search}'"
         end
         memo
       end
@@ -559,15 +552,6 @@ module Rake
         [ "#{ linker } -shared -o #{ target } #{ file_list( object_files ) } #{ link_flags }" ]
       else
         # TODO: raise an error
-      end
-    end
-
-    def install_file(source_pathname, destination_path)
-      begin
-        shell "cp '#{ source_pathname }' '#{ destination_path }'", Logger::INFO
-      rescue Errno::EACCES => e
-        source_filename = File.basename( source_pathname ) rescue '????'
-        raise Error.new( "You do not have permission to install '#{ source_filename }' to '#{ destination_path }'\nTry\n $ sudo rake install", task_namespace )
       end
     end
 
