@@ -14,6 +14,6 @@ Rake::Builder.new do |builder|
   builder.source_search_paths  = [ 'test', 'src/units.*' ]
   builder.header_search_paths  = [ 'include' ]
   builder.objects_path         = 'test'
-  builder.compilation_options  = '-DDEBUG'
+  builder.compilation_options  = [ '-DDEBUG' ]
 end
 
