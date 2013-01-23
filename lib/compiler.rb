@@ -1,22 +1,20 @@
-
 module Compiler
-
   class Base
-    EXTRA_PATHS = [ '/opt/local/include' ]
+    EXTRA_PATHS = ['/opt/local/include']
 
-    def self.for( compiler )
-      COMPILERS[ compiler ].new
+    def self.for(compiler)
+      COMPILERS[compiler].new
     end
 
     def initialize
       @paths = {}
     end
 
-    def include_paths( headers )
+    def include_paths(headers)
       paths = []
-      headers.each do | header |
-        path = find_header( header )
-        raise "Can't find header '#{ header }' in any known include path" if path.nil?
+      headers.each do |header|
+        path = find_header(header)
+        raise "Can't find header '#{header}' in any known include path" if path.nil?
         paths << path
       end
       paths.uniq
@@ -24,29 +22,27 @@ module Compiler
 
     private
 
-    def find_header( header )
-      EXTRA_PATHS.each do | path |
-        if File.exist?( "#{ path }/#{ header }" )
+    def find_header(header)
+      EXTRA_PATHS.each do |path|
+        if File.exist?("#{path}/#{header}")
           return path
         end
       end
       nil
     end
-
   end
 
   class GCC < Base
-
-    def self.framework_path( framework, qt_major )
-      "/Library/Frameworks/#{ framework }.framework/Versions/#{ qt_major }/Headers"
+    def self.framework_path(framework, qt_major)
+      "/Library/Frameworks/#{framework}.framework/Versions/#{qt_major}/Headers"
     end
 
-    def default_include_paths( language )
-      return @paths[ language ] if @paths[ language ]
+    def default_include_paths(language)
+      return @paths[language] if @paths[language]
 
       paths = []
       # Below is the recommended(!) way of getting standard search paths from GCC
-      output = `echo | LANG=C gcc -v -x #{ language } -E - 2>&1 1>/dev/null`
+      output = `echo | LANG=C gcc -v -x #{language} -E - 2>&1 1>/dev/null`
       collecting = false
       output.each_line do | line |
         case
@@ -61,24 +57,23 @@ module Compiler
         end
       end
 
-      @paths[ language ] = paths
+      @paths[language] = paths
     end
 
-    def missing_headers( include_paths, source_files )
-      include_path = include_paths.map { | path | "-I#{ path }" }.join( ' ' )
-      command      = "makedepend -f- -- #{ include_path } -- #{ source_files.join( ' ' ) } 2>&1 1>/dev/null"
-      output       = `#{ command }`
+    def missing_headers(include_paths, source_files)
+      include_path = include_paths.map { |path| "-I#{path}"}.join(' ')
+      command      = "makedepend -f- -- #{include_path} -- #{source_files.join(' ')} 2>&1 1>/dev/null"
+      output       = `#{command}`
       missing      = []
-      output.each_line do | line |
-        match = line.match( /cannot find include file "([^"]*)"/m )
-        missing << match[ 1 ] if match
+      output.each_line do |line|
+        match = line.match(/cannot find include file "([^"]*)"/m)
+        missing << match[1] if match
       end
 
       missing
     end
-
   end
 
-  COMPILERS = { :gcc => GCC }
-
+  COMPILERS = {:gcc => GCC}
 end
+
