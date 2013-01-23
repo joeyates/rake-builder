@@ -219,27 +219,12 @@ module Rake
       raise BuildFailure.new("'#{target}' not created") if not File.exist?(target)
     end
 
-    def create_local_config
-      logger.debug "Creating file '#{local_config}'"
-      added_includes = compiler_data.include_paths(missing_headers)
-      config = Rake::Builder::LocalConfig.new(local_config)
-      config.include_paths = added_includes
-      config.save
-    end
-
     def create_makedepend_file
       logger.debug 'Creating makedepend file'
       system('which makedepend >/dev/null')
       raise 'makedepend not found' unless $?.success?
       command = "makedepend -f- -- #{include_path} -- #{file_list(source_files)} 2>/dev/null > #{makedepend_file}"
       shell command
-    end
-
-    def load_local_config
-      config = Rake::Builder::LocalConfig.new(local_config)
-      config.load
-      @include_paths       += Rake::Path.expand_all_with_root(config.include_paths, rakefile_path)
-      @compilation_options += config.compilation_options
     end
 
     def load_makedepend
@@ -259,6 +244,21 @@ module Rake
         object_header_dependencies[object_file] += header_files.split(' ')
       end
       object_header_dependencies
+    end
+
+    def load_local_config
+      config = Rake::Builder::LocalConfig.new(local_config)
+      config.load
+      @include_paths       += Rake::Path.expand_all_with_root(config.include_paths, rakefile_path)
+      @compilation_options += config.compilation_options
+    end
+
+    def create_local_config
+      logger.debug "Creating file '#{local_config}'"
+      added_includes = compiler_data.include_paths(missing_headers)
+      config = Rake::Builder::LocalConfig.new(local_config)
+      config.include_paths = added_includes
+      config.save
     end
 
     def clean
