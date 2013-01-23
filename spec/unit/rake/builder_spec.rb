@@ -344,12 +344,47 @@ describe Rake::Builder do
     end
   end
 
-  context '#load_local_config' do
+  context '#load_makedepend' do
     it 'needs specs'
   end
 
-  context '#load_makedepend' do
-    it 'needs specs'
+  context '#load_local_config' do
+    let(:config_include_paths) { ['/path/one', '/path/two'] }
+    let(:config_compilation_options) { ['opt1', 'opt2'] }
+    let(:local_config) do
+      stub(
+        'Rake::Builder::LocalConfig',
+        :load => nil,
+        :include_paths => config_include_paths,
+        :compilation_options => config_compilation_options,
+      )
+    end
+
+    before { Rake::Builder::LocalConfig.stub(:new => local_config) }
+
+    it 'loads local config' do
+      Rake::Builder::LocalConfig.should_receive(:new).
+        with(/\.rake-builder/).and_return(local_config)
+      local_config.should_receive(:load).with()
+
+      builder.load_local_config
+    end
+
+    it 'adds include paths' do
+      original = builder.include_paths.clone
+
+      builder.load_local_config
+
+      expect(builder.include_paths).to eq(original + config_include_paths)
+    end
+
+    it 'adds compilation options' do
+      original = builder.compilation_options.clone
+
+      builder.load_local_config
+
+      expect(builder.compilation_options).to eq(original + config_compilation_options)
+    end
   end
 
   context '#install' do
