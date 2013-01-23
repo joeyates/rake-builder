@@ -228,21 +228,23 @@ module Rake
     end
 
     def load_makedepend
-      object_to_source = source_files.inject({}) do |memo, source|
-        mapped_object = source.gsub('.' + source_file_extension, '.o')
-        memo[mapped_object] = source
-        memo
+      # makedepend assumes each .o files will be in the same path as its source
+      real_object_path = source_files.inject({}) do |a, source|
+        source_path_object = source.gsub('.' + source_file_extension, '.o')
+        correct_path_object = object_path(source)
+        a[source_path_object] = correct_path_object
+        a
       end
 
       object_header_dependencies = Hash.new { |h, v| h[v] = [] }
       File.open(makedepend_file).each_line do |line|
         next if line !~ /:\s/
-        mapped_object_file = $`
+        source_path_object = $`
         header_files = $'.chomp
-        source_file = object_to_source[mapped_object_file]
-        object_file = object_path(source_file)
-        object_header_dependencies[object_file] += header_files.split(' ')
+        object_path_name = real_object_path[source_path_object]
+        object_header_dependencies[object_path_name] += header_files.split(' ')
       end
+
       object_header_dependencies
     end
 
