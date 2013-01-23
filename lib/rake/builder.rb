@@ -508,7 +508,8 @@ module Rake
       # TODO: make install_headers_path a configuration option
       install_headers_path = '/usr/local/include'
 
-      project_headers.each do | installable_header |
+      installer = Rake::Builder::Installer.new
+      project_headers.each do |installable_header|
         destination_path = File.join( install_headers_path, installable_header[ :relative_path ] )
         begin
           `mkdir -p '#{ destination_path }'`
@@ -520,28 +521,28 @@ module Rake
     end
 
     def project_headers
-      @installable_headers.reduce( [] ) do | memo, search |
-        non_glob_search = ( search.match( /^([^\*\?]*)/ ) )[ 1 ]
+      @installable_headers.reduce([]) do |memo, search|
+        non_glob_search = (search.match(/^([^\*\?]*)/))[1]
         case
-        when ( non_glob_search !~ /#{ @rakefile_path }/ )
+        when (non_glob_search !~ /#{@rakefile_path}/)
           # Skip paths that are not inside the project
-        when File.file?( search )
-          full_path = Rake::Path.expand_with_root( search, @rakefile_path )
-          memo << { :source_file => search, :relative_path => '' }
-        when File.directory?( search )
-          FileList[ search + '/*.' + @header_file_extension ].each do | pathname |
-            full_path = Rake::Path.expand_with_root( pathname, @rakefile_path )
-            memo << { :source_file => pathname, :relative_path => '' }
+        when File.file?(search)
+          full_path = Rake::Path.expand_with_root(search, @rakefile_path)
+          memo << {:source_file => search, :relative_path => ''}
+        when File.directory?(search)
+          FileList[search + '/*.' + @header_file_extension].each do |pathname|
+            full_path = Rake::Path.expand_with_root(pathname, @rakefile_path)
+            memo << {:source_file => pathname, :relative_path => ''}
           end
-        when ( search =~ /[\*\?]/ )
-          FileList[ search ].each do | pathname |
-            full_path = Rake::Path.expand_with_root( pathname, @rakefile_path )
-            directory = File.dirname( full_path )
-            relative  = Rake::Path.relative_path( directory, non_glob_search )
-            memo << { :source_file => pathname, :relative_path => relative }
+        when (search =~ /[\*\?]/)
+          FileList[search].each do |pathname|
+            full_path = Rake::Path.expand_with_root(pathname, @rakefile_path)
+            directory = File.dirname(full_path)
+            relative  = Rake::Path.relative_path(directory, non_glob_search)
+            memo << {:source_file => pathname, :relative_path => relative}
           end
         else
-          $stderr.puts "Bad search path: '${ search }'"
+          $stderr.puts "Bad search path: '${search}'"
         end
         memo
       end
