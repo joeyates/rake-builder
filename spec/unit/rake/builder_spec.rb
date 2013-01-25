@@ -103,54 +103,6 @@ describe Rake::Builder do
     end
   end
 
-  context '#header_search_paths' do
-    it 'is deprecated' do
-      stdout, stderr = capturing_output do
-        builder.header_search_paths
-      end
-
-      expect(stderr).to include('Deprecation notice')
-    end
-  end
-
-  context '#header_search_paths=' do
-    it 'is deprecated' do
-      stdout, stderr = capturing_output do
-        builder.header_search_paths = []
-      end
-
-      expect(stderr).to include('Deprecation notice')
-    end
-  end
-
-  context '#target' do
-    it "defaults to 'a.out'" do
-      Rake::Path.stub(:find_files => ['main.cpp'])
-
-      builder = Rake::Builder.new {}
-
-      expect(builder.target).to end_with('/a.out')
-    end
-  end
-
-  context '#primary_name' do
-    it 'returns a relative path' do
-      here = File.expand_path(File.dirname(__FILE__))
-      target_pathname = File.join(here, 'my_prog')
-      builder = cpp_builder(:executable) { |b| b.target = target_pathname }
-
-      expect(builder.primary_name).to eq(File.join('unit', 'rake', 'my_prog'))
-    end
-  end
-
-  context '#label' do
-    it 'replaces dots with underscores' do
-      builder = cpp_builder(:executable) { |b| b.target = 'my_prog.exe' }
-
-      expect(builder.label).to eq('my_prog_exe')
-    end
-  end
-
   context '#build' do
     before do
       @target_exists = [false, true]
@@ -257,6 +209,54 @@ describe Rake::Builder do
       builder.clean
 
       expect(deletes).to eq(builder.generated_files)
+    end
+  end
+
+  context '#header_search_paths' do
+    it 'is deprecated' do
+      stdout, stderr = capturing_output do
+        builder.header_search_paths
+      end
+
+      expect(stderr).to include('Deprecation notice')
+    end
+  end
+
+  context '#header_search_paths=' do
+    it 'is deprecated' do
+      stdout, stderr = capturing_output do
+        builder.header_search_paths = []
+      end
+
+      expect(stderr).to include('Deprecation notice')
+    end
+  end
+
+  context '#target' do
+    it "defaults to 'a.out'" do
+      Rake::Path.stub(:find_files => ['main.cpp'])
+
+      builder = Rake::Builder.new {}
+
+      expect(builder.target).to end_with('/a.out')
+    end
+  end
+
+  context '#primary_name' do
+    it 'returns a relative path' do
+      here = File.expand_path(File.dirname(__FILE__))
+      target_pathname = File.join(here, 'my_prog')
+      builder = cpp_builder(:executable) { |b| b.target = target_pathname }
+
+      expect(builder.primary_name).to eq(File.join('unit', 'rake', 'my_prog'))
+    end
+  end
+
+  context '#label' do
+    it 'replaces dots with underscores' do
+      builder = cpp_builder(:executable) { |b| b.target = 'my_prog.exe' }
+
+      expect(builder.label).to eq('my_prog_exe')
     end
   end
 
