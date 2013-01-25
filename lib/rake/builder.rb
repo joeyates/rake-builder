@@ -198,6 +198,9 @@ module Rake
       self.class.instances << self
     end
 
+    ################################################
+    # main actions
+
     def build
       logger.debug "Building '#{target}'"
       File.unlink(target) if File.exist?(target)
@@ -237,6 +240,9 @@ module Rake
       Rake::Builder::Installer.new.uninstall destination
     end
 
+    ################################################
+    # helpers invoked by tasks
+
     def create_makedepend_file
       logger.debug 'Creating makedepend file'
       system('which makedepend >/dev/null')
@@ -266,6 +272,19 @@ module Rake
       object_header_dependencies
     end
 
+    def generated_headers
+      []
+    end
+
+    # Raises an error if there are missing headers
+    def ensure_headers
+      missing = missing_headers
+      return if missing.size == 0
+
+      message = "Compilation cannot proceed as the following header files are missing:\n" + missing.join("\n") 
+      raise Error.new(message)
+    end
+
     def load_local_config
       config = Rake::Builder::LocalConfig.new(local_config)
       config.load
@@ -288,14 +307,15 @@ module Rake
       raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
     end
 
-    # Source files found in source_search_paths
-    def source_files
-      return @source_files if @source_files
-      @source_files = find_files(@source_search_paths, source_file_extension).uniq.sort
-    end
+    ################################################
+    # public attributes
 
     def is_library?
       [:static_library, :shared_library].include?(target_type)
+    end
+
+    def target_basename
+      File.basename(@target)
     end
 
     def primary_name
@@ -304,6 +324,12 @@ module Rake
 
     def label
       primary_name.gsub(%r(\.), '_')
+    end
+
+    # Source files found in source_search_paths
+    def source_files
+      return @source_files if @source_files
+      @source_files = find_files(@source_search_paths, source_file_extension).uniq.sort
     end
 
     def source_paths
@@ -327,12 +353,14 @@ module Rake
       flags
     end
 
-    def library_dependencies_list
-      @library_dependencies.map { |lib| "-l#{lib}" }.join(' ')
+    def link_flags
+      flags = [ @linker_options, library_paths_list, library_dependencies_list ]
+      flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
+      flags.join( " " )
     end
 
-    def target_basename
-      File.basename(@target)
+    def library_dependencies_list
+      @library_dependencies.map { |lib| "-l#{lib}" }.join(' ')
     end
 
     def makefile_name
@@ -342,25 +370,6 @@ module Rake
                     ''
                   end
       "Makefile#{ extension }"
-    end
-
-    def generated_headers
-      []
-    end
-
-    # Raises an error if there are missing headers
-    def ensure_headers
-      missing = missing_headers
-      return if missing.size == 0
-
-      message = "Compilation cannot proceed as the following header files are missing:\n" + missing.join("\n") 
-      raise Error.new(message)
-    end
-
-    def link_flags
-      flags = [ @linker_options, library_paths_list, library_dependencies_list ]
-      flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
-      flags.join( " " )
     end
 
     private
