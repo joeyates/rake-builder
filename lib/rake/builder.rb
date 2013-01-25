@@ -422,7 +422,6 @@ module Rake
       @installable_headers   = Rake::Path.expand_all_with_root( @installable_headers, @rakefile_path )
 
       @linker_options        ||= ''
-      @include_paths         += []
       @include_paths         = Rake::Path.expand_all_with_root( @include_paths.uniq, @rakefile_path )
       @generated_files       = Rake::Path.expand_all_with_root( @generated_files, @rakefile_path )
 
