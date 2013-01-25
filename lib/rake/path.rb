@@ -1,7 +1,5 @@
 module Rake
-
   module Path
-
     def self.find_files( paths, extension )
       files = paths.reduce( [] ) do | memo, path |
         case
@@ -43,7 +41,6 @@ module Rake
         path
       end
     end
-
   end
-
 end
+
