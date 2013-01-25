@@ -198,6 +198,16 @@ module Rake
       self.class.instances << self
     end
 
+    def build
+      logger.debug "Building '#{target}'"
+      File.unlink(target) if File.exist?(target)
+      build_commands.each do |command|
+        stdout, stderr = shell(command)
+        raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
+      end
+      raise BuildFailure.new("'#{target}' not created") if not File.exist?(target)
+    end
+
     def run
       old_dir = Dir.pwd
       Dir.chdir rakefile_path
@@ -210,14 +220,21 @@ module Rake
       end
     end
 
-    def build
-      logger.debug "Building '#{target}'"
-      File.unlink(target) if File.exist?(target)
-      build_commands.each do |command|
-        stdout, stderr = shell(command)
-        raise BuildFailure.new("Error: command '#{command}' failed: #{stderr} #{stdout}") if not $?.success?
+    def clean
+      generated_files.each do |file|
+        File.unlink(file) if File.exist?(file)
       end
-      raise BuildFailure.new("'#{target}' not created") if not File.exist?(target)
+    end
+
+    def install
+      destination = File.join(install_path, target_basename)
+      Rake::Builder::Installer.new.install target, destination
+      install_headers if target_type == :static_library
+    end
+
+    def uninstall
+      destination = File.join(install_path, target_basename)
+      Rake::Builder::Installer.new.uninstall destination
     end
 
     def create_makedepend_file
@@ -262,23 +279,6 @@ module Rake
       config = Rake::Builder::LocalConfig.new(local_config)
       config.include_paths = added_includes
       config.save
-    end
-
-    def clean
-      generated_files.each do |file|
-        File.unlink(file) if File.exist?(file)
-      end
-    end
-
-    def install
-      destination = File.join(install_path, target_basename)
-      Rake::Builder::Installer.new.install target, destination
-      install_headers if target_type == :static_library
-    end
-
-    def uninstall
-      destination = File.join(install_path, target_basename)
-      Rake::Builder::Installer.new.uninstall destination
     end
 
     def compile(source, object)
