@@ -288,7 +288,7 @@ module Rake
     def load_local_config
       config = Rake::Builder::LocalConfig.new(local_config)
       config.load
-      @include_paths       += Rake::Path.expand_all_with_root(config.include_paths, rakefile_path)
+      @include_paths       += config.include_paths
       @compilation_options += config.compilation_options
     end
 
@@ -329,11 +329,12 @@ module Rake
     # Source files found in source_search_paths
     def source_files
       return @source_files if @source_files
-      @source_files = find_files(@source_search_paths, source_file_extension).uniq.sort
-    end
 
-    def source_paths
-      source_files.map{ |file| Rake::Path.relative_path(file, rakefile_path) }
+      old_dir = Dir.pwd
+      Dir.chdir @rakefile_path
+      @source_files = Rake::Path.find_files(@source_search_paths, source_file_extension).uniq.sort
+      Dir.chdir old_dir
+      @source_files
     end
 
     def object_files
@@ -342,7 +343,7 @@ module Rake
 
     def object_path(source_path_name)
       o_name = File.basename(source_path_name).gsub('.' + source_file_extension, '.o')
-      Rake::Path.expand_with_root(o_name, objects_path)
+      File.join(objects_path, o_name)
     end
 
     def compiler_flags
@@ -391,16 +392,16 @@ module Rake
       @logger.formatter      = Rake::Builder::Logger::Formatter.new
       @programming_language  = 'c++'
       @header_file_extension = 'h'
-      @objects_path          = @rakefile_path.dup
+      @objects_path          = '.'
       @library_paths         = []
       @library_dependencies  = []
       @target_prerequisites  = []
-      @source_search_paths   = [@rakefile_path.dup]
-      @target                = 'a.out'
+      @source_search_paths   = ['.']
+      @target                = './a.out'
       @generated_files       = []
       @compilation_options   = []
-      @include_paths         = [File.join(@rakefile_path.dup, 'include')]
-      @installable_headers   = [@rakefile_path.dup]
+      @include_paths         = ['./include']
+      @installable_headers   ||= []
     end
 
     def configure
@@ -415,33 +416,26 @@ module Rake
       @ranlib                ||= KNOWN_LANGUAGES[ @programming_language ][ :ranlib ]
       @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
 
-      @source_search_paths   = Rake::Path.expand_all_with_root( @source_search_paths, @rakefile_path )
-      @library_paths         = Rake::Path.expand_all_with_root( @library_paths, @rakefile_path )
 
       raise Error.new( "The target name cannot be nil", task_namespace )             if @target.nil?
       raise Error.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
-      @objects_path          = Rake::Path.expand_with_root( @objects_path, @rakefile_path )
 
-      @target                = File.expand_path( @target, @rakefile_path )
       @target_type           ||= to_target_type( @target )
       raise Error.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
       @generated_files << @target
 
       @install_path          ||= default_install_path( @target_type )
-      @installable_headers   = Rake::Path.expand_all_with_root( @installable_headers, @rakefile_path )
 
       @linker_options        ||= ''
-      @include_paths         = Rake::Path.expand_all_with_root( @include_paths.uniq, @rakefile_path )
-      @generated_files       = Rake::Path.expand_all_with_root( @generated_files, @rakefile_path )
 
       @default_task          ||= :build
       @target_prerequisites  << @rakefile
-      @local_config          = Rake::Path.expand_with_root( '.rake-builder', @rakefile_path )
+      @local_config          = '.rake-builder'
 
       @makedepend_file       = @objects_path + '/.' + target_basename + '.depend.mf'
       @generated_files << @makedepend_file
 
-      raise Error.new( "No source files found", task_namespace ) if source_files.length == 0
+      raise Error.new("No source files found", task_namespace) if source_files.size == 0
     end
 
     def to_target_type(target)
@@ -458,8 +452,7 @@ module Rake
     # Compiling and linking parameters
 
     def include_path
-      paths = @include_paths.map{ | file | Rake::Path.relative_path( file, rakefile_path) }
-      paths.map { |p| "-I#{ p }" }.join( ' ' )
+      @include_paths.map { |p| "-I#{p}" }.join(' ')
     end
 
     def architecture_option
@@ -495,11 +488,6 @@ module Rake
     def file_list(files)
       files.join(' ')
     end
-
-    def find_files(paths, extension)
-      files = Rake::Path.find_files(paths, extension)
-      Rake::Path.expand_all_with_root(files, @rakefile_path)
-    end
     
     def library_paths_list
       @library_paths.map { | path | "-L#{ path }" }.join( " " )
@@ -525,7 +513,7 @@ module Rake
       @installable_headers.reduce([]) do |memo, search|
         non_glob_search = (search.match(/^([^\*\?]*)/))[1]
         case
-        when (non_glob_search !~ /#{@rakefile_path}/)
+        when search.start_with?('/'), search.start_with?('..')
           # Skip paths that are not inside the project
         when File.file?(search)
           full_path = Rake::Path.expand_with_root(search, @rakefile_path)

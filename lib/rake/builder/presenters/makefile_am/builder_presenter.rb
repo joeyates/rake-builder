@@ -13,7 +13,7 @@ module Rake::Builder::Presenters::MakefileAm
     private
 
     def sources
-      "#{builder.label}_SOURCES = #{builder.source_paths.join(' ')}"
+      "#{builder.label}_SOURCES = #{builder.source_files.join(' ')}"
     end
 
     def cpp_flags

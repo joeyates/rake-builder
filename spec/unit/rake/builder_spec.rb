@@ -293,12 +293,6 @@ describe Rake::Builder do
     end
   end
 
-  context '#source_paths' do
-    it 'returns source files' do
-      expect(builder.source_paths).to eq(source_paths)
-    end
-  end
-
   context '#source_files' do
     it 'finds files with the .cpp extension' do
       Rake::Path.should_receive(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
@@ -312,6 +306,20 @@ describe Rake::Builder do
       Rake::Builder.new do |b|
         b.source_file_extension = 'cc'
       end
+    end
+  end
+
+  context '#object_path' do
+    let(:source_path) { 'foo/bar/baz.cpp' }
+
+    subject { builder.object_path(source_path) }
+
+    it 'substitutes the source extension with the object one' do
+      expect(subject).to end_with('.o')
+    end
+
+    it 'adds the objects path' do
+      expect(subject).to start_with(builder.objects_path)
     end
   end
 
@@ -434,12 +442,12 @@ describe Rake::Builder do
 
     it 'installs headers for static libraries' do
       installer.stub(:install).with(builder.target, anything)
-      File.should_receive(:file?).with(anything).and_return(true)
-      installer.should_receive(:install).with(File.join(builder.rakefile_path, 'header.h'), anything)
+      File.should_receive(:file?).with('header.h').and_return(true)
+      installer.should_receive(:install).with('header.h', anything)
 
       builder = Rake::Builder.new do |b|
-        b.target = 'libthe_static_library.a'
-        b.installable_headers  = [File.expand_path('header.h', File.dirname(__FILE__))]
+        b.target              = 'libthe_static_library.a'
+        b.installable_headers = ['header.h']
       end
 
       builder.install

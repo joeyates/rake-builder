@@ -15,7 +15,7 @@ describe Rake::Builder::Presenters::MakefileAm::BuilderPresenter do
         'Rake::Builder',
         :is_library?               => false,
         :label                     => 'fubar',
-        :source_paths              => ['path/to/1', 'path/to/2'],
+        :source_files              => ['path/to/1', 'path/to/2'],
         :compiler_flags            => '-D FOO -D BAR',
         :library_dependencies_list => '-lfoo -lbar'
       )

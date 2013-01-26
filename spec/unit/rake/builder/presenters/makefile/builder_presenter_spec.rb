@@ -11,7 +11,6 @@ describe Rake::Builder::Presenters::Makefile::BuilderPresenter do
   let(:shared_library_target) { 'libshared.so' }
   let(:static_library_target) { 'libstatic.a' }
   let(:label) { 'the_label' }
-  let(:source_paths) { ['/sources'] }
   let(:source_files) { ['/sources/one.c', '/sources/two.c'] }
   let(:object_files) { ['/objects/one.o', '/objects/two.o'] }
   let(:makefile_name) { 'the_makefile' }
@@ -23,7 +22,6 @@ describe Rake::Builder::Presenters::Makefile::BuilderPresenter do
       :linker => self.class.linker,
       :link_flags => self.class.link_flags,
       :objects_path => self.class.objects_path,
-      :source_paths => source_paths,
       :source_files => source_files,
       :object_files => object_files,
       :makefile_name => makefile_name,
