@@ -47,8 +47,6 @@ module Rake
 
       super
 
-      @resource_files      = Rake::Path.expand_all_with_root( @resource_files, @rakefile_path )
-      @ui_files            = Rake::Path.expand_all_with_root( @ui_files, @rakefile_path )
       @compilation_options += [ '-pipe', '-g', '-gdwarf-2', '-Wall', '-W' ]
       @include_paths << @objects_path # for UI headers
     end
@@ -161,8 +159,7 @@ module Rake
     end
 
     def ui_header_path( ui_file )
-      header_name = 'ui_' + File.basename( ui_file ).gsub( '.ui', '.h' )
-      Rake::Path.expand_with_root( header_name, @objects_path )
+      'ui_' + File.basename(ui_file).gsub('.ui', '.h')
     end
 
     # MOC
@@ -191,8 +188,7 @@ module Rake
     end
 
     def moc_pathname( header_name )
-      moc_name = 'moc_' + File.basename( header_name ).gsub( '.' + @header_file_extension, '.cpp' )
-      Rake::Path.expand_with_root( moc_name, @objects_path )
+      'moc_' + File.basename(header_name).gsub('.' + @header_file_extension, '.cpp')
     end
 
     # Resources
@@ -214,8 +210,7 @@ module Rake
     end
 
     def qrc_pathname( resource_name )
-      qrc_name = 'qrc_' + File.basename( resource_name ).gsub( '.qrc', '.cpp' )
-      Rake::Path.expand_with_root( qrc_name, @objects_path )
+      'qrc_' + File.basename(resource_name).gsub('.qrc', '.cpp')
     end
 
   end
