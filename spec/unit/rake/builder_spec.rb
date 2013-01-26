@@ -1,15 +1,25 @@
 require 'spec_helper'
 
 describe Rake::Builder do
-  include RakeBuilderHelper
   include InputOutputTestHelper
-
-  let(:builder) { cpp_builder(:executable) }
+  
+  let(:target_pathname) { File.join('foo', 'bar', 'my_prog.exe') }
+  let(:source_paths) { ['src/file1.cpp'] }
+  let(:builder) do
+    Rake::Builder.new do |b|
+      b.target               = target_pathname
+      b.library_dependencies = ['foo', 'bar']
+    end
+  end
   let(:installer) do
     stub(
       'Rake::Builder::Installer',
       :install => nil
     )
+  end
+
+  before do
+    Rake::Path.stub(:find_files).and_return(source_paths)
   end
 
   context '.create_autoconf' do
@@ -200,8 +210,6 @@ describe Rake::Builder do
     end
 
     it 'deletes generated files' do
-      builder = cpp_builder(:executable)
-
       deletes = []
       File.stub(:exist? => true)
       File.stub(:unlink) { |file| deletes << file }
@@ -244,19 +252,13 @@ describe Rake::Builder do
 
   context '#primary_name' do
     it 'returns a relative path' do
-      here = File.expand_path(File.dirname(__FILE__))
-      target_pathname = File.join(here, 'my_prog')
-      builder = cpp_builder(:executable) { |b| b.target = target_pathname }
-
-      expect(builder.primary_name).to eq(File.join('unit', 'rake', 'my_prog'))
+      expect(builder.primary_name).to eq(File.join('foo', 'bar', 'my_prog.exe'))
     end
   end
 
   context '#label' do
     it 'replaces dots with underscores' do
-      builder = cpp_builder(:executable) { |b| b.target = 'my_prog.exe' }
-
-      expect(builder.label).to eq('my_prog_exe')
+      expect(builder.label).to eq(File.join('foo', 'bar', 'my_prog_exe'))
     end
   end
 
@@ -278,21 +280,22 @@ describe Rake::Builder do
 
   context '#is_library?' do
     [
-      [:static_library, true],
-      [:shared_library, true],
-      [:executable,     false]
-    ].each do |type, is_library|
+      [:static_library, 'libbaz.a',  true],
+      [:shared_library, 'libfoo.so', true],
+      [:executable,     'baz',       false]
+    ].each do |type, target, is_library|
       example type do
-        expect(c_task(type).is_library?).to eq(is_library)
+        builder = Rake::Builder.new do |b|
+          b.target = target
+        end
+        expect(builder.is_library?).to eq(is_library)
       end
     end
   end
 
   context '#source_paths' do
     it 'returns source files' do
-      builder = cpp_builder(:executable)
-
-      expect(builder.source_paths).to eq(['projects/cpp_project/main.cpp'])
+      expect(builder.source_paths).to eq(source_paths)
     end
   end
 
@@ -300,27 +303,25 @@ describe Rake::Builder do
     it 'finds files with the .cpp extension' do
       Rake::Path.should_receive(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
 
-      cpp_builder(:executable)
+      builder
     end
 
     it 'should allow configuration of source extension' do
       Rake::Path.should_receive(:find_files).with(anything, 'cc').and_return(['a.cc'])
 
-      builder = cpp_builder(:executable) do |b|
+      Rake::Builder.new do |b|
         b.source_file_extension = 'cc'
       end
     end
   end
 
   context '#library_dependencies_list' do
-    subject { cpp_builder(:executable) { |b| b.library_dependencies = ['foo', 'bar'] } }
-
     it 'is a string' do
-      expect(subject.library_dependencies_list).to be_a(String)
+      expect(builder.library_dependencies_list).to be_a(String)
     end
 
     it 'lists libraries' do
-      expect(subject.library_dependencies_list).to eq('-lfoo -lbar')
+      expect(builder.library_dependencies_list).to eq('-lfoo -lbar')
     end
   end
 
@@ -432,13 +433,14 @@ describe Rake::Builder do
     end
 
     it 'installs headers for static libraries' do
-      builder = cpp_builder(:static_library) do |b|
-        b.installable_headers = ['header.h']
-      end
-
-      installer.should_receive(:install).with(builder.target, anything)
+      installer.stub(:install).with(builder.target, anything)
       File.should_receive(:file?).with(anything).and_return(true)
       installer.should_receive(:install).with(File.join(builder.rakefile_path, 'header.h'), anything)
+
+      builder = Rake::Builder.new do |b|
+        b.target = 'libthe_static_library.a'
+        b.installable_headers  = [File.expand_path('header.h', File.dirname(__FILE__))]
+      end
 
       builder.install
     end
