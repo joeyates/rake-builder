@@ -516,11 +516,9 @@ module Rake
         when search.start_with?('/'), search.start_with?('..')
           # Skip paths that are not inside the project
         when File.file?(search)
-          full_path = Rake::Path.expand_with_root(search, @rakefile_path)
           memo << {:source_file => search, :relative_path => ''}
         when File.directory?(search)
           FileList[search + '/*.' + @header_file_extension].each do |pathname|
-            full_path = Rake::Path.expand_with_root(pathname, @rakefile_path)
             memo << {:source_file => pathname, :relative_path => ''}
           end
         when (search =~ /[\*\?]/)
