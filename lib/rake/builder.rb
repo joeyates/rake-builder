@@ -214,10 +214,12 @@ module Rake
     def run
       old_dir = Dir.pwd
       Dir.chdir rakefile_path
+      command = File.join('.', target)
       begin
-        output, error = shell(target, ::Logger::INFO)
+        output, error = shell(command, ::Logger::INFO)
         $stdout.print output
         $stderr.print error
+        raise Exception.new("Running #{command} failed with status #{$?.exitstatus}") if not $?.success?
       ensure
         Dir.chdir old_dir
       end

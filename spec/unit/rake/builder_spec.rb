@@ -169,7 +169,7 @@ describe Rake::Builder do
     end
 
     it 'runs the executable' do
-      builder.should_receive(:system).with(builder.target, anything)
+      builder.should_receive(:system).with('./' + builder.target, anything)
 
       capturing_output do
         builder.run
@@ -190,12 +190,20 @@ describe Rake::Builder do
       expect(stderr).to eq("error output\n")
     end
 
+    it 'raises and error is the program does not run successfully' do
+      builder.stub(:system) { `(exit 1)` } # set $? to a failing Process::Status
+
+      expect {
+        builder.run
+      }.to raise_error(Exception, /Running.*?failed with status 1/)
+    end
+
     it 'restores the preceding working directory, even after errors' do
+      builder.stub(:system).and_raise('foo')
+
       Dir.should_receive(:chdir).with(@old_dir)
 
-      capturing_output do
-        builder.run
-      end
+      builder.run rescue nil
     end
   end
 
