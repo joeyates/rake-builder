@@ -5,15 +5,15 @@ require 'rake/builder'
 Rake::Builder.new do |builder|
   builder.target               = 'unit'
   builder.source_search_paths  = [ 'src' ]
-  builder.header_search_paths  = [ 'include' ]
+  builder.installable_headers  = [ 'include' ]
 end
 
 Rake::Builder.new do |builder|
   builder.task_namespace       = 'test'
   builder.target               = 'test_unit'
   builder.source_search_paths  = [ 'test', 'src/units.*' ]
-  builder.header_search_paths  = [ 'include' ]
+  builder.installable_headers  = [ 'include' ]
   builder.objects_path         = 'test'
-  builder.compilation_options  = '-DDEBUG'
+  builder.compilation_options  = [ '-DDEBUG' ]
 end
 

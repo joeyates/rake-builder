@@ -68,7 +68,7 @@ class Rake::Builder
         @builder.create_local_config
       end
 
-      once_task :load_local_config => scoped_task(@builder.local_config) do
+      once_task :load_local_config => @builder.local_config do
         @builder.load_local_config
       end
 

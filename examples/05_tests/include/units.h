@@ -1,8 +1,8 @@
 #ifndef __UNITS_H__
 #define __UNITS_H__
 
-#include <ostream>;
-#include <string>;
+#include <ostream>
+#include <string>
 using namespace std;
 
 class Unit

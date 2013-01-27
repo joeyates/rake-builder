@@ -129,6 +129,12 @@ describe Rake::Builder::BuilderTaskDefiner do
 
         expect(Rake::Task.task_defined?('foo')).to be_true
       end
+
+      it 'does not fiddle up the local_config file' do
+        subject.run
+
+        expect(Rake::Task['foo:load_local_config'].prerequisites).to eq([self.class.local_config])
+      end
     end
   end
 
