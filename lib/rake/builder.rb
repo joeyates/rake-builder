@@ -516,7 +516,6 @@ module Rake
 
     def project_headers
       @installable_headers.reduce([]) do |memo, search|
-        non_glob_search = (search.match(/^([^\*\?]*)/))[1]
         case
         when search.start_with?('/'), search.start_with?('..')
           # Skip paths that are not inside the project
@@ -526,11 +525,12 @@ module Rake
           FileList[search + '/*.' + @header_file_extension].each do |pathname|
             memo << {:source_file => pathname, :relative_path => ''}
           end
-        when (search =~ /[\*\?]/)
+        when search.match(/[\*\?]/)
+          non_glob_part = search[/^([^\*\?]*\/)/, 1]
           FileList[search].each do |pathname|
             full_path = Rake::Path.expand_with_root(pathname, @rakefile_path)
             directory = File.dirname(full_path)
-            relative  = Rake::Path.relative_path(directory, non_glob_search)
+            relative  = Rake::Path.relative_path(directory, non_glob_part)
             memo << {:source_file => pathname, :relative_path => relative}
           end
         else
