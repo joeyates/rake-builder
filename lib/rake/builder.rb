@@ -254,6 +254,13 @@ module Rake
     end
 
     def load_makedepend
+      content = File.read(makedepend_file)
+      # Replace old-style files with full paths
+      if content =~ %r(^/)
+        create_makedepend_file
+        return load_makedepend
+      end
+
       # makedepend assumes each .o files will be in the same path as its source
       real_object_path = source_files.inject({}) do |a, source|
         source_path_object = source.gsub('.' + source_file_extension, '.o')
@@ -263,7 +270,7 @@ module Rake
       end
 
       object_header_dependencies = Hash.new { |h, v| h[v] = [] }
-      File.open(makedepend_file).each_line do |line|
+      content.each_line do |line|
         next if line !~ /:\s/
         source_path_object = $`
         header_files = $'.chomp

@@ -368,28 +368,27 @@ describe Rake::Builder do
   end
 
   context '#load_makedepend' do
-    let(:file) { stub('File', :each_line => nil) }
+    let(:content) do
+      lines = []
+      lines << 'Some text'
+      builder.source_files.each do |f|
+        source_path_object = f.gsub(/\.[^\.]+$/, '.o')
+        lines << source_path_object + ': header1.h'
+      end
+      lines.join("\n")
+    end
 
     before do
-      File.stub(:open).with(builder.makedepend_file).and_return(file)
+      File.stub(:read).with(builder.makedepend_file).and_return(content)
     end
 
     it 'opens the file' do
-      File.should_receive(:open).with(builder.makedepend_file).and_return(file)
-      file.should_receive(:each_line)
+      File.should_receive(:read).with(builder.makedepend_file).and_return(content)
 
       builder.load_makedepend
     end
 
     it 'returns a map of sources to headers' do
-      file.stub(:each_line) do |&block|
-        block.call 'Some text'
-        builder.source_files.each do |f|
-          source_path_object = f.gsub(/\.[^\.]+$/, '.o')
-          block.call source_path_object + ': header1.h'
-        end
-      end
-
       expected = builder.object_files.reduce({}) do |a, e|
         a[e] = ['header1.h']
         a
