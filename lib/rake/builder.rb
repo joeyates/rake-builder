@@ -327,12 +327,8 @@ module Rake
       File.basename(@target)
     end
 
-    def primary_name
-      Rake::Path.relative_path(target, rakefile_path, :initial_dot_slash => false)
-    end
-
     def label
-      primary_name.gsub(%r(\.), '_')
+      target.gsub(%r(\.), '_')
     end
 
     # Source files found in source_search_paths

@@ -258,12 +258,6 @@ describe Rake::Builder do
     end
   end
 
-  context '#primary_name' do
-    it 'returns a relative path' do
-      expect(builder.primary_name).to eq(File.join('foo', 'bar', 'my_prog.exe'))
-    end
-  end
-
   context '#label' do
     it 'replaces dots with underscores' do
       expect(builder.label).to eq(File.join('foo', 'bar', 'my_prog_exe'))
