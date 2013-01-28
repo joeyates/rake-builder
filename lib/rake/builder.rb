@@ -527,10 +527,11 @@ module Rake
           end
         when search.match(/[\*\?]/)
           non_glob_part = search[/^([^\*\?]*\/)/, 1]
+          base_path     = File.expand_path(non_glob_part, rakefile_path)
           FileList[search].each do |pathname|
-            full_path = Rake::Path.expand_with_root(pathname, @rakefile_path)
+            full_path = File.expand_path(pathname, rakefile_path)
             directory = File.dirname(full_path)
-            relative  = Rake::Path.relative_path(directory, non_glob_part)
+            relative  = File.relative_path(base_path, directory)
             memo << {:source_file => pathname, :relative_path => relative}
           end
         else
