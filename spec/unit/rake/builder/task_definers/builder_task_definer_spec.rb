@@ -44,6 +44,7 @@ describe Rake::Builder::BuilderTaskDefiner do
   let(:executable_target) { self.class.executable_target }
   let(:objects_path) { self.class.objects_path }
   let(:custom_prerequisite) { self.class.custom_prerequisite }
+  let(:logger) { stub('Logger') }
   let(:builder) do
     stub(
       'Rake::Builder',
@@ -63,6 +64,7 @@ describe Rake::Builder::BuilderTaskDefiner do
       :install_path => 'install/path',
       :makefile_name => self.class.makefile_name,
       :default_task => :build,
+      :logger       => logger,
     )
   end
   let(:namespaced_builder) { builder.stub(:task_namespace => 'foo'); builder }
@@ -178,6 +180,63 @@ describe Rake::Builder::BuilderTaskDefiner do
       Rake::Builder::BuilderTaskDefiner.new(builder).run
     end
 
+    context 'run' do
+      it 'runs the builder' do
+        clear_prerequisites 'run'
+
+        builder.should_receive(:run)
+
+        Rake::Task['run'].invoke
+      end
+    end
+
+    context 'the target' do
+      it 'builds the target' do
+        clear_prerequisites executable_target
+
+        builder.should_receive(:build)
+
+        Rake::Task[executable_target].invoke
+      end
+    end
+
+    context 'clean' do
+      it 'cleans the build' do
+        builder.should_receive(:clean)
+
+        Rake::Task['clean'].invoke
+      end
+    end
+
+    context 'install' do
+      it 'installs the target' do
+        clear_prerequisites 'install'
+
+        builder.should_receive(:install)
+
+        Rake::Task['install'].invoke
+      end
+    end
+
+    context 'uninstall' do
+      it 'uninstalls the target' do
+        builder.should_receive(:uninstall)
+
+        Rake::Task['uninstall'].invoke
+      end
+    end
+
+    context 'compile file' do
+      it 'compiles the file' do
+        clear_prerequisites 'src/file1.o'
+
+        builder.should_receive(:compile).
+          with('src/file1.cpp', 'src/file1.o')
+
+        Rake::Task['src/file1.o'].invoke
+      end
+    end
+
     context 'local_config' do
       it 'creates local config' do
         builder.should_receive(:create_local_config)
@@ -249,6 +308,32 @@ describe Rake::Builder::BuilderTaskDefiner do
         Rake::Task['load_makedepend'].invoke
 
         expect(Rake::Task[@object_file].prerequisites).to include('include/header1.h')
+      end
+    end
+
+    context 'makefile' do
+      let(:presenter) { stub('BuilderPresenter') }
+
+      it 'creates a makefile' do
+        clear_prerequisites self.class.makefile_name
+
+        Rake::Builder::Presenters::Makefile::BuilderPresenter.
+          should_receive(:new).
+          with(builder).
+          and_return(presenter)
+        presenter.should_receive(:save)
+
+        Rake::Task[self.class.makefile_name].invoke
+      end
+    end
+
+    context 'environment' do
+      it 'sets the logger level if required' do
+        ENV['DEBUG'] = 'true'
+
+        logger.should_receive(:level=).with(0)
+
+        Rake::Task['environment'].invoke
       end
     end
   end
