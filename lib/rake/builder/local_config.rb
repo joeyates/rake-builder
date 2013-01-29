@@ -30,6 +30,8 @@ class Rake::Builder
       end
     end
 
+    private
+
     def config
       {
         :rake_builder        => {:config_file => {:version => VERSIONS[-1]}},

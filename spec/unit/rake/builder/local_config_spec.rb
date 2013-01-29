@@ -49,5 +49,32 @@ describe Rake::Builder::LocalConfig do
       expect(subject.compilation_options).to eq(compilation_options)
     end
   end
+
+  context '#save' do
+    let(:file) { stub('File') }
+
+    before do
+      File.stub(:open).with(local_config_file, 'w') do |&block|
+        block.call file
+      end
+    end
+
+    it 'write to the file' do
+      File.should_receive(:open).with(local_config_file, 'w') {}
+
+      subject.save
+    end
+
+    it 'saves the data' do
+      expected = {
+        :rake_builder        => {:config_file => {:version => '1.1'}},
+        :include_paths       => [],
+        :compilation_options => []
+      }.to_yaml
+      file.should_receive(:write).with(expected)
+
+      subject.save
+    end
+  end
 end
 
