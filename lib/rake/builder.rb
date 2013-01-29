@@ -31,7 +31,7 @@ module Rake
     attr_accessor :target_type
 
     # The types of file that can be built
-    TARGET_TYPES = [ :executable, :static_library, :shared_library ]
+    TARGET_TYPES = [:executable, :static_library, :shared_library]
 
     # processor type: 'i386', 'x86_64', 'ppc' or 'ppc64'.
     attr_accessor :architecture
@@ -360,9 +360,9 @@ module Rake
     end
 
     def link_flags
-      flags = [ @linker_options, library_paths_list, library_dependencies_list ]
+      flags = [@linker_options, library_paths_list, library_dependencies_list]
       flags << architecture_option if RUBY_PLATFORM =~ /darwin/i
-      flags.join( " " )
+      flags.join(" ")
     end
 
     def library_dependencies_list
@@ -375,7 +375,7 @@ module Rake
                   else
                     ''
                   end
-      "Makefile#{ extension }"
+      "Makefile#{extension}"
     end
 
     private
@@ -384,9 +384,9 @@ module Rake
     # that can not be found on in any of the include paths
     def missing_headers
       return @missing_headers if @missing_headers
-      default_includes = @compiler_data.default_include_paths( @programming_language )
+      default_includes = @compiler_data.default_include_paths(@programming_language)
       all_includes     = default_includes + @include_paths
-      @missing_headers = @compiler_data.missing_headers( all_includes, source_files )
+      @missing_headers = @compiler_data.missing_headers(all_includes, source_files)
     end
 
     def set_defaults
@@ -414,22 +414,22 @@ module Rake
       @compilation_options.uniq!
 
       @programming_language = @programming_language.to_s.downcase
-      raise Error.new( "Don't know how to build '#{ @programming_language }' programs", task_namespace ) if KNOWN_LANGUAGES[ @programming_language ].nil?
-      @compiler              ||= KNOWN_LANGUAGES[ @programming_language ][ :compiler ]
-      @linker                ||= KNOWN_LANGUAGES[ @programming_language ][ :linker ]
-      @ar                    ||= KNOWN_LANGUAGES[ @programming_language ][ :ar ]
-      @ranlib                ||= KNOWN_LANGUAGES[ @programming_language ][ :ranlib ]
-      @source_file_extension ||= KNOWN_LANGUAGES[ @programming_language ][ :source_file_extension ]
+      raise Error.new("Don't know how to build '#{@programming_language}' programs", task_namespace) if KNOWN_LANGUAGES[@programming_language].nil?
+      @compiler              ||= KNOWN_LANGUAGES[@programming_language][:compiler]
+      @linker                ||= KNOWN_LANGUAGES[@programming_language][:linker]
+      @ar                    ||= KNOWN_LANGUAGES[@programming_language][:ar]
+      @ranlib                ||= KNOWN_LANGUAGES[@programming_language][:ranlib]
+      @source_file_extension ||= KNOWN_LANGUAGES[@programming_language][:source_file_extension]
 
 
-      raise Error.new( "The target name cannot be nil", task_namespace )             if @target.nil?
-      raise Error.new( "The target name cannot be an empty string", task_namespace ) if @target == ''
+      raise Error.new("The target name cannot be nil", task_namespace)             if @target.nil?
+      raise Error.new("The target name cannot be an empty string", task_namespace) if @target == ''
 
-      @target_type           ||= to_target_type( @target )
-      raise Error.new( "Building #{ @target_type } targets is not supported", task_namespace ) if ! TARGET_TYPES.include?( @target_type )
+      @target_type           ||= to_target_type(@target)
+      raise Error.new("Building #{@target_type} targets is not supported", task_namespace) if ! TARGET_TYPES.include?(@target_type)
       @generated_files << @target
 
-      @install_path          ||= default_install_path( @target_type )
+      @install_path          ||= default_install_path(@target_type)
 
       @linker_options        ||= ''
 
@@ -461,23 +461,23 @@ module Rake
     end
 
     def architecture_option
-      "-arch #{ @architecture }"
+      "-arch #{@architecture}"
     end
 
     # Paths
 
-    def save_rakefile_info( block )
+    def save_rakefile_info(block)
       if RUBY_VERSION < '1.9'
         # Hack the path from the block String representation
-        @rakefile = block.to_s.match( /@([^\:]+):/ )[ 1 ]
+        @rakefile = block.to_s.match(/@([^\:]+):/)[1]
       else
-        @rakefile = block.source_location[ 0 ]
+        @rakefile = block.source_location[0]
       end
-      @rakefile      = File.expand_path( @rakefile )
-      @rakefile_path = File.dirname( @rakefile )
+      @rakefile      = File.expand_path(@rakefile)
+      @rakefile_path = File.dirname(@rakefile)
     end
 
-    def default_install_path( target_type )
+    def default_install_path(target_type)
       case target_type
       when :executable
         '/usr/local/bin'
@@ -495,7 +495,7 @@ module Rake
     end
     
     def library_paths_list
-      @library_paths.map { | path | "-L#{ path }" }.join( " " )
+      @library_paths.map { | path | "-L#{path}" }.join(" ")
     end
 
     def install_headers
@@ -504,11 +504,11 @@ module Rake
 
       installer = Rake::Builder::Installer.new
       project_headers.each do |installable_header|
-        destination_path = File.join( install_headers_path, installable_header[ :relative_path ] )
+        destination_path = File.join(install_headers_path, installable_header[:relative_path])
         begin
-          `mkdir -p '#{ destination_path }'`
+          `mkdir -p '#{destination_path}'`
         rescue Errno::EACCES => e
-          raise Error.new( "Permission denied to created directory '#{ destination_path }'", task_namespace )
+          raise Error.new("Permission denied to created directory '#{destination_path}'", task_namespace)
         end
         installer.install installable_header[:source_file], destination_path
       end
@@ -544,12 +544,14 @@ module Rake
     def build_commands
       case target_type
       when :executable
-        [ "#{ linker } -o #{ target } #{ file_list( object_files ) } #{ link_flags }" ]
+        ["#{linker} -o #{target} #{file_list(object_files)} #{link_flags}"]
       when :static_library
-        [ "#{ ar } -cq #{ target } #{ file_list( object_files ) }",
-          "#{ ranlib } #{ target }" ]
+        [
+          "#{ar} -cq #{target} #{file_list(object_files)}",
+          "#{ranlib} #{target}",
+        ]
       when :shared_library
-        [ "#{ linker } -shared -o #{ target } #{ file_list( object_files ) } #{ link_flags }" ]
+        ["#{linker} -shared -o #{target} #{file_list(object_files)} #{link_flags}"]
       else
         # TODO: raise an error
       end
