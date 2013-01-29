@@ -431,6 +431,43 @@ describe Rake::Builder do
     end
   end
 
+  context '#create_local_config' do
+    let(:compiler) do
+      stub(
+        'Compiler',
+        :default_include_paths => [],
+        :missing_headers       => [],
+        :include_paths         => [],
+      )
+    end
+    let(:local_config) do
+      stub(
+        'Rake::Builder::LocalConfig',
+        :include_paths=        => nil,
+        :save                  => nil
+      )
+    end
+
+    before do
+      Compiler::Base.stub(:for).with(:gcc).and_return(compiler)
+      Rake::Builder::LocalConfig.stub(:new).and_return(local_config)
+    end
+
+    it 'gets extra paths for missing headers' do
+      compiler.should_receive(:missing_headers).
+        with(['./include'], source_paths).
+        and_return([])
+
+      builder.create_local_config
+    end
+
+    it 'saves a LocalConfig' do
+      local_config.should_receive(:save)
+
+      builder.create_local_config
+    end
+  end
+
   context '#install' do
     before { Rake::Builder::Installer.stub(:new).and_return(installer) }
 
