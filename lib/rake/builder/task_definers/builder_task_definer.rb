@@ -1,3 +1,6 @@
+require 'logger'
+require 'rake'
+
 include Rake::DSL
 
 class Rake::Builder
@@ -20,10 +23,6 @@ class Rake::Builder
     private
 
     def define
-      once_task :environment do
-        @builder.logger.level = Logger::DEBUG if ENV['DEBUG']
-      end
-
       if @builder.target_type == :executable
         desc "Run '#{@builder.target_basename}'"
         task :run => :build do
@@ -59,6 +58,23 @@ class Rake::Builder
         object = @builder.object_path(source)
         @builder.generated_files << object
         define_compile_task(source, object)
+      end
+
+      # Re-implement :clean locally for project and within namespace
+      # Standard :clean is a singleton
+      desc "Remove temporary files"
+      task :clean do
+        @builder.clean
+      end
+
+      desc "Install '#{@builder.target_basename}' in '#{@builder.install_path}'"
+      task :install, [] => [scoped_task(:build)] do
+        @builder.install
+      end
+
+      desc "Uninstall '#{@builder.target_basename}' from '#{@builder.install_path}'"
+      task :uninstall, [] => [] do
+        @builder.uninstall
       end
 
       # TODO: Does this need to be microsecond?
@@ -98,26 +114,13 @@ class Rake::Builder
         end
       end
 
-      # Re-implement :clean locally for project and within namespace
-      # Standard :clean is a singleton
-      desc "Remove temporary files"
-      task :clean do
-        @builder.clean
-      end
-
-      desc "Install '#{@builder.target_basename}' in '#{@builder.install_path}'"
-      task :install, [] => [scoped_task(:build)] do
-        @builder.install
-      end
-
-      desc "Uninstall '#{@builder.target_basename}' from '#{@builder.install_path}'"
-      task :uninstall, [] => [] do
-        @builder.uninstall
-      end
-
       desc "Create a '#{@builder.makefile_name}' to build the project"
       file "#{@builder.makefile_name}" => [@builder.makedepend_file, scoped_task(:load_makedepend)] do
         Rake::Builder::Presenters::Makefile::BuilderPresenter.new(@builder).save
+      end
+
+      once_task :environment do
+        @builder.logger.level = ::Logger::DEBUG if ENV['DEBUG']
       end
     end
 
