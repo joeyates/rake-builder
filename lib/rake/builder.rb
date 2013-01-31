@@ -151,6 +151,9 @@ module Rake
       # The directory where 'rake install' will copy the target file
       attr_accessor :install_path
 
+      # Tasks which the target file depends upon
+      attr_accessor :target_prerequisites
+
       def initialize(block)
         raise 'No block given' if block.nil?
         set_defaults
@@ -173,6 +176,7 @@ module Rake
         self.compilation_options   = []
         self.include_paths         = ['./include']
         self.installable_headers   ||= []
+        self.target_prerequisites  = []
       end
 
       def save_rakefile_info(block)
@@ -209,6 +213,7 @@ module Rake
         self.linker_options        ||= ''
 
         self.default_task          ||= :build
+        self.target_prerequisites  << rakefile
       end
 
       def to_target_type(target)
@@ -231,9 +236,6 @@ module Rake
         end
       end
     end
-
-    # Tasks which the target file depends upon
-    attr_accessor :target_prerequisites
 
     # Name of the generated file containing source - header dependencies
     attr_reader   :makedepend_file
@@ -425,6 +427,10 @@ module Rake
       config.task_namespace
     end
 
+    def target_prerequisites
+      config.target_prerequisites
+    end
+
     # other
 
     def is_library?
@@ -503,13 +509,10 @@ module Rake
       @logger.level          = ::Logger::UNKNOWN
       @logger.formatter      = Rake::Builder::Logger::Formatter.new
       @generated_files       = []
-      @target_prerequisites  = []
       @local_config          = '.rake-builder'
     end
 
     def configure
-      @target_prerequisites  << config.rakefile
-
       @makedepend_file       = config.objects_path + '/.' + target_basename + '.depend.mf'
       @generated_files << config.target
       @generated_files << @makedepend_file
