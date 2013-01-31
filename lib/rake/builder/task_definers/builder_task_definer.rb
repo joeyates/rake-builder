@@ -82,8 +82,7 @@ class Rake::Builder
         builder.uninstall
       end
 
-      # TODO: Does this need to be microsecond?
-      microsecond_directory builder.objects_path
+      directory builder.objects_path
 
       file builder.local_config_file do
         builder.create_local_config
