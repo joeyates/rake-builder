@@ -91,6 +91,8 @@ class Rake::Builder
     # so the file will be installed as '/usr/local/include/my_lib/foo.h'
     attr_accessor :installable_headers
 
+    attr_accessor :install_headers_path
+
     def header_search_paths
       warn 'Deprecation notice: Rake::Builder#header_search_paths has been replaced by Rake::Builder#installable_headers'
       installable_headers
@@ -169,6 +171,7 @@ class Rake::Builder
       self.compilation_options   = []
       self.include_paths         = ['./include']
       self.installable_headers   ||= []
+      self.install_headers_path  = '/usr/local/include'
       self.target_prerequisites  = []
       @local_config_file         = '.rake-builder'
     end

@@ -347,12 +347,9 @@ module Rake
     end
 
     def install_headers
-      # TODO: make install_headers_path a configuration option
-      install_headers_path = '/usr/local/include'
-
       installer = Rake::Builder::Installer.new
       project_headers.each do |installable_header|
-        destination_path = File.join(install_headers_path, installable_header[:relative_path])
+        destination_path = File.join(config.install_headers_path, installable_header[:relative_path])
         begin
           `mkdir -p '#{destination_path}'`
         rescue Errno::EACCES => e
