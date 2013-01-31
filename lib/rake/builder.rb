@@ -370,8 +370,6 @@ module Rake
         ]
       when :shared_library
         ["#{config.linker} -shared -o #{config.target} #{file_list(object_files)} #{link_flags}"]
-      else
-        # TODO: raise an error
       end
     end
 
