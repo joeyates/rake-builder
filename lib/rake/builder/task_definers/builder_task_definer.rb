@@ -80,11 +80,11 @@ class Rake::Builder
       # TODO: Does this need to be microsecond?
       microsecond_directory @builder.objects_path
 
-      file @builder.local_config do
+      file @builder.local_config_file do
         @builder.create_local_config
       end
 
-      once_task :load_local_config => @builder.local_config do
+      once_task :load_local_config => @builder.local_config_file do
         @builder.load_local_config
       end
 

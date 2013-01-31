@@ -9,8 +9,8 @@ describe Rake::Builder::BuilderTaskDefiner do
     '/path/to/object/files'
   end
 
-  def self.local_config
-    'local_config'
+  def self.local_config_file
+    'local_config_file'
   end
 
   def self.makedepend_file
@@ -59,7 +59,7 @@ describe Rake::Builder::BuilderTaskDefiner do
       :object_path  => self.class.object_files[0],
       :objects_path => objects_path,
       :generated_files => [],
-      :local_config => self.class.local_config,
+      :local_config_file => self.class.local_config_file,
       :generated_headers => self.class.generated_headers,
       :install_path => 'install/path',
       :makefile_name => self.class.makefile_name,
@@ -91,7 +91,7 @@ describe Rake::Builder::BuilderTaskDefiner do
       executable_target,
       'compile',
       objects_path,
-      local_config,
+      local_config_file,
       makedepend_file,
       'load_local_config',
       'missing_headers',
@@ -135,7 +135,7 @@ describe Rake::Builder::BuilderTaskDefiner do
       it 'does not fiddle up the local_config file' do
         subject.run
 
-        expect(Rake::Task['foo:load_local_config'].prerequisites).to eq([namespaced_builder.local_config])
+        expect(Rake::Task['foo:load_local_config'].prerequisites).to eq([namespaced_builder.local_config_file])
       end
     end
   end
@@ -153,9 +153,9 @@ describe Rake::Builder::BuilderTaskDefiner do
       ['compile',           ['environment', makedepend_file, 'load_makedepend', *object_files]],
       [objects_path,        []],
       ['src/file1.cpp',     []],
-      [local_config,        []],
+      [local_config_file,   []],
       [makedepend_file,     ['load_local_config', 'missing_headers', objects_path, *source_files]],
-      ['load_local_config', [local_config]],
+      ['load_local_config', [local_config_file]],
       ['missing_headers',   generated_headers],
       ['load_makedepend',   [makedepend_file]],
       ['clean',             []],
@@ -237,11 +237,11 @@ describe Rake::Builder::BuilderTaskDefiner do
       end
     end
 
-    context 'local_config' do
+    context 'local_config_file' do
       it 'creates local config' do
         builder.should_receive(:create_local_config)
 
-        Rake::Task[self.class.local_config].invoke
+        Rake::Task[self.class.local_config_file].invoke
       end
     end
 

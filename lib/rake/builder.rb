@@ -29,7 +29,7 @@ module Rake
     attr_reader   :makedepend_file
 
     # The file containing local settings such as include paths
-    attr_reader   :local_config
+    attr_reader   :local_config_file
 
     # Temporary files generated during compilation and linking
     attr_accessor :generated_files
@@ -165,16 +165,16 @@ module Rake
     end
 
     def load_local_config
-      local = Rake::Builder::LocalConfig.new(local_config)
+      local = Rake::Builder::LocalConfig.new(local_config_file)
       local.load
       config.include_paths       += local.include_paths
       config.compilation_options += local.compilation_options
     end
 
     def create_local_config
-      logger.debug "Creating file '#{local_config}'"
+      logger.debug "Creating file '#{local_config_file}'"
       added_includes = @compiler_data.include_paths(missing_headers)
-      local = Rake::Builder::LocalConfig.new(local_config)
+      local = Rake::Builder::LocalConfig.new(local_config_file)
       local.include_paths = added_includes
       local.save
     end
@@ -297,7 +297,7 @@ module Rake
       @logger.level          = ::Logger::UNKNOWN
       @logger.formatter      = Rake::Builder::Logger::Formatter.new
       @generated_files       = []
-      @local_config          = '.rake-builder'
+      @local_config_file     = '.rake-builder'
     end
 
     def configure
