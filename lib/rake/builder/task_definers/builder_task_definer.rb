@@ -1,6 +1,9 @@
 require 'logger'
 require 'rake'
 
+require 'rake/microsecond_task'
+require 'rake/once_task'
+
 include Rake::DSL
 
 class Rake::Builder

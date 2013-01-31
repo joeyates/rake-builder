@@ -13,8 +13,6 @@ require 'rake/builder/presenters/makefile_am/builder_collection_presenter'
 require 'rake/builder/task_definers/builder_task_definer'
 require 'rake/builder/task_definers/builder_collection_task_definer'
 require 'rake/path'
-require 'rake/microsecond_task'
-require 'rake/once_task'
 require 'compiler'
 
 module Rake
