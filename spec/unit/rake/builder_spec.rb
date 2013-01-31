@@ -109,7 +109,7 @@ describe Rake::Builder do
 
       builder = Rake::Builder.new {}
 
-      expect(builder.rakefile_path).to eq(here)
+      expect(builder.config.rakefile_path).to eq(here)
     end
   end
 
@@ -155,13 +155,14 @@ describe Rake::Builder do
   context '#run' do
     before do
       @old_dir = Dir.pwd
-      Dir.stub(:chdir).with(builder.rakefile_path)
+      Dir.stub(:chdir).with(builder.config.rakefile_path)
       builder.stub(:system)
       Dir.stub(:chdir).with(@old_dir)
+      `(exit 0)` # set $? to a successful Process::Status
     end
 
     it 'changes directory to the Rakefile path' do
-      Dir.should_receive(:chdir).with(builder.rakefile_path)
+      Dir.should_receive(:chdir).with(builder.config.rakefile_path)
 
       capturing_output do
         builder.run
@@ -231,7 +232,7 @@ describe Rake::Builder do
   context '#header_search_paths' do
     it 'is deprecated' do
       stdout, stderr = capturing_output do
-        builder.header_search_paths
+        builder.config.header_search_paths
       end
 
       expect(stderr).to include('Deprecation notice')
@@ -241,7 +242,7 @@ describe Rake::Builder do
   context '#header_search_paths=' do
     it 'is deprecated' do
       stdout, stderr = capturing_output do
-        builder.header_search_paths = []
+        builder.config.header_search_paths = []
       end
 
       expect(stderr).to include('Deprecation notice')
@@ -415,19 +416,19 @@ describe Rake::Builder do
     end
 
     it 'adds include paths' do
-      original = builder.include_paths.clone
+      original = builder.config.include_paths.clone
 
       builder.load_local_config
 
-      expect(builder.include_paths).to eq(original + config_include_paths)
+      expect(builder.config.include_paths).to eq(original + config_include_paths)
     end
 
     it 'adds compilation options' do
-      original = builder.compilation_options.clone
+      original = builder.config.compilation_options.clone
 
       builder.load_local_config
 
-      expect(builder.compilation_options).to eq(original + config_compilation_options)
+      expect(builder.config.compilation_options).to eq(original + config_compilation_options)
     end
   end
 
