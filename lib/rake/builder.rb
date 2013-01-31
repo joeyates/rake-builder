@@ -36,8 +36,6 @@ module Rake
     # processor type: 'i386', 'x86_64', 'ppc' or 'ppc64'.
     attr_accessor :architecture
 
-    attr_accessor :compiler_data
-
     # The programming language: 'c++', 'c' or 'objective-c' (default 'c++')
     # This also sets defaults for source_file_extension
     attr_accessor :programming_language
@@ -303,7 +301,7 @@ module Rake
 
     def create_local_config
       logger.debug "Creating file '#{local_config}'"
-      added_includes = compiler_data.include_paths(missing_headers)
+      added_includes = @compiler_data.include_paths(missing_headers)
       config = Rake::Builder::LocalConfig.new(local_config)
       config.include_paths = added_includes
       config.save
