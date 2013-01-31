@@ -282,15 +282,6 @@ module Rake
 
     private
 
-    # Lists headers referenced by the project's files or includes
-    # that can not be found on in any of the include paths
-    def missing_headers
-      return @missing_headers if @missing_headers
-      default_includes = @compiler_data.default_include_paths(config.programming_language)
-      all_includes     = default_includes + config.include_paths
-      @missing_headers = @compiler_data.missing_headers(all_includes, source_files)
-    end
-
     def set_defaults
       @compiler_data         = Compiler::Base.for(:gcc)
       @logger                = ::Logger.new(STDOUT)
@@ -328,20 +319,13 @@ module Rake
       config.library_paths.map { | path | "-L#{path}" }.join(" ")
     end
 
-    def install_headers
-      # TODO: make install_headers_path a configuration option
-      install_headers_path = '/usr/local/include'
-
-      installer = Rake::Builder::Installer.new
-      project_headers.each do |installable_header|
-        destination_path = File.join(install_headers_path, installable_header[:relative_path])
-        begin
-          `mkdir -p '#{destination_path}'`
-        rescue Errno::EACCES => e
-          raise Error.new("Permission denied to created directory '#{destination_path}'", config.task_namespace)
-        end
-        installer.install installable_header[:source_file], destination_path
-      end
+    # Lists headers referenced by the project's files or includes
+    # that can not be found on in any of the include paths
+    def missing_headers
+      return @missing_headers if @missing_headers
+      default_includes = @compiler_data.default_include_paths(config.programming_language)
+      all_includes     = default_includes + config.include_paths
+      @missing_headers = @compiler_data.missing_headers(all_includes, source_files)
     end
 
     def project_headers
@@ -368,6 +352,22 @@ module Rake
           $stderr.puts "Bad search path: '#{search}'"
         end
         memo
+      end
+    end
+
+    def install_headers
+      # TODO: make install_headers_path a configuration option
+      install_headers_path = '/usr/local/include'
+
+      installer = Rake::Builder::Installer.new
+      project_headers.each do |installable_header|
+        destination_path = File.join(install_headers_path, installable_header[:relative_path])
+        begin
+          `mkdir -p '#{destination_path}'`
+        rescue Errno::EACCES => e
+          raise Error.new("Permission denied to created directory '#{destination_path}'", config.task_namespace)
+        end
+        installer.install installable_header[:source_file], destination_path
       end
     end
 
