@@ -118,7 +118,10 @@ class Rake::Builder
       end
 
       desc "Create a '#{@builder.makefile_name}' to build the project"
-      file "#{@builder.makefile_name}" => [@builder.makedepend_file, scoped_task(:load_makedepend)] do
+      file "#{@builder.makefile_name}" => [
+        @builder.makedepend_file,
+        scoped_task(:load_makedepend)
+      ] do
         Rake::Builder::Presenters::Makefile::BuilderPresenter.new(@builder).save
       end
 
