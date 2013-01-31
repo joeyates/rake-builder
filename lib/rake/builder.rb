@@ -6,7 +6,6 @@ require 'rake/builder/configuration'
 require 'rake/builder/configure_ac'
 require 'rake/builder/error'
 require 'rake/builder/installer'
-require 'rake/builder/local_config'
 require 'rake/builder/logger/formatter'
 require 'rake/builder/presenters/makefile/builder_presenter'
 require 'rake/builder/presenters/makefile_am/builder_presenter'
@@ -27,9 +26,6 @@ module Rake
 
     # Name of the generated file containing source - header dependencies
     attr_reader   :makedepend_file
-
-    # The file containing local settings such as include paths
-    attr_reader   :local_config_file
 
     # Temporary files generated during compilation and linking
     attr_accessor :generated_files
@@ -165,18 +161,12 @@ module Rake
     end
 
     def load_local_config
-      local = Rake::Builder::LocalConfig.new(local_config_file)
-      local.load
-      config.include_paths       += local.include_paths
-      config.compilation_options += local.compilation_options
+      config.load_local_config
     end
 
     def create_local_config
-      logger.debug "Creating file '#{local_config_file}'"
       added_includes = @compiler_data.include_paths(missing_headers)
-      local = Rake::Builder::LocalConfig.new(local_config_file)
-      local.include_paths = added_includes
-      local.save
+      config.create_local_config added_includes
     end
 
     def compile(source, object)
@@ -217,6 +207,10 @@ module Rake
 
     def target_prerequisites
       config.target_prerequisites
+    end
+
+    def local_config_file
+      config.local_config_file
     end
 
     # other
@@ -288,7 +282,6 @@ module Rake
       @logger.level          = ::Logger::UNKNOWN
       @logger.formatter      = Rake::Builder::Logger::Formatter.new
       @generated_files       = []
-      @local_config_file     = '.rake-builder'
     end
 
     def configure

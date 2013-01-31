@@ -1,3 +1,5 @@
+require 'rake/builder/local_config'
+
 class Rake::Builder
   class Configuration
     # The file to be built
@@ -129,12 +131,28 @@ class Rake::Builder
     # Tasks which the target file depends upon
     attr_accessor :target_prerequisites
 
+    # The file containing local settings such as include paths
+    attr_reader   :local_config_file
+
     def initialize(block)
       raise 'No block given' if block.nil?
       set_defaults
       save_rakefile_info(block)
       block.call(self)
       configure
+    end
+
+    def load_local_config
+      local = Rake::Builder::LocalConfig.new(local_config_file)
+      local.load
+      self.include_paths       += local.include_paths
+      self.compilation_options += local.compilation_options
+    end
+
+    def create_local_config(added_includes)
+      local = Rake::Builder::LocalConfig.new(local_config_file)
+      local.include_paths = added_includes
+      local.save
     end
 
     private
@@ -152,6 +170,7 @@ class Rake::Builder
       self.include_paths         = ['./include']
       self.installable_headers   ||= []
       self.target_prerequisites  = []
+      @local_config_file         = '.rake-builder'
     end
 
     def save_rakefile_info(block)
