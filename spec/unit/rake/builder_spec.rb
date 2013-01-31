@@ -394,41 +394,10 @@ describe Rake::Builder do
   end
 
   context '#load_local_config' do
-    let(:config_include_paths) { ['/path/one', '/path/two'] }
-    let(:config_compilation_options) { ['opt1', 'opt2'] }
-    let(:local_config) do
-      stub(
-        'Rake::Builder::LocalConfig',
-        :load => nil,
-        :include_paths => config_include_paths,
-        :compilation_options => config_compilation_options,
-      )
-    end
-
-    before { Rake::Builder::LocalConfig.stub(:new => local_config) }
-
-    it 'loads local config' do
-      Rake::Builder::LocalConfig.should_receive(:new).
-        with(/\.rake-builder/).and_return(local_config)
-      local_config.should_receive(:load).with()
+    it 'delegates to Configuration' do
+      builder.config.should_receive(:load_local_config)
 
       builder.load_local_config
-    end
-
-    it 'adds include paths' do
-      original = builder.config.include_paths.clone
-
-      builder.load_local_config
-
-      expect(builder.config.include_paths).to eq(original + config_include_paths)
-    end
-
-    it 'adds compilation options' do
-      original = builder.config.compilation_options.clone
-
-      builder.load_local_config
-
-      expect(builder.config.compilation_options).to eq(original + config_compilation_options)
     end
   end
 
@@ -441,17 +410,9 @@ describe Rake::Builder do
         :include_paths         => [],
       )
     end
-    let(:local_config) do
-      stub(
-        'Rake::Builder::LocalConfig',
-        :include_paths=        => nil,
-        :save                  => nil
-      )
-    end
 
     before do
       Compiler::Base.stub(:for).with(:gcc).and_return(compiler)
-      Rake::Builder::LocalConfig.stub(:new).and_return(local_config)
     end
 
     it 'gets extra paths for missing headers' do
@@ -462,8 +423,9 @@ describe Rake::Builder do
       builder.create_local_config
     end
 
-    it 'saves a LocalConfig' do
-      local_config.should_receive(:save)
+    it 'delegates to Configuration' do
+      builder.config.should_receive(:create_local_config).
+        with([])
 
       builder.create_local_config
     end
