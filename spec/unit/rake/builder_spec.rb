@@ -3,7 +3,8 @@ require 'spec_helper'
 describe Rake::Builder do
   include InputOutputTestHelper
   
-  let(:target_pathname) { File.join('foo', 'bar', 'my_prog.exe') }
+  let(:target_path) { File.join('foo', 'bar') }
+  let(:target_pathname) { File.join(target_path, 'my_prog.exe') }
   let(:source_paths) { ['src/file1.cpp'] }
   let(:target_parameters) { [] }
   let(:builder) do
@@ -277,6 +278,14 @@ describe Rake::Builder do
   context '#label' do
     it 'replaces dots with underscores' do
       expect(builder.label).to eq(File.join('foo', 'bar', 'my_prog_exe'))
+    end
+
+    context 'a leading current directory indicator' do
+      let(:target_path) { File.join('.', 'ciao') }
+
+      it 'is removed' do
+        expect(builder.label).to eq(File.join('ciao', 'my_prog_exe'))
+      end
     end
   end
 
