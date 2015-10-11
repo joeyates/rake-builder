@@ -5,10 +5,12 @@ describe Rake::Builder do
   
   let(:target_pathname) { File.join('foo', 'bar', 'my_prog.exe') }
   let(:source_paths) { ['src/file1.cpp'] }
+  let(:target_parameters) { [] }
   let(:builder) do
     Rake::Builder.new do |b|
       b.target               = target_pathname
       b.library_dependencies = ['foo', 'bar']
+      b.target_parameters    = target_parameters
     end
   end
   let(:installer) do
@@ -158,6 +160,8 @@ describe Rake::Builder do
       Dir.stub(:chdir).with(builder.rakefile_path)
       builder.stub(:system)
       Dir.stub(:chdir).with(@old_dir)
+      # Run a successful command, so Process:Status $? gets set to success
+      `ls`
     end
 
     it 'changes directory to the Rakefile path' do
@@ -173,6 +177,18 @@ describe Rake::Builder do
 
       capturing_output do
         builder.run
+      end
+    end
+
+    context 'target_parameters' do
+      let(:target_parameters) { %w(--ciao) }
+
+      it 'are passed as command line options to the target' do
+        builder.should_receive(:system).with("./#{builder.target} --ciao", anything)
+
+        capturing_output do
+          builder.run
+        end
       end
     end
 

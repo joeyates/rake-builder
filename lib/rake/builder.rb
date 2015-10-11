@@ -165,6 +165,10 @@ module Rake
     # Each instance has its own logger
     attr_accessor :logger
 
+    # Command line parameters to pass to the target when it is executed
+    # with the `run` task. Default: []
+    attr_accessor :target_parameters
+
     # All Rake::Builder instances that get defined
     # This allows us to create scripts for configure
     @instances = []
@@ -215,11 +219,14 @@ module Rake
       old_dir = Dir.pwd
       Dir.chdir rakefile_path
       command = File.join('.', target)
+      if target_parameters.size > 0
+        command << " " << target_parameters.join(" ")
+      end
       begin
         output, error = shell(command, ::Logger::INFO)
         $stdout.print output
         $stderr.print error
-        raise Exception.new("Running #{command} failed with status #{$?.exitstatus}") if not $?.success?
+        raise Exception.new("Running #{command} failed with status #{$?.exitstatus}") if ! $?.success?
       ensure
         Dir.chdir old_dir
       end
@@ -407,6 +414,7 @@ module Rake
       @compilation_options   = []
       @include_paths         = ['./include']
       @installable_headers   ||= []
+      @target_parameters     = []
     end
 
     def configure
