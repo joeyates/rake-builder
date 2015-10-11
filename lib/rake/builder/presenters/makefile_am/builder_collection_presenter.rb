@@ -27,11 +27,11 @@ module Rake; class Builder; module Presenters; module MakefileAm
     end
 
     def programs_list
-      'bin_PROGRAMS = ' + programs.map(&:label).join(' ') + "\n\n"
+      'bin_PROGRAMS = ' + programs.map(&:target_path).join(' ') + "\n\n"
     end
 
     def libraries_list
-      'lib_LIBRARIES = ' + libraries.map(&:label).join(' ') + "\n\n"
+      'lib_LIBRARIES = ' + libraries.map(&:target_path).join(' ') + "\n\n"
     end
 
     def program_sections

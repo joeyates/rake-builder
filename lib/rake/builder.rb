@@ -334,9 +334,12 @@ module Rake
       File.basename(@target)
     end
 
+    def target_path
+      target.sub(/^\.\//, '') # Remove current directory from name
+    end
+
     def label
-      label = target.sub(/^\.\//, '') # Remove current directory from name
-      label.gsub(%r(\.), '_')
+      target_path.gsub(%r(\.), '_')
     end
 
     # Source files found in source_search_paths

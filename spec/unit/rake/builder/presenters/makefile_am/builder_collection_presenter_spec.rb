@@ -10,8 +10,8 @@ describe Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter do
   end
 
   context '#to_s' do
-    let(:program_builder) { stub('Rake::Builder', :label => 'the_program', :is_library? => false) }
-    let(:library_builder) { stub('Rake::Builder', :label => 'the_library', :is_library? => true) }
+    let(:program_builder) { stub('Rake::Builder', :label => 'the_program', :target_path => 'the_program', :is_library? => false) }
+    let(:library_builder) { stub('Rake::Builder', :label => 'the_library', :target_path => 'the_library', :is_library? => true) }
     let(:builders) { [program_builder, library_builder] }
 
     subject { Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.new(builders) }
