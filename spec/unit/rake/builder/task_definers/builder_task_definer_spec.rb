@@ -44,41 +44,48 @@ describe Rake::Builder::BuilderTaskDefiner do
   let(:executable_target) { self.class.executable_target }
   let(:objects_path) { self.class.objects_path }
   let(:custom_prerequisite) { self.class.custom_prerequisite }
-  let(:logger) { stub('Logger') }
+  let(:logger) { double(Logger, 'level=': nil) }
   let(:builder) do
-    stub(
-      'Rake::Builder',
-      :task_namespace => nil,
-      :target_type => :executable,
-      :target       => executable_target,
-      :target_basename => executable_target,
-      :target_prerequisites => [custom_prerequisite],
-      :makedepend_file => self.class.makedepend_file,
-      :source_files => self.class.source_files,
-      :object_files => self.class.object_files,
-      :object_path  => self.class.object_files[0],
-      :objects_path => objects_path,
-      :generated_files => [],
-      :local_config => self.class.local_config,
-      :generated_headers => self.class.generated_headers,
-      :install_path => 'install/path',
-      :makefile_name => self.class.makefile_name,
-      :default_task => :build,
-      :logger       => logger,
+    double(
+      Rake::Builder,
+      task_namespace:       task_namespace,
+      target_type:          :executable,
+      target:               executable_target,
+      target_basename:      executable_target,
+      target_prerequisites: [custom_prerequisite],
+      makedepend_file:      self.class.makedepend_file,
+      source_files:         self.class.source_files,
+      object_files:         self.class.object_files,
+      object_path:          self.class.object_files[0],
+      objects_path:         objects_path,
+      generated_files:      [],
+      local_config:         self.class.local_config,
+      generated_headers:    self.class.generated_headers,
+      install_path:         'install/path',
+      makefile_name:        self.class.makefile_name,
+      default_task:         :build,
+      logger:               logger,
     )
   end
-  let(:namespaced_builder) { builder.stub(:task_namespace => 'foo'); builder }
+  let(:task_namespace) { nil }
 
-  subject { Rake::Builder::BuilderTaskDefiner.new(builder) }
+  subject { described_class.new(builder) }
 
   before do
     Rake::Task.clear
+    %i(
+      run clean build install uninstall compile
+      create_makedepend_file create_local_config ensure_headers
+      load_local_config
+    ).each do |m|
+      allow(builder).to receive(m)
+    end
   end
 
   context '#new' do
     it 'takes a parameter' do
       expect {
-        Rake::Builder::BuilderTaskDefiner.new 
+        described_class.new
       }.to raise_error(ArgumentError)
     end
   end
@@ -105,7 +112,7 @@ describe Rake::Builder::BuilderTaskDefiner do
       it "defines '#{task}'" do
         subject.run
 
-        expect(Rake::Task.task_defined?(task)).to be_true
+        expect(Rake::Task.task_defined?(task)).to be_truthy
       end
     end
 
@@ -113,36 +120,36 @@ describe Rake::Builder::BuilderTaskDefiner do
       it 'defines run' do
         subject.run
 
-        expect(Rake::Task.task_defined?('run')).to be_true
+        expect(Rake::Task.task_defined?('run')).to be_truthy
       end
     end
 
     context 'with a namespace' do
-      subject { Rake::Builder::BuilderTaskDefiner.new(namespaced_builder) }
+      let(:task_namespace) { 'foo' }
 
       it 'namespaces tasks' do
         subject.run
 
-        expect(Rake::Task.task_defined?('foo:run')).to be_true
+        expect(Rake::Task.task_defined?('foo:run')).to be_truthy
       end
 
       it 'defines the namespace default task' do
         subject.run
 
-        expect(Rake::Task.task_defined?('foo')).to be_true
+        expect(Rake::Task.task_defined?('foo')).to be_truthy
       end
 
       it 'does not fiddle up the local_config file' do
         subject.run
 
-        expect(Rake::Task['foo:load_local_config'].prerequisites).to eq([namespaced_builder.local_config])
+        expect(Rake::Task['foo:load_local_config'].prerequisites).to eq([builder.local_config])
       end
     end
   end
 
   context 'dependencies' do
     before do
-      Rake::Builder::BuilderTaskDefiner.new(builder).run
+      described_class.new(builder).run
     end
 
     [
@@ -177,52 +184,25 @@ describe Rake::Builder::BuilderTaskDefiner do
 
   context 'tasks' do
     before do
-      Rake::Builder::BuilderTaskDefiner.new(builder).run
+      described_class.new(builder).run
     end
 
-    context 'run' do
-      it 'runs the builder' do
-        clear_prerequisites 'run'
+    [
+      ['run', 'runs the builder', :run],
+      [executable_target, 'builds the target', :build],
+      ['clean', 'cleans the build', :clean],
+      ['install', 'installs the target', :install],
+      ['uninstall', 'uninstalls the target', :uninstall],
+      ['load_local_config', 'loads local config', :load_local_config],
+    ].each do |task, action, command|
+      context task do
+        it action do
+          clear_prerequisites task
 
-        builder.should_receive(:run)
+          Rake::Task[task].invoke
 
-        Rake::Task['run'].invoke
-      end
-    end
-
-    context 'the target' do
-      it 'builds the target' do
-        clear_prerequisites executable_target
-
-        builder.should_receive(:build)
-
-        Rake::Task[executable_target].invoke
-      end
-    end
-
-    context 'clean' do
-      it 'cleans the build' do
-        builder.should_receive(:clean)
-
-        Rake::Task['clean'].invoke
-      end
-    end
-
-    context 'install' do
-      it 'installs the target' do
-        clear_prerequisites 'install'
-
-        builder.should_receive(:install)
-
-        Rake::Task['install'].invoke
-      end
-    end
-
-    context 'uninstall' do
-      it 'uninstalls the target' do
-        builder.should_receive(:uninstall)
-
-        Rake::Task['uninstall'].invoke
+          expect(builder).to have_received(command)
+        end
       end
     end
 
@@ -230,28 +210,19 @@ describe Rake::Builder::BuilderTaskDefiner do
       it 'compiles the file' do
         clear_prerequisites 'src/file1.o'
 
-        builder.should_receive(:compile).
-          with('src/file1.cpp', 'src/file1.o')
-
         Rake::Task['src/file1.o'].invoke
+
+
+        expect(builder).to have_received(:compile).
+          with('src/file1.cpp', 'src/file1.o')
       end
     end
 
     context 'local_config' do
       it 'creates local config' do
-        builder.should_receive(:create_local_config)
-
         Rake::Task[self.class.local_config].invoke
-      end
-    end
 
-    context 'load_local_config' do
-      it 'loads local config' do
-        clear_prerequisites 'load_local_config'
-
-        builder.should_receive(:load_local_config)
-
-        Rake::Task['load_local_config'].invoke
+        expect(builder).to have_received(:create_local_config)
       end
     end
 
@@ -261,17 +232,17 @@ describe Rake::Builder::BuilderTaskDefiner do
       end
 
       it 'calls ensure_headers' do
-        builder.should_receive(:ensure_headers)
-
         Rake::Task['missing_headers'].invoke
+
+        expect(builder).to have_received(:ensure_headers)
       end
 
       it 'fails if builder raises an error' do
-        builder.stub(:ensure_headers).and_raise('foo')
+        allow(builder).to receive(:ensure_headers).and_raise('foo')
 
         expect {
           Rake::Task['missing_headers'].invoke
-        }.to raise_error
+        }.to raise_error(RuntimeError, /foo/)
       end
     end
 
@@ -279,9 +250,9 @@ describe Rake::Builder::BuilderTaskDefiner do
       it 'creates the makedepend file' do
         clear_prerequisites self.class.makedepend_file
 
-        builder.should_receive(:create_makedepend_file)
-
         Rake::Task[self.class.makedepend_file].invoke
+
+        expect(builder).to have_received(:create_makedepend_file)
       end
     end
 
@@ -289,13 +260,7 @@ describe Rake::Builder::BuilderTaskDefiner do
       before do
         clear_prerequisites 'load_makedepend'
         @object_file = self.class.object_files[0]
-        builder.stub(:load_makedepend).and_return({@object_file => ['include/header1.h']})
-      end
-
-      it 'gets dependency information from builder' do
-        builder.should_receive(:load_makedepend).and_return({@object_file => ['include/header1.h']})
-
-        Rake::Task['load_makedepend'].invoke
+        allow(builder).to receive(:load_makedepend) { {@object_file => ['include/header1.h']} }
       end
 
       it 'creates tasks for headers' do
@@ -312,18 +277,20 @@ describe Rake::Builder::BuilderTaskDefiner do
     end
 
     context 'makefile' do
-      let(:presenter) { stub('BuilderPresenter') }
+      let(:presenter) do
+        double(Rake::Builder::Presenters::Makefile::BuilderPresenter, save: nil)
+      end
+
+      before do
+        allow(Rake::Builder::Presenters::Makefile::BuilderPresenter).to receive(:new).with(builder) { presenter }
+      end
 
       it 'creates a makefile' do
         clear_prerequisites self.class.makefile_name
 
-        Rake::Builder::Presenters::Makefile::BuilderPresenter.
-          should_receive(:new).
-          with(builder).
-          and_return(presenter)
-        presenter.should_receive(:save)
-
         Rake::Task[self.class.makefile_name].invoke
+
+        expect(presenter).to have_received(:save)
       end
     end
 
@@ -331,9 +298,9 @@ describe Rake::Builder::BuilderTaskDefiner do
       it 'sets the logger level if required' do
         ENV['DEBUG'] = 'true'
 
-        logger.should_receive(:level=).with(0)
-
         Rake::Task['environment'].invoke
+
+        expect(logger).to have_received(:level=).with(0)
       end
     end
   end

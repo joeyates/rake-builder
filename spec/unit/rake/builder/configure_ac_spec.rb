@@ -32,21 +32,16 @@ describe Rake::Builder::ConfigureAc do
   end
 
   context '#save' do
-    it 'creates the file' do
-      File.should_receive(:open).with('configure.ac', 'w')
+    let(:file) { double(File, write: nil) }
 
-      subject.save
+    before do
+      allow(File).to receive(:open).with('configure.ac', 'w').and_yield(file)
     end
 
     it 'saves the content' do
-      file = stub('File')
-      File.stub(:open).with('configure.ac', 'w') do |&block|
-        block.call file
-      end
-
-      file.should_receive(:write).with(/AC_PREREQ\(2\.61\)/)
-
       subject.save
+
+      expect(file).to have_received(:write).with(/AC_PREREQ\(2\.61\)/)
     end
   end
 end

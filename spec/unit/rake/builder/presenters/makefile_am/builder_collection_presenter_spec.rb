@@ -10,21 +10,17 @@ describe Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter do
   end
 
   context '#to_s' do
-    let(:program_builder) { stub('Rake::Builder', :label => 'the_program', :target_path => 'the_program', :is_library? => false) }
-    let(:library_builder) { stub('Rake::Builder', :label => 'the_library', :target_path => 'the_library', :is_library? => true) }
+    let(:program_builder) { double(Rake::Builder, :label => 'the_program', :target_path => 'the_program', :is_library? => false) }
+    let(:library_builder) { double(Rake::Builder, :label => 'the_library', :target_path => 'the_library', :is_library? => true) }
     let(:builders) { [program_builder, library_builder] }
 
-    subject { Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.new(builders) }
+    subject { described_class.new(builders) }
 
     before do
-      Rake::Builder::Presenters::MakefileAm::BuilderPresenter.
-        stub(:new).
-        with(program_builder).
-        and_return("AAA\nBBB\n")
-      Rake::Builder::Presenters::MakefileAm::BuilderPresenter.
-        stub(:new).
-        with(library_builder).
-        and_return("XXX\nYYY\n")
+      allow(Rake::Builder::Presenters::MakefileAm::BuilderPresenter)
+        .to receive(:new).with(program_builder) { "AAA\nBBB\n" }
+      allow(Rake::Builder::Presenters::MakefileAm::BuilderPresenter)
+        .to receive(:new). with(library_builder) { "XXX\nYYY\n" }
     end
 
     it 'lists libraries' do
@@ -36,15 +32,6 @@ describe Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter do
     end
 
     it 'includes builder text' do
-      Rake::Builder::Presenters::MakefileAm::BuilderPresenter.
-        should_receive(:new).
-        with(program_builder).
-        and_return("AAA\nBBB\n")
-      Rake::Builder::Presenters::MakefileAm::BuilderPresenter.
-        should_receive(:new).
-        with(library_builder).
-        and_return("XXX\nYYY\n")
-
       output = subject.to_s
 
       expect(output).to include("AAA\nBBB\n")
@@ -52,4 +39,3 @@ describe Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter do
     end
   end
 end
-

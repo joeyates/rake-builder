@@ -1,116 +1,104 @@
 require 'spec_helper'
 
 describe Rake::Builder::Autoconf::Version do
+  let(:exists) { true }
+  let(:file_content) { '1.2.3' }
   before do
-    File.stub(:exist? => true)
-    File.stub(:read   => '1.2.3')
+    allow(File).to receive(:exist?).with('VERSION') { exists }
+    allow(File).to receive(:read).with('VERSION') { file_content }
   end
+  let(:params) { [] }
+  let(:parameter_version) { '4.5.6' }
+
+  subject { described_class.new(*params) }
 
   context '.new' do
     context 'with parameter' do
       it 'fails if the version parameter is not nn.nn.nn' do
         expect {
-          Rake::Builder::Autoconf::Version.new('hello')
+          described_class.new('hello')
         }.to raise_error(RuntimeError, /badly formatted/)
       end
     end
 
     context 'without parameter' do
       it 'succeeds' do
-        Rake::Builder::Autoconf::Version.new
+        described_class.new
       end
     end
 
-    context 'VERSION file' do
-      it 'checks for a the file' do
-        File.should_receive(:exist?).
-          with('VERSION').
-          and_return(false)
+    context 'if the version is badly formed' do
+      let(:file_content) { 'bad' }
 
-        Rake::Builder::Autoconf::Version.new
-      end
-
-      it 'loads the file' do
-        File.should_receive(:exist?).
-          with('VERSION').
-          and_return(true)
-        File.should_receive(:read).
-          with('VERSION').
-          and_return('1.2.3')
-
-        Rake::Builder::Autoconf::Version.new
-      end
-
-      it 'fails if the version is badly formed' do
-        File.should_receive(:read).
-          with('VERSION').
-          and_return('bad')
-
+      it 'fails' do
         expect {
-          Rake::Builder::Autoconf::Version.new
+          described_class.new
         }.to raise_error(RuntimeError, /file.*?version.*?badly formatted/)
       end
     end
   end
 
   context '#decide' do
-    let(:with_parameter) { Rake::Builder::Autoconf::Version.new('4.5.6') }
-    let(:without_parameter) { Rake::Builder::Autoconf::Version.new }
+    let(:file) { double(File, write: nil) }
 
-    before { File.stub(:open).with('VERSION', 'w') }
+    before do
+      allow(File).to receive(:open).with('VERSION', 'w').and_yield(file)
+    end
 
-    context 'file version is nil' do
-      before { File.stub(:exist? => false) }
+    context 'disk file is absent' do
+      let(:exists) { false }
 
       context 'parameter is nil' do
         it 'raises an error' do
           expect {
-            without_parameter.decide
+            subject.decide
           }.to raise_error(RuntimeError, /Please do one of the following/)
         end
       end
 
       context 'parameter not nil' do
-        it 'saves the version' do
-          File.should_receive(:open).with('VERSION', 'w')
+        let(:params) { [parameter_version] }
 
-          with_parameter.decide
+        it 'saves the version' do
+          subject.decide
+
+          expect(file).to have_received(:write).with(parameter_version + "\n")
         end
 
         it 'returns the parameter version' do
-          expect(with_parameter.decide).to eq('4.5.6')
+          expect(subject.decide).to eq(parameter_version)
         end
       end
     end
 
-    context 'file version not nil' do
-      before do
-        File.stub(:exist? => true)
-        File.stub(:read).with('VERSION').and_return("6.6.6\n")
-      end
+    context 'disk file exists' do
+      let(:exists) { true }
 
-      context 'parameter is nil' do
-        it 'returns the file version' do
-          expect(without_parameter.decide).to eq('6.6.6')
+      context 'without parameters' do
+        it 'returns the file version from disk' do
+          expect(subject.decide).to eq(file_content)
         end
       end
 
       context 'parameter not nil' do
-        it 'fails if the two versions differ'do
-          File.should_receive(:read).with('VERSION').and_return("6.6.6\n")
+        context 'if the two versions differ'do
+          let(:params) { [parameter_version] }
 
-          expect {
-            with_parameter.decide
-          }.to raise_error(RuntimeError, /parameter.*?is different to.*?VERSION/)
+          it 'fails' do
+            expect {
+              subject.decide
+            }.to raise_error(RuntimeError, /parameter.*?is different to.*?VERSION/)
+          end
         end
 
-        it 'returns the version' do
-          File.should_receive(:read).with('VERSION').and_return("4.5.6\n")
+        context 'if the two versions are the same' do
+          let(:params) { [file_content] }
 
-          expect(with_parameter.decide).to eq('4.5.6')
+          it 'returns the version' do
+            expect(subject.decide).to eq(file_content)
+          end
         end
       end
     end
   end
 end
-

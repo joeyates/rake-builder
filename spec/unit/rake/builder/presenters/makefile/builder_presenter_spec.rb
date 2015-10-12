@@ -46,9 +46,9 @@ describe Rake::Builder::Presenters::Makefile::BuilderPresenter do
     )
   end
   
-  let(:executable_builder) { stub('Rake::Builder', executable_attributes) }
-  let(:static_library_builder) { stub('Rake::Builder', static_library_attributes) }
-  let(:shared_library_builder) { stub('Rake::Builder', shared_library_attributes) }
+  let(:executable_builder) { double(Rake::Builder, executable_attributes) }
+  let(:static_library_builder) { double('Rake::Builder', static_library_attributes) }
+  let(:shared_library_builder) { double('Rake::Builder', shared_library_attributes) }
 
   let(:executable_subject) { Rake::Builder::Presenters::Makefile::BuilderPresenter.new(executable_builder) }
   let(:static_library_subject) { Rake::Builder::Presenters::Makefile::BuilderPresenter.new(static_library_builder) }
@@ -66,12 +66,20 @@ describe Rake::Builder::Presenters::Makefile::BuilderPresenter do
   end
 
   context '#to_s' do
-    it 'fails with unknown target types' do
-      executable_builder.should_receive(:target_type).any_number_of_times.and_return(:foo)
+    context 'with unknown target types' do
+      let(:executable_attributes) do
+        common_attributes.merge(
+          :target => executable_target,
+          :target_type => :foo,
+        )
+      end
 
-      expect {
-        Rake::Builder::Presenters::Makefile::BuilderPresenter.new(executable_builder)
-      }.to raise_error(RuntimeError, /Unknown.*?target type/)
+      it 'fails' do
+        expect {
+          Rake::Builder::Presenters::Makefile::BuilderPresenter.new(executable_builder)
+        }.to raise_error(RuntimeError, /Unknown.*?target type/)
+      end
+
     end
 
     context 'target' do
@@ -142,21 +150,16 @@ EOT
   end
 
   context '#save' do
-    it 'creates the makefile' do
-      File.should_receive(:open).with(makefile_name, 'w')
+    let(:file) { double(File, write: nil) }
 
-      executable_subject.save
+    before do
+      allow(File).to receive(:open).with(makefile_name, 'w').and_yield(file)
     end
 
-    it 'saves' do
-      file = stub('File')
-      File.stub(:open).with(makefile_name, 'w') do |&block|
-        block.call file
-      end
-
-      file.should_receive(:write).with(/COMPILER.*?= the_compiler/)
-
+    it 'saves a makefile' do
       executable_subject.save
+
+      expect(file).to have_received(:write).with(/COMPILER.*?= the_compiler/)
     end
   end
 end

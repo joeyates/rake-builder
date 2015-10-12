@@ -28,7 +28,7 @@ module Rake
 
       def needed?
         return true if not File.exist?(self.name)
-        @timestamp = File.stat(self.name).mtime if @timestamp.nil?
+        @timestamp ||= File.stat(self.name).mtime
         prerequisites_needed?
       end
 
@@ -52,9 +52,7 @@ module Rake
 
       def needed?
         return true if not File.directory?(self.path)
-        if @timestamp.nil?
-          @timestamp = File.stat(self.path).mtime
-        end
+        @timestamp ||= File.stat(self.path).mtime
         prerequisites_needed?
       end
 

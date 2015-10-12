@@ -15,27 +15,25 @@ describe Rake::Builder do
     end
   end
   let(:installer) do
-    stub(
-      'Rake::Builder::Installer',
-      :install => nil
-    )
+    double(Rake::Builder::Installer, install: nil, uninstall: nil)
   end
 
   before do
-    Rake::Path.stub(:find_files).and_return(source_paths)
+    allow(Rake::Path).to receive(:find_files) { source_paths }
+    allow(builder).to receive(:system)
   end
 
   context '.create_autoconf' do
-    let(:version) { stub('Rake::Builder::Autoconf::Autoconf::Version', :decide => 'qux') }
-    let(:presenter) { stub('Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter', :save => nil) }
-    let(:configure_ac) { stub('Rake::Builder::ConfigureAc', :save => nil) }
+    let(:version) { double('Rake::Builder::Autoconf::Autoconf::Version', :decide => 'qux') }
+    let(:presenter) { double('Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter', :save => nil) }
+    let(:configure_ac) { double('Rake::Builder::ConfigureAc', :save => nil) }
 
     before do
-      Rake::Builder::Autoconf::Version.stub(:new).and_return(version)
-      File.stub(:exist?).with('configure.ac').and_return(false)
-      File.stub(:exist?).with('Makefile.am').and_return(false)
-      Rake::Builder::ConfigureAc.stub(:new => configure_ac)
-      Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.stub(:new).and_return(presenter)
+      allow(Rake::Builder::Autoconf::Version).to receive(:new) { version }
+      allow(File).to receive(:exist?).with('configure.ac') { false }
+      allow(File).to receive(:exist?).with('Makefile.am') { false }
+      allow(Rake::Builder::ConfigureAc).to receive(:new) { configure_ac }
+      allow(Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter).to receive(:new) { presenter }
     end
 
     it 'fails if project_title is nil' do
@@ -44,16 +42,20 @@ describe Rake::Builder do
       }.to raise_error(RuntimeError, 'Please supply a project_title parameter')
     end
 
-    it 'fails if Version fails' do
-      Rake::Builder::Autoconf::Version.stub(:new).and_raise('foo')
+    context 'if Version fails' do
+      before do
+        allow(Rake::Builder::Autoconf::Version).to receive(:new).and_raise('foo')
+      end
 
-      expect {
-        Rake::Builder.create_autoconf('foo', 'bar', 'baz')
-      }.to raise_error(RuntimeError, 'foo')
+      it 'fails' do
+        expect {
+          Rake::Builder.create_autoconf('foo', 'bar', 'baz')
+        }.to raise_error(RuntimeError, 'foo')
+      end
     end
 
     it 'fails if configure.ac exists' do
-      File.should_receive(:exist?).with('configure.ac').and_return(true)
+      allow(File).to receive(:exist?).with('configure.ac') { true }
 
       expect {
         Rake::Builder.create_autoconf('foo', 'bar', 'baz')
@@ -61,7 +63,7 @@ describe Rake::Builder do
     end
 
     it 'fails if Makefile.am exists' do
-      File.should_receive(:exist?).with('Makefile.am').and_return(true)
+      allow(File).to receive(:exist?).with('Makefile.am') { true }
 
       expect {
         Rake::Builder.create_autoconf('foo', 'bar', 'baz')
@@ -69,13 +71,13 @@ describe Rake::Builder do
     end
 
     it 'creates configure.ac' do
-      Rake::Builder::ConfigureAc.should_receive(:new).and_return(configure_ac)
+      allow(Rake::Builder::ConfigureAc).to receive(:new) { configure_ac }
 
       Rake::Builder.create_autoconf('foo', 'bar', 'baz')
     end
 
     it 'creates Makefile.am' do
-      Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.should_receive(:new).and_return(presenter)
+      allow(Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter).to receive(:new) { presenter }
 
       Rake::Builder.create_autoconf('foo', 'bar', 'baz')
     end
@@ -107,7 +109,7 @@ describe Rake::Builder do
     end
 
     it 'remembers the Rakefile path' do
-      Rake::Path.stub(:find_files => ['main.cpp'])
+      allow(Rake::Path).to receive(:find_files) { ['main.cpp'] }
       here = File.dirname(File.expand_path(__FILE__))
 
       builder = Rake::Builder.new {}
@@ -119,13 +121,12 @@ describe Rake::Builder do
   context '#build' do
     before do
       @target_exists = [false, true]
-      File.stub(:exist?).with(builder.target) { @target_exists.shift }
-      builder.stub(:system => nil)
+      allow(File).to receive(:exist?).with(builder.target) { @target_exists.shift }
       `(exit 0)` # set $? to a successful Process::Status
     end
 
     it 'checks if the old target exists' do
-      File.should_receive(:exist?).with(builder.target) { @target_exists.shift }
+      allow(File).to receive(:exist?).with(builder.target) { @target_exists.shift }
 
       builder.build
     end
@@ -133,7 +134,7 @@ describe Rake::Builder do
     it 'deletes the old target' do
       @target_exists = [true, true]
 
-      File.should_receive(:unlink).with(builder.target)
+      allow(File).to receive(:unlink).with(builder.target)
 
       builder.build
     end
@@ -158,15 +159,14 @@ describe Rake::Builder do
   context '#run' do
     before do
       @old_dir = Dir.pwd
-      Dir.stub(:chdir).with(builder.rakefile_path)
-      builder.stub(:system)
-      Dir.stub(:chdir).with(@old_dir)
+      allow(Dir).to receive(:chdir).with(builder.rakefile_path)
+      allow(Dir).to receive(:chdir).with(@old_dir)
       # Run a successful command, so Process:Status $? gets set to success
       `ls`
     end
 
     it 'changes directory to the Rakefile path' do
-      Dir.should_receive(:chdir).with(builder.rakefile_path)
+      allow(Dir).to receive(:chdir).with(builder.rakefile_path)
 
       capturing_output do
         builder.run
@@ -174,27 +174,27 @@ describe Rake::Builder do
     end
 
     it 'runs the executable' do
-      builder.should_receive(:system).with('./' + builder.target, anything)
-
       capturing_output do
         builder.run
       end
+
+      expect(builder).to have_received(:system).with('./' + builder.target, anything)
     end
 
     context 'target_parameters' do
       let(:target_parameters) { %w(--ciao) }
 
       it 'are passed as command line options to the target' do
-        builder.should_receive(:system).with("./#{builder.target} --ciao", anything)
-
         capturing_output do
           builder.run
         end
+
+        expect(builder).to have_received(:system).with("./#{builder.target} --ciao", anything)
       end
     end
 
     it 'outputs the stdout results, then the stderr results' do
-      builder.stub(:system) do |command|
+      allow(builder).to receive(:system) do |command|
         $stdout.puts 'standard output'
         $stderr.puts 'error output'
       end
@@ -208,7 +208,7 @@ describe Rake::Builder do
     end
 
     it 'raises and error is the program does not run successfully' do
-      builder.stub(:system) { `(exit 1)` } # set $? to a failing Process::Status
+      allow(builder).to receive(:system) { `(exit 1)` } # set $? to a failing Process::Status
 
       expect {
         builder.run
@@ -216,18 +216,18 @@ describe Rake::Builder do
     end
 
     it 'restores the preceding working directory, even after errors' do
-      builder.stub(:system).and_raise('foo')
-
-      Dir.should_receive(:chdir).with(@old_dir)
+      allow(builder).to receive(:system).and_raise('foo')
 
       builder.run rescue nil
+
+      expect(Dir).to have_received(:chdir).with(@old_dir)
     end
   end
 
   context '#clean' do
     it 'checks if files exist' do
       exists = []
-      File.stub(:exist?) { |file| exists << file; false }
+      allow(File).to receive(:exist?) { |file| exists << file; false }
 
       builder.clean
 
@@ -236,8 +236,8 @@ describe Rake::Builder do
 
     it 'deletes generated files' do
       deletes = []
-      File.stub(:exist? => true)
-      File.stub(:unlink) { |file| deletes << file }
+      allow(File).to receive(:exist?) { true }
+      allow(File).to receive(:unlink) { |file| deletes << file }
 
       builder.clean
 
@@ -267,7 +267,7 @@ describe Rake::Builder do
 
   context '#target' do
     it "defaults to 'a.out'" do
-      Rake::Path.stub(:find_files => ['main.cpp'])
+      allow(Rake::Path).to receive(:find_files) { ['main.cpp'] }
 
       builder = Rake::Builder.new {}
 
@@ -296,7 +296,7 @@ describe Rake::Builder do
       ['libshared.so', :shared_library],
     ].each do |name, type|
       it "recognises '#{name}' as '#{type}'" do
-        Rake::Path.stub(:find_files).and_return(['file'])
+        allow(Rake::Path).to receive(:find_files) { ['file'] }
 
         builder = Rake::Builder.new { |b| b.target = name }
 
@@ -322,17 +322,17 @@ describe Rake::Builder do
 
   context '#source_files' do
     it 'finds files with the .cpp extension' do
-      Rake::Path.should_receive(:find_files).with(anything, 'cpp').and_return(['a.cpp'])
+      allow(Rake::Path).to receive(:find_files).with(anything, 'cpp') { ['a.cpp'] }
 
       builder
     end
 
     it 'should allow configuration of source extension' do
-      Rake::Path.should_receive(:find_files).with(anything, 'cc').and_return(['a.cc'])
-
       Rake::Builder.new do |b|
         b.source_file_extension = 'cc'
       end
+
+      expect(Rake::Path).to have_received(:find_files).with(anything, 'cc') { ['a.cc'] }
     end
   end
 
@@ -362,15 +362,15 @@ describe Rake::Builder do
 
   context '#create_makedepend_file' do
     before do
-      builder.stub(:system).with('which makedepend >/dev/null') do
+      allow(builder).to receive(:system).with('which makedepend >/dev/null') do
         `(exit 0)` # set $? to a successful Process::Status
       end
 
-      builder.stub(:system).with(/makedepend -f-/, anything)
+      allow(builder).to receive(:system).with(/makedepend -f-/, anything)
     end
 
     it 'fails if makedepend is missing' do
-      builder.stub(:system).with('which makedepend >/dev/null') do
+      allow(builder).to receive(:system).with('which makedepend >/dev/null') do
         `(exit 1)` # set $? to a successful Process::Status
       end
 
@@ -380,9 +380,9 @@ describe Rake::Builder do
     end
 
     it 'calls makedepend' do
-      builder.should_receive(:system).with(/makedepend -f-/, anything)
-
       builder.create_makedepend_file
+
+      expect(builder).to have_received(:system).with(/makedepend -f-/, anything)
     end
   end
 
@@ -398,13 +398,7 @@ describe Rake::Builder do
     end
 
     before do
-      File.stub(:read).with(builder.makedepend_file).and_return(content)
-    end
-
-    it 'opens the file' do
-      File.should_receive(:read).with(builder.makedepend_file).and_return(content)
-
-      builder.load_makedepend
+      allow(File).to receive(:read).with(builder.makedepend_file) { content }
     end
 
     it 'returns a map of sources to headers' do
@@ -421,7 +415,7 @@ describe Rake::Builder do
     let(:config_include_paths) { ['/path/one', '/path/two'] }
     let(:config_compilation_options) { ['opt1', 'opt2'] }
     let(:local_config) do
-      stub(
+      double(
         'Rake::Builder::LocalConfig',
         :load => nil,
         :include_paths => config_include_paths,
@@ -429,14 +423,15 @@ describe Rake::Builder do
       )
     end
 
-    before { Rake::Builder::LocalConfig.stub(:new => local_config) }
+    before { allow(Rake::Builder::LocalConfig).to receive(:new) { local_config } }
 
     it 'loads local config' do
-      Rake::Builder::LocalConfig.should_receive(:new).
-        with(/\.rake-builder/).and_return(local_config)
-      local_config.should_receive(:load).with()
+      allow(Rake::Builder::LocalConfig).to receive(:new).
+        with(/\.rake-builder/) { local_config }
 
       builder.load_local_config
+
+      expect(local_config).to have_received(:load).with(no_args)
     end
 
     it 'adds include paths' do
@@ -458,7 +453,7 @@ describe Rake::Builder do
 
   context '#create_local_config' do
     let(:compiler) do
-      stub(
+      double(
         'Compiler',
         :default_include_paths => [],
         :missing_headers       => [],
@@ -466,7 +461,7 @@ describe Rake::Builder do
       )
     end
     let(:local_config) do
-      stub(
+      double(
         'Rake::Builder::LocalConfig',
         :include_paths=        => nil,
         :save                  => nil
@@ -474,39 +469,28 @@ describe Rake::Builder do
     end
 
     before do
-      Compiler::Base.stub(:for).with(:gcc).and_return(compiler)
-      Rake::Builder::LocalConfig.stub(:new).and_return(local_config)
-    end
-
-    it 'gets extra paths for missing headers' do
-      compiler.should_receive(:missing_headers).
-        with(['./include'], source_paths).
-        and_return([])
-
-      builder.create_local_config
+      allow(Compiler::Base).to receive(:for).with(:gcc) { compiler }
+      allow(Rake::Builder::LocalConfig).to receive(:new) { local_config }
     end
 
     it 'saves a LocalConfig' do
-      local_config.should_receive(:save)
-
       builder.create_local_config
+
+      expect(local_config).to have_received(:save)
     end
   end
 
   context '#install' do
-    before { Rake::Builder::Installer.stub(:new).and_return(installer) }
+    before { allow(Rake::Builder::Installer).to receive(:new) { installer } }
 
     it 'installs the target' do
-      Rake::Builder::Installer.should_receive(:new).and_return(installer)
-      installer.should_receive(:install).with(builder.target, anything)
-
       builder.install
+
+      expect(Rake::Builder::Installer).to have_received(:new) { installer }
     end
 
     it 'installs headers for static libraries' do
-      installer.stub(:install).with(builder.target, anything)
-      File.should_receive(:file?).with('header.h').and_return(true)
-      installer.should_receive(:install).with('header.h', anything)
+      allow(File).to receive(:file?).with('header.h') { true }
 
       builder = Rake::Builder.new do |b|
         b.target              = 'libthe_static_library.a'
@@ -514,18 +498,21 @@ describe Rake::Builder do
       end
 
       builder.install
+
+      expect(installer).to have_received(:install).with(builder.target, anything)
+      expect(installer).to have_received(:install).with('header.h', anything)
     end
   end
 
   context '#uninstall' do
-    before { Rake::Builder::Installer.stub(:new).and_return(installer) }
+    before { allow(Rake::Builder::Installer).to receive(:new) { installer } }
 
     it 'uninstalls' do
       installed_path = File.join(builder.install_path, builder.target_basename)
-      installer.should_receive(:uninstall).with(installed_path)
 
       builder.uninstall
+
+      expect(installer).to have_received(:uninstall).with(installed_path)
     end
   end
 end
-

@@ -2,61 +2,70 @@ require 'spec_helper'
 
 describe Rake::Microsecond::DirectoryTask do
   let(:path) { '/a/path' }
-  let(:task) do
-    task = Rake::Microsecond::DirectoryTask.define_task(path)
-    task.stub(:mkdir_p => nil)
-    task
-  end
+
+  subject { described_class.define_task(path) }
 
   before do
+    allow(subject).to receive(:mkdir_p)
     Rake::Task.clear
   end
 
   context '#needed?' do
-    let(:base_time) { Time.now }
-    let(:task1) { Rake::Microsecond::DirectoryTask.define_task('/path1') }
-    let(:task2) { Rake::Microsecond::DirectoryTask.define_task('/path2') }
-    let(:needed_task) { Rake::Task.define_task('needed') }
-    let(:unneeded_task) { Rake::Task.define_task('unneeded') }
+    let(:directory_task) { instance_double(Rake::Microsecond::DirectoryTask) }
+    let(:file_task) { instance_double(Rake::FileTask, timestamp: file_timestamp) }
+    let(:needed_task) { double(Rake::Task, needed?: true) }
+    let(:unneeded_task) { double(Rake::Task, needed?: false) }
+    let(:directory_mtime) { 33 }
+    let(:file_timestamp) { directory_mtime + 1 }
 
     context 'when the directory exists' do
+      let(:exists) { true }
+      let(:stat) { double(mtime: directory_mtime) }
+
       before do
-        File.stub(:directory? => true)
-        File.stub_chain(:stat, :mtime).and_return(33)
+        allow(File).to receive(:directory?) { exists }
+        allow(File).to receive(:stat) { stat }
+        allow(Rake.application).to receive(:[]).with(:directory_task) { directory_task }
+        allow(directory_task).to receive(:is_a?).with(described_class) { true }
+        allow(Rake.application).to receive(:[]).with(:file_task) { file_task }
+        allow(file_task).to receive(:is_a?).with(Rake::FileTask) { true }
+        allow(file_task).to receive(:is_a?).with(described_class) { false }
+        allow(Rake.application).to receive(:[]).with(:needed) { needed_task }
+        allow(Rake.application).to receive(:[]).with(:unneeded) { unneeded_task }
       end
 
-      it 'true if a prerequisite FileTask is more recent' do
-        task1.timestamp = base_time - 10
-        task2.timestamp = base_time - 1
-        task1.enhance([task2])
+      context 'if a prerequisite FileTask is more recent' do
 
-        expect(task1).to be_needed
+        it 'is needed' do
+          subject.enhance([:file_task])
+
+          expect(subject).to be_needed
+        end
       end
 
       it 'true if a prerequisite non-FileTask is needed?' do
-        task.enhance([needed_task])
+        subject.enhance([:needed])
 
-        expect(task).to be_needed
+        expect(subject).to be_needed
       end
 
       it 'false otherwise' do
-        task.enhance([unneeded_task])
-        unneeded_task.stub(:needed? => false)
+        subject.enhance([:unneeded])
 
-        expect(task).to_not be_needed
+        expect(subject).to_not be_needed
       end
     end
   end
 
   context '#execute' do
-    let(:stub_time) { stub('Time') }
+    let(:now) { 12345 }
 
     it 'memorizes the directory creation time including fractional seconds' do
-      Time.stub(:now => stub_time)
+      allow(Time).to receive(:now) { now }
 
-      task.execute
+      subject.execute
 
-      expect(task.timestamp).to eq(stub_time)
+      expect(subject.timestamp).to eq(now)
     end
   end
 end

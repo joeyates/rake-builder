@@ -10,18 +10,11 @@ describe Compiler::Base do
   subject { Compiler::Base.new }
 
   context '#include_paths' do
+    let(:exists) { false }
+
     before do
-      File.stub(:exist?).
-        with('/opt/local/include/foo/bar.h').
-        and_return(false)
-    end
-
-    it 'checks extra paths' do
-      File.should_receive(:exist?).
-        with('/opt/local/include/foo/bar.h').
-        and_return(true)
-
-      subject.include_paths(['foo/bar.h'])
+      allow(File).to receive(:exist).
+        with('/opt/local/include/foo/bar.h') { exists }
     end
 
     it 'throws an error is the headers are not found' do
@@ -88,12 +81,12 @@ COLLECT_GCC_OPTIONS='-v' '-E' '-mtune=generic' '-march=x86-64'
       EOT
     end
 
-    before { subject.stub(:`).with(/gcc/).and_return(gcc_output) }
+    before { allow(subject).to receive(:`).with(/gcc/) { gcc_output } }
 
     it 'calls gcc' do
-      subject.should_receive(:`).with(/gcc/).and_return(gcc_output)
-
       subject.default_include_paths('c++')
+
+      expect(subject).to have_received(:`).with(/gcc/)
     end
 
     it 'parses gcc output' do
@@ -111,12 +104,12 @@ makedepend: warning:  main.cpp (reading main.h, line 4): cannot find include fil
       EOT
     end
 
-    before { subject.stub(:`).with(/makedepend/).and_return(makedepend_output) }
+    before { allow(subject).to receive(:`).with(/makedepend/) { makedepend_output } }
 
     it 'calls makedepend' do
-      subject.should_receive(:`).with(/makedepend/).and_return(makedepend_output)
-
       subject.missing_headers(['/foo'], ['bar.cpp'])
+
+      expect(subject).to have_received(:`).with(/makedepend/)
     end
 
     it 'returns missing headers' do

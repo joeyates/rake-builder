@@ -2,9 +2,9 @@ require 'spec_helper'
 
 describe Rake::Builder::LocalConfig do
   let(:local_config_file) { 'local_config' }
-  let(:include_paths) { ['/foo/bar'] }
-  let(:compilation_options) { ['foo', 'bar'] }
-  let(:config_data) do
+  let(:include_paths) { [] }
+  let(:compilation_options) { [] }
+  let(:good_config_data) do
     {
       :rake_builder => {
         :config_file => {:version => '1.1'},
@@ -14,27 +14,28 @@ describe Rake::Builder::LocalConfig do
     }
   end
   let(:bad_config_data) do
-    config_data[:rake_builder][:config_file][:version] = '0.1'
-    config_data
+    config = good_config_data.clone
+    config[:rake_builder][:config_file][:version] = '0.1'
+    config
   end
+  let(:config_data) { good_config_data }
 
-  before { YAML.stub(:load_file).and_return(config_data) }
+  before { allow(YAML).to receive(:load_file) { config_data } }
 
-  subject { Rake::Builder::LocalConfig.new(local_config_file) }
+  subject { described_class.new(local_config_file) }
 
   context '#load' do
-    it 'loads the file' do
-      YAML.should_receive(:load_file).and_return(config_data)
+    let(:include_paths) { ['/foo/bar'] }
+    let(:compilation_options) { ['foo', 'bar'] }
 
-      subject.load
-    end
+    context 'if the version is not recognized' do
+      let(:config_data) { bad_config_data }
 
-    it 'fails if the version is not recognized' do
-      YAML.should_receive(:load_file).and_return(bad_config_data)
-
-      expect {
-        subject.load
-      }.to raise_error(Rake::Builder::Error, /version incorrect/)
+      it 'fails' do
+        expect {
+          subject.load
+        }.to raise_error(Rake::Builder::Error, /version incorrect/)
+      end
     end
 
     it 'sets the include_paths' do
@@ -51,29 +52,17 @@ describe Rake::Builder::LocalConfig do
   end
 
   context '#save' do
-    let(:file) { stub('File') }
+    let(:file) { double(File, write: nil) }
+    let(:data) { config_data.to_yaml }
 
     before do
-      File.stub(:open).with(local_config_file, 'w') do |&block|
-        block.call file
-      end
+      allow(File).to receive(:open).with(local_config_file, 'w').and_yield(file)
     end
 
-    it 'write to the file' do
-      File.should_receive(:open).with(local_config_file, 'w') {}
-
+    it 'writes to the file' do
       subject.save
-    end
 
-    it 'saves the data' do
-      expected = {
-        :rake_builder        => {:config_file => {:version => '1.1'}},
-        :include_paths       => [],
-        :compilation_options => []
-      }.to_yaml
-      file.should_receive(:write).with(expected)
-
-      subject.save
+      expect(file).to have_received(:write).with(data)
     end
   end
 end

@@ -2,99 +2,110 @@ require 'spec_helper'
 
 describe Rake::Builder::Installer do
   let(:destination_path) { '/destination/path' }
-  let(:destination_pathname) { '/destination/path/install' }
+  let(:destination_pathname) { File.join(destination_path, 'install') }
+  let(:destination_path_writable) { true }
+
+  before do
+    allow(File).to receive(:writable?).with(destination_path) { destination_path_writable }
+  end
 
   context '#install' do
     let(:file_to_install) { '/file/to/install' }
+    let(:file_to_install_exists) { true }
+    let(:destination_path_exists) { true }
+    let(:destination_path_directory) { true }
+    let(:destination_pathname_file) { true }
+    let(:destination_pathname_writable) { true }
 
     before do
-      File.stub(:exist?).with(file_to_install).and_return(true)
-      File.stub(:exist?).with(destination_path).and_return(true)
-      File.stub(:directory?).with(destination_path).and_return(true)
-      File.stub(:writable?).with(destination_path).and_return(true)
-      File.stub(:file?).with(destination_pathname).and_return(false)
-      File.stub(:writable?).with(destination_pathname).and_return(true)
-      FileUtils.stub(:copy_file).with(file_to_install, destination_path)
+      allow(File).to receive(:exist?).with(file_to_install) { file_to_install_exists }
+      allow(File).to receive(:exist?).with(destination_path) { destination_path_exists }
+      allow(File).to receive(:directory?).with(destination_path) { destination_path_directory }
+      allow(File).to receive(:file?).with(destination_pathname) { destination_pathname_file }
+      allow(File).to receive(:writable?).with(destination_pathname) { destination_pathname_writable }
+      allow(FileUtils).to receive(:copy_file).with(file_to_install, destination_path)
     end
 
-    it 'checks the source exists' do
-      File.should_receive(:exist?).with(file_to_install).and_return(true)
+    context 'if the source does not exist' do
+      let(:file_to_install_exists) { false }
 
-      subject.install file_to_install, destination_path
+      it 'fails' do
+        expect {
+          subject.install file_to_install, destination_path
+        }.to raise_error(RuntimeError, /does not exist/)
+      end
     end
 
-    it 'fails if the source does not exist' do
-      File.stub(:exist?).with(file_to_install).and_return(false)
+    context 'if the destination directory does not exist' do
+      let(:destination_path_exists) { false }
 
-      expect {
-        subject.install file_to_install, destination_path
-      }.to raise_error(RuntimeError, /does not exist/)
+      it 'fails' do
+        expect {
+          subject.install file_to_install, destination_path
+        }.to raise_error(RuntimeError, /does not exist/)
+      end
     end
 
-    it 'checks the destination directory exists' do
-      File.should_receive(:exist?).with(destination_path).and_return(false)
+    context 'if the destination is not a directory' do
+      let(:destination_path_directory) { false }
 
-      expect {
-        subject.install file_to_install, destination_path
-      }.to raise_error(RuntimeError, /does not exist/)
+      it 'fails' do
+        expect {
+          subject.install file_to_install, destination_path
+        }.to raise_error(RuntimeError, /is not a directory/)
+      end
     end
 
-    it 'checks the destination is a directory' do
-      File.should_receive(:directory?).with(destination_path).and_return(false)
+    context 'if it cannot overwrite an existing destination file' do
+      let(:destination_pathname_file) { true }
+      let(:destination_pathname_writable) { false }
 
-      expect {
-        subject.install file_to_install, destination_path
-      }.to raise_error(RuntimeError, /is not a directory/)
-    end
-
-    it 'check it can overwrite an existing destination file' do
-      File.stub(:file?).with(destination_pathname).and_return(true)
-      File.stub(:writable?).with(destination_pathname).and_return(false)
-
-      expect {
-        subject.install file_to_install, destination_path
-      }.to raise_error(RuntimeError, /cannot be overwritten/)
+      it 'fails' do
+        expect {
+          subject.install file_to_install, destination_path
+        }.to raise_error(RuntimeError, /cannot be overwritten/)
+      end
     end
 
     it 'copies the file to the destination' do
-      FileUtils.should_receive(:copy_file).with(file_to_install, destination_path)
-
       subject.install file_to_install, destination_path
+
+      expect(FileUtils).to have_received(:copy_file).with(file_to_install, destination_path)
     end
   end
 
   context '#uninstall' do
+    let(:destination_pathname_exist) { true }
+
     before do
-      File.stub(:exist?).with(destination_pathname).and_return(true)
-      File.stub(:writable?).with(destination_path).and_return(true)
-      File.stub(:unlink).with(destination_pathname)
+      allow(File).to receive(:exist?).with(destination_pathname) { destination_pathname_exist }
+      allow(File).to receive(:unlink).with(destination_pathname)
     end
 
-    it 'checks if the file exists' do
-      File.should_receive(:exist?).with(destination_pathname).and_return(true)
+    context 'if the file does not exist' do
+      let(:destination_pathname_exist) { false }
 
-      subject.uninstall destination_pathname
-    end
-
-    it 'does nothing if the file does not exist' do
-      File.should_receive(:exist?).with(destination_pathname).and_return(false)
-      File.should_not_receive(:unlink)
-
-      subject.uninstall destination_pathname
-    end
-
-    it 'fails if the directory is not writable' do
-      File.should_receive(:writable?).with(destination_path).and_return(false)
-
-      expect {
+      it 'does nothing' do
         subject.uninstall destination_pathname
-      }.to raise_error(RuntimeError, /directory.*?writable/)
+
+        expect(File).to_not have_received(:unlink)
+      end
+    end
+
+    context 'if the directory is not writable' do
+      let(:destination_path_writable) { false }
+
+      it 'fails' do
+        expect {
+          subject.uninstall destination_pathname
+        }.to raise_error(RuntimeError, /directory.*?writable/)
+      end
     end
 
     it 'deletes the file' do
-      File.should_receive(:unlink).with(destination_pathname)
-
       subject.uninstall destination_pathname
+
+      expect(File).to have_received(:unlink).with(destination_pathname)
     end
   end
 end
