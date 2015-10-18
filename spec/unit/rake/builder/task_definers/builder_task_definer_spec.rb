@@ -44,7 +44,7 @@ describe Rake::Builder::BuilderTaskDefiner do
   let(:executable_target) { self.class.executable_target }
   let(:objects_path) { self.class.objects_path }
   let(:custom_prerequisite) { self.class.custom_prerequisite }
-  let(:logger) { double(Logger, 'level=': nil) }
+  let(:logger) { double(Logger, :'level=' => nil) }
   let(:builder) do
     double(
       Rake::Builder,
@@ -73,12 +73,12 @@ describe Rake::Builder::BuilderTaskDefiner do
 
   before do
     Rake::Task.clear
-    %i(
+    %w(
       run clean build install uninstall compile
       create_makedepend_file create_local_config ensure_headers
       load_local_config
     ).each do |m|
-      allow(builder).to receive(m)
+      allow(builder).to receive(m.intern)
     end
   end
 

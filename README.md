@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/joeyates/rake-builder.png)][Continuous Integration]
+
 rake-builder
 ============
 
@@ -10,6 +12,7 @@ rake-builder
 [Source code]:   http://github.com/joeyates/rake-builder         "Source code at GitHub"
 [Documentation]: http://rdoc.info/projects/joeyates/rake-builder "Documentation at Rubydoc.info"
 [Rubygem]:       http://rubygems.org/gems/rake-builder           "Ruby gem at rubygems.org"
+[Continuous Integration]: http://travis-ci.org/joeyates/rake-builder "Build status by Travis-CI"
 
 Hello World! Example
 ====================
