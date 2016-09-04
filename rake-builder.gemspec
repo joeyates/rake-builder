@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.summary           = 'Rake for C/C++ Projects'
   s.description       = 'Provides Rake:Builder, a specific rake TaskLib for building C, C++, Objective-C and Objective-C++ projects'
   s.version           = Rake::Builder::VERSION::STRING
+  s.required_ruby_version = '>= 2.1.0'
 
   s.homepage          = 'http://github.com/joeyates/rake-builder'
   s.author            = 'Joe Yates'
@@ -27,7 +28,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency     'json'
 
   s.add_development_dependency 'rspec',  '~> 3.3.0'
-  s.add_development_dependency 'simplecov' if RUBY_VERSION > '1.9'
+  s.add_development_dependency 'simplecov'
 
   s.test_files       = FileList[ 'spec/**/*' ]
 end
