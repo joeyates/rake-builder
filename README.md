@@ -125,6 +125,16 @@ If you install a static library, your headers will also be installed.
 Ensure that you use file globs, e.g. './include/**/*.h',
 as these will ensure that your headers are installed in the correct subdirectories.
 
+Problem Resolution
+------------------
+
+If you project does not build, use Rake's `--trace` option to get more
+information about what's going wrong:
+
+```shell
+$ rake --trace
+```
+
 Project
 =======
 
