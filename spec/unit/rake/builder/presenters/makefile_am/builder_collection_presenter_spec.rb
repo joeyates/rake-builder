@@ -5,7 +5,7 @@ describe Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter do
     it 'takes one parameter' do
       expect {
         Rake::Builder::Presenters::MakefileAm::BuilderCollectionPresenter.new
-      }.to raise_error(ArgumentError, 'wrong number of arguments (0 for 1)')
+      }.to raise_error(ArgumentError, /wrong number of arguments/)
     end
   end
 
