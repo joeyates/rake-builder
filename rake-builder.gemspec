@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency     'rake'
   s.add_runtime_dependency     'json'
 
-  s.add_development_dependency 'rspec',  '~> 3.3.0'
+  s.add_development_dependency 'rspec',  '~> 3.4'
   s.add_development_dependency 'simplecov'
 
   s.test_files       = FileList[ 'spec/**/*' ]
