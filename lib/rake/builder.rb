@@ -256,7 +256,12 @@ module Rake
       logger.debug 'Creating makedepend file'
       system('which makedepend >/dev/null')
       raise 'makedepend not found' unless $?.success?
-      command = "makedepend -f- -- #{include_path} -- #{file_list(source_files)} 2>/dev/null > #{makedepend_file}"
+      command =
+        "makedepend -f- " \
+        "-- #{compiler_flags} "\
+        "-- #{file_list(source_files)} " \
+        "2>/dev/null " \
+        "> #{makedepend_file}"
       shell command
     end
 
